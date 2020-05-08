@@ -1,0 +1,5 @@
+__pycache__/
+tmp/
+paper/*
+!paper/ms.bib
+!paper/ms.tex
