@@ -82,8 +82,9 @@ def validate_or_test_supervised_model(supervised_model, unsupervised_model, data
 
 
 if __name__ == '__main__':
-    torch.backends.cudnn.deterministic = True
     torch.manual_seed(0)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
     path_images_mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list = f'{path_paper}/images_mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list'
     if not os.path.exists(path_images_mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list):
         os.mkdir(path_images_mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list)
@@ -214,16 +215,15 @@ if __name__ == '__main__':
             ax_main.add_patch(wedge)
             plt.savefig(f'{path_images_mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list}/{dataset_name}.pdf')
             plt.close()
-        with open(f'{path_tables}/mean_inverse_compression_ratio_mean_reconstruction_loss_variable_kernel_size.tex', 'w') as f:
-            header = ['$m$', r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
-            index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-            physionet_latex_table = np.array(physionet_latex_table).T.tolist()
-            df = pd.DataFrame(physionet_latex_table, index=index)
-            df = df.T
-            df.index = dataset_name_list
-            df.index.names = ['Datasets']
-            formatters = 5*[lambda x: f'{x:.0f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}']
-            df.to_latex(buf=f, bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+        header = ['$m$', r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
+        index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+        physionet_latex_table = np.array(physionet_latex_table).T.tolist()
+        df = pd.DataFrame(physionet_latex_table, index=index)
+        df = df.T
+        df.index = dataset_name_list
+        df.index.names = ['Datasets']
+        formatters = 5*[lambda x: f'{x:.0f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}']
+        df.to_latex(f'{path_tables}/mean_inverse_compression_ratio_mean_reconstruction_loss_variable_kernel_size.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
         fig = plt.figure(constrained_layout=True, figsize=(6, 6))
         ax = plt.gca()
@@ -418,16 +418,15 @@ if __name__ == '__main__':
                 if kernel_size_list[0] == 10:
                     save_images_1d(model_best, dataset_name, test_dataset[0][0][0], kernel_size_list[0], device)
             uci_epilepsy_supervised_latex_table.append(uci_epilepsy_supervised_latex_table_row)
-        with open(f'{path_tables}/uci_epilepsy_supervised.tex', 'w') as f:
-            header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-            index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-            uci_epilepsy_supervised_latex_table = np.array(uci_epilepsy_supervised_latex_table).T.tolist()
-            df = pd.DataFrame(uci_epilepsy_supervised_latex_table, index=index)
-            df = df.T
-            df.index = list(uci_epilepsy_kernel_size_range)
-            df.index.names = [r'$m$']
-            formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-            df.to_latex(buf=f, bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+        header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
+        index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+        uci_epilepsy_supervised_latex_table = np.array(uci_epilepsy_supervised_latex_table).T.tolist()
+        df = pd.DataFrame(uci_epilepsy_supervised_latex_table, index=index)
+        df = df.T
+        df.index = list(uci_epilepsy_kernel_size_range)
+        df.index.names = [r'$m$']
+        formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
+        df.to_latex(f'{path_tables}/uci_epilepsy_supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     if 1:
         print('MNIST baseline, Supervised FNN classification')
@@ -524,16 +523,15 @@ if __name__ == '__main__':
                 if kernel_size_list[0] == 4:
                     save_images_2d(model_best, test_dataset[0][0][0], dataset_name, device)
             mnist_supervised_latex_table.append(mnist_supervised_latex_table_row)
-        with open(f'{path_tables}/mnist_supervised.tex', 'w') as f:
-            header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-            index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-            mnist_supervised_latex_table = np.array(mnist_supervised_latex_table).T.tolist()
-            df = pd.DataFrame(mnist_supervised_latex_table, index=index)
-            df = df.T
-            df.index = list(mnist_kernel_size_range)
-            df.index.names = [r'$m$']
-            formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-            df.to_latex(buf=f, bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+        header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
+        index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+        mnist_supervised_latex_table = np.array(mnist_supervised_latex_table).T.tolist()
+        df = pd.DataFrame(mnist_supervised_latex_table, index=index)
+        df = df.T
+        df.index = list(mnist_kernel_size_range)
+        df.index.names = [r'$m$']
+        formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
+        df.to_latex(f'{path_tables}/mnist_supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     if 1:
         print('FashionMNIST baseline, Supervised FNN classification')
@@ -630,16 +628,15 @@ if __name__ == '__main__':
                 if kernel_size_list[0] == 3:
                     save_images_2d(model_best, test_dataset[0][0][0], dataset_name, device)
             fashionmnist_supervised_latex_table.append(fashionmnist_supervised_latex_table_row)
-        with open(f'{path_tables}/fashionmnist_supervised.tex', 'w') as f:
-            header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-            index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-            fashionmnist_supervised_latex_table = np.array(fashionmnist_supervised_latex_table).T.tolist()
-            df = pd.DataFrame(fashionmnist_supervised_latex_table, index=index)
-            df = df.T
-            df.index = list(fashionmnist_kernel_size_range)
-            df.index.names = [r'$m$']
-            formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-            df.to_latex(buf=f, bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+        header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
+        index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+        fashionmnist_supervised_latex_table = np.array(fashionmnist_supervised_latex_table).T.tolist()
+        df = pd.DataFrame(fashionmnist_supervised_latex_table, index=index)
+        df = df.T
+        df.index = list(fashionmnist_kernel_size_range)
+        df.index.names = [r'$m$']
+        formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
+        df.to_latex(f'{path_tables}/fashionmnist_supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     df = pd.DataFrame({'key': ['uci_epilepsy_supervised_accuracy', 'mnist_supervised_accuracy', 'fashionmnist_supervised_accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_supervised_accuracy, fashionmnist_supervised_accuracy]})
     df.to_csv(f'{path_paper}/keys_values.csv', index=False, float_format='%.2f')
