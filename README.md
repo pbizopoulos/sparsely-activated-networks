@@ -6,7 +6,7 @@ ArXiv link: <https://arxiv.org/abs/1907.06592>
 # Instructions
 The syntax of the `make` command is as follows:
 
-`make [docker] [ARGS="[--full] [--gpu]"] [GPU="--gpus all"]`
+`make [docker] [ARGS="[--full] [--gpu]"]`
 
 where `[...]` denotes an optional argument.
 
@@ -20,7 +20,7 @@ For example you can choose one of the following:
 - `make docker`
 	- Requires local installation of docker.
 	- Takes ~5 minutes.
-- `make docker ARGS="--full --gpu" GPU="--gpus all"`
+- `make docker ARGS="--full --gpu"`
 	- Requires local installation of nvidia-container-toolkit.
 	- Takes a week on an NVIDIA Titan X.
 - `make clean`
