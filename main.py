@@ -22,8 +22,6 @@ from utilities import calculate_inverse_compression_ratio, FNN, CNN, path_tmp, p
 from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset
 from utilities_2d import save_images_2d
 
-plt.rc('text', usetex=True)
-
 
 def train_unsupervised_model(model, optimizer, training_dataloader, device):
     model.train()
@@ -203,7 +201,7 @@ if __name__ == '__main__':
             plt.xlim([0, 2.5])
             plt.ylim([0, 2.5])
             plt.xlabel(r'$\tilde{\mathcal{L}}$', fontsize=20)
-            plt.ylabel(r'$CR\textsuperscript{-1}$', fontsize=20)
+            plt.ylabel(r'$CR^{-1}$', fontsize=20)
             plt.xticks(fontsize=20)
             plt.yticks(fontsize=20)
             plt.grid(True)
@@ -215,7 +213,7 @@ if __name__ == '__main__':
             ax_main.add_patch(wedge)
             plt.savefig(f'{path_images_mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list}/{dataset_name}.pdf')
             plt.close()
-        header = ['$m$', r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
+        header = ['$m$', r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
         index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
         physionet_latex_table = np.array(physionet_latex_table).T.tolist()
         df = pd.DataFrame(physionet_latex_table, index=index)
@@ -280,7 +278,7 @@ if __name__ == '__main__':
         ax.plot(range(2), range(2), range(2))
         legend_elements = [
                 patches.Patch(color='r', alpha=0.3, label='non-sparse model description'),
-                patches.Patch(color='orange', alpha=0.3, label=r'worse $CR\textsuperscript{-1}$ than original data'),
+                patches.Patch(color='orange', alpha=0.3, label=r'worse $CR^{-1}$ than original data'),
                 patches.Patch(color='gray', alpha=0.3, label=r'worse $\tilde{\mathcal{L}}$ than constant prediction'),
                 patches.Patch(color='g', alpha=0.3, label=r'$\bar\varphi < 1$'),
                 Line2D([0], [0], marker='o', color='w', label='Identity', markerfacecolor=sparse_activation_color_list[0]),
@@ -311,7 +309,7 @@ if __name__ == '__main__':
         wedge = patches.Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
         ax.add_patch(wedge)
         plt.xlabel(r'$\tilde{\mathcal{L}}$', fontsize=20)
-        plt.ylabel(r'$CR\textsuperscript{-1}$', fontsize=20)
+        plt.ylabel(r'$CR^{-1}$', fontsize=20)
         plt.xticks(fontsize=20)
         plt.yticks(fontsize=20)
         plt.xlim([0, 2.5])
@@ -418,7 +416,7 @@ if __name__ == '__main__':
                 if kernel_size_list[0] == 10:
                     save_images_1d(model_best, dataset_name, test_dataset[0][0][0], kernel_size_list[0], device)
             uci_epilepsy_supervised_latex_table.append(uci_epilepsy_supervised_latex_table_row)
-        header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
+        header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
         index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
         uci_epilepsy_supervised_latex_table = np.array(uci_epilepsy_supervised_latex_table).T.tolist()
         df = pd.DataFrame(uci_epilepsy_supervised_latex_table, index=index)
@@ -523,7 +521,7 @@ if __name__ == '__main__':
                 if kernel_size_list[0] == 4:
                     save_images_2d(model_best, test_dataset[0][0][0], dataset_name, device)
             mnist_supervised_latex_table.append(mnist_supervised_latex_table_row)
-        header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
+        header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
         index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
         mnist_supervised_latex_table = np.array(mnist_supervised_latex_table).T.tolist()
         df = pd.DataFrame(mnist_supervised_latex_table, index=index)
@@ -628,7 +626,7 @@ if __name__ == '__main__':
                 if kernel_size_list[0] == 3:
                     save_images_2d(model_best, test_dataset[0][0][0], dataset_name, device)
             fashionmnist_supervised_latex_table.append(fashionmnist_supervised_latex_table_row)
-        header = [r'$CR\textsuperscript{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
+        header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
         index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
         fashionmnist_supervised_latex_table = np.array(fashionmnist_supervised_latex_table).T.tolist()
         df = pd.DataFrame(fashionmnist_supervised_latex_table, index=index)
