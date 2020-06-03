@@ -6,9 +6,6 @@ path_paper = 'paper'
 path_dataset = f'{path_tmp}/datasets'
 
 
-def filename_format(path, dataset_name, model):
-    return f'{path}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}'
-
 def calculate_inverse_compression_ratio(model, data, num_activations):
     activation_multiplier = 1 + len(model.neuron_list[0].weights.shape)
     num_parameters = sum([n.weights.shape[0] for n in model.neuron_list])

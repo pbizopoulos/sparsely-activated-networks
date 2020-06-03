@@ -8,7 +8,7 @@ import urllib
 import wfdb
 
 from torch.utils.data import Dataset
-from utilities import filename_format, path_dataset, path_paper
+from utilities import path_dataset, path_paper
 
 
 def save_images_1d(model, dataset_name, data, xlim_weights, device):
@@ -20,7 +20,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
     apply_plot_style_1d(fig)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{filename_format(path_images_1d, dataset_name, model)}_signal.pdf')
+    plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_signal.pdf')
     plt.close()
 
     model.eval()
@@ -44,13 +44,13 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
             plt.ylabel(sparse_activation_name, fontsize=20)
         if model.sparse_activation.__name__ == 'relu_1d':
             plt.title(dataset_name, fontsize=20)
-        plt.savefig(f'{filename_format(path_images_1d, dataset_name, model)}_kernel_{index_neuron}.pdf')
+        plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_kernel_{index_neuron}.pdf')
         plt.close()
 
         fig = plt.figure(constrained_layout=True)
         apply_plot_style_1d(fig)
         plt.plot(similarity.cpu().detach().numpy(), 'g')
-        plt.savefig(f'{filename_format(path_images_1d, dataset_name, model)}_similarity_{index_neuron}.pdf')
+        plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_similarity_{index_neuron}.pdf')
         plt.close()
 
         fig = plt.figure(constrained_layout=True)
@@ -59,7 +59,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
         plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
         if p.shape[0] != 0:
             plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), 'c', basefmt=' ', use_line_collection=True)
-        plt.savefig(f'{filename_format(path_images_1d, dataset_name, model)}_activations_{index_neuron}.pdf')
+        plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_activations_{index_neuron}.pdf')
         plt.close()
 
         fig = plt.figure(constrained_layout=True)
@@ -81,7 +81,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
         plt.plot(pos_signal)
         plt.plot(neg_signal, color='r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(f'{filename_format(path_images_1d, dataset_name, model)}_reconstruction_{index_neuron}.pdf')
+        plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_reconstruction_{index_neuron}.pdf')
         plt.close()
 
     fig = plt.figure(constrained_layout=True)
@@ -89,7 +89,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
     plt.plot(data.cpu().detach().numpy(), alpha=0.5)
     plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{filename_format(path_images_1d, dataset_name, model)}_reconstructed.pdf')
+    plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_reconstructed.pdf')
     plt.close()
 
 def apply_plot_style_1d(fig):
