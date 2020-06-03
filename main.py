@@ -9,7 +9,7 @@ import torch
 from matplotlib import patches
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MaxNLocator
-from scipy.stats import kde
+from scipy.stats import gaussian_kde
 from torch import optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
@@ -297,9 +297,7 @@ if __name__ == '__main__':
         nbins = 200
         yi, xi = np.mgrid[0:2.5:nbins*1j, 0:2.5:nbins*1j]
         for index, (sparse_activation, sparse_activation_name, sparse_activation_colormap, sparse_activation_color, c) in enumerate(zip(sparse_activation_list, sparse_activation_name_list, ['Blues', 'Oranges', 'Greens', 'Reds', 'Purples'], sparse_activation_color_list, for_density_plot)):
-            x = c[:, 0]
-            y = c[:, 1]
-            k = kde.gaussian_kde([x, y])
+            k = gaussian_kde(c.T)
             zi = k(np.vstack([xi.flatten(), yi.flatten()]))
             plt.contour(zi.reshape(xi.shape), [1, 999], colors=sparse_activation_color, extent=(0, 2.5, 0, 2.5))
             plt.contourf(zi.reshape(xi.shape), [1, 999], colors=sparse_activation_color, extent=(0, 2.5, 0, 2.5))
