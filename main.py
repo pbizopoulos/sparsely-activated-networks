@@ -22,6 +22,7 @@ from utilities import calculate_inverse_compression_ratio, FNN, CNN, path_tmp, p
 from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset
 from utilities_2d import save_images_2d
 
+plt.rcParams['font.size'] = 20
 
 def train_unsupervised_model(model, optimizer, training_dataloader, device):
     model.train()
@@ -199,12 +200,10 @@ if __name__ == '__main__':
         plt.sca(ax_main)
         plt.xlim([0, 2.5])
         plt.ylim([0, 2.5])
-        plt.xlabel(r'$\tilde{\mathcal{L}}$', fontsize=20)
-        plt.ylabel(r'$CR^{-1}$', fontsize=20)
-        plt.xticks(fontsize=20)
-        plt.yticks(fontsize=20)
+        plt.xlabel(r'$\tilde{\mathcal{L}}$')
+        plt.ylabel(r'$CR^{-1}$')
         plt.grid(True)
-        plt.title(dataset_name, fontsize=20)
+        plt.title(dataset_name)
         plt.axhspan(2, 2.5, alpha=0.3, color='r')
         plt.axhspan(1, 2, alpha=0.3, color='orange')
         plt.axvspan(1, 2.5, alpha=0.3, color='gray')
@@ -229,18 +228,16 @@ if __name__ == '__main__':
     p2 = [0, 0, 0, 0, 0]
     for index, (sparse_activation, sparse_activation_name, sparse_activation_color, kernel_size_best, c) in enumerate(zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, kernel_size_list_best, flithos_all_validation)):
         t = np.arange(1, c.shape[-1] + 1)
-        for j, (x_, y_) in enumerate(zip(c, kernel_size_best)):
-            var[j] = x_[int(y_ - 1)]
+        for j, (c_, k_) in enumerate(zip(c, kernel_size_best)):
+            var[j] = c_[int(k_ - 1)]
         mu = var.mean(axis=0)
         sigma = var.std(axis=0)
         ax.fill_between(t, mu+sigma, mu-sigma, facecolor=sparse_activation_color, alpha=0.3)
         p1[index] = ax.plot(t, mu, color=sparse_activation_color)
         p2[index] = ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)
-    ax.legend([(p2[0][0], p1[0][0]), (p2[1][0], p1[1][0]), (p2[2][0], p1[2][0]), (p2[3][0], p1[3][0]), (p2[4][0], p1[4][0])], sparse_activation_name_list, loc='lower left')
-    plt.xlabel(r'epochs', fontsize=20)
-    plt.ylabel(r'$\bar\varphi$', fontsize=20)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
+    ax.legend([(p2[0][0], p1[0][0]), (p2[1][0], p1[1][0]), (p2[2][0], p1[2][0]), (p2[3][0], p1[3][0]), (p2[4][0], p1[4][0])], sparse_activation_name_list, fontsize=12, loc='lower left')
+    plt.xlabel(r'epochs')
+    plt.ylabel(r'$\bar\varphi$')
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.ylim([0, 2.5])
     plt.grid(True)
@@ -259,11 +256,9 @@ if __name__ == '__main__':
         ax.fill_between(t, mu+sigma, mu-sigma, facecolor=sparse_activation_color, alpha=0.3)
         p1[index] = ax.plot(t, mu, color=sparse_activation_color)
         p2[index] = ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)
-    ax.legend([(p2[0][0], p1[0][0]), (p2[1][0], p1[1][0]), (p2[2][0], p1[2][0]), (p2[3][0], p1[3][0]), (p2[4][0], p1[4][0])], sparse_activation_name_list, loc='lower right')
-    plt.xlabel(r'$m$', fontsize=20)
-    plt.ylabel(r'$\bar\varphi$', fontsize=20)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
+    ax.legend([(p2[0][0], p1[0][0]), (p2[1][0], p1[1][0]), (p2[2][0], p1[2][0]), (p2[3][0], p1[3][0]), (p2[4][0], p1[4][0])], sparse_activation_name_list, fontsize=12, loc='lower right')
+    plt.xlabel(r'$m$')
+    plt.ylabel(r'$\bar\varphi$')
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.ylim([0, 2.5])
     plt.grid(True)
@@ -305,10 +300,8 @@ if __name__ == '__main__':
     plt.axvspan(1, 2.5, alpha=0.3, color='gray')
     wedge = patches.Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
     ax.add_patch(wedge)
-    plt.xlabel(r'$\tilde{\mathcal{L}}$', fontsize=20)
-    plt.ylabel(r'$CR^{-1}$', fontsize=20)
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
+    plt.xlabel(r'$\tilde{\mathcal{L}}$')
+    plt.ylabel(r'$CR^{-1}$')
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(True)
