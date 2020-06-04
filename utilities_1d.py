@@ -16,8 +16,10 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
     if not os.path.exists(path_images_1d):
         os.mkdir(path_images_1d)
 
-    fig = plt.figure(constrained_layout=True)
-    apply_plot_style_1d(fig)
+    fig, ax = plt.subplots(constrained_layout=True)
+    ax.tick_params(labelbottom=False, labelleft=False)
+    plt.grid(True)
+    plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
     plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_signal.pdf')
@@ -26,8 +28,10 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
     model.eval()
     reconstructed, similarity_list, activations_list, reconstructions = model(data.unsqueeze(0).unsqueeze(0).to(device))
     for index_neuron, (neuron, similarity, activations, reconstruction) in enumerate(zip(model.neuron_list, similarity_list[0, :, 0], activations_list[0, :, 0], reconstructions[0, :, 0])):
-        fig = plt.figure(constrained_layout=True, figsize=(2, 2.2))
-        apply_plot_style_1d(fig)
+        fig, ax = plt.subplots(constrained_layout=True, figsize=(2, 2.2))
+        ax.tick_params(labelbottom=False, labelleft=False)
+        plt.grid(True)
+        plt.autoscale(enable=True, axis='x', tight=True)
         plt.plot(neuron.weights.flip(0).cpu().detach().numpy().T, 'r')
         plt.xlim([0, xlim_weights])
         if dataset_name == 'apnea-ecg':
@@ -47,14 +51,18 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
         plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_kernel_{index_neuron}.pdf')
         plt.close()
 
-        fig = plt.figure(constrained_layout=True)
-        apply_plot_style_1d(fig)
+        fig, ax = plt.subplots(constrained_layout=True)
+        ax.tick_params(labelbottom=False, labelleft=False)
+        plt.grid(True)
+        plt.autoscale(enable=True, axis='x', tight=True)
         plt.plot(similarity.cpu().detach().numpy(), 'g')
         plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_similarity_{index_neuron}.pdf')
         plt.close()
 
-        fig = plt.figure(constrained_layout=True)
-        apply_plot_style_1d(fig)
+        fig, ax = plt.subplots(constrained_layout=True)
+        ax.tick_params(labelbottom=False, labelleft=False)
+        plt.grid(True)
+        plt.autoscale(enable=True, axis='x', tight=True)
         p = activations.nonzero()[:, 0]
         plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
         if p.shape[0] != 0:
@@ -62,8 +70,10 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
         plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_activations_{index_neuron}.pdf')
         plt.close()
 
-        fig = plt.figure(constrained_layout=True)
-        apply_plot_style_1d(fig)
+        fig, ax = plt.subplots(constrained_layout=True)
+        ax.tick_params(labelbottom=False, labelleft=False)
+        plt.grid(True)
+        plt.autoscale(enable=True, axis='x', tight=True)
         reconstruction = reconstruction.cpu().detach().numpy()
         left = p - neuron.weights.shape[0]/2
         right = p + neuron.weights.shape[0]/2
@@ -84,19 +94,15 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device):
         plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_reconstruction_{index_neuron}.pdf')
         plt.close()
 
-    fig = plt.figure(constrained_layout=True)
-    apply_plot_style_1d(fig)
+    fig, ax = plt.subplots(constrained_layout=True)
+    ax.tick_params(labelbottom=False, labelleft=False)
+    plt.grid(True)
+    plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy(), alpha=0.5)
     plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
     plt.ylim([data.min(), data.max()])
     plt.savefig(f'{path_images_1d}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_reconstructed.pdf')
     plt.close()
-
-def apply_plot_style_1d(fig):
-    ax = fig.gca()
-    ax.tick_params(labelbottom=False, labelleft=False)
-    plt.grid(True)
-    plt.autoscale(enable=True, axis='x', tight=True)
 
 def download_physionet(dataset_name_list):
     for dataset_name in dataset_name_list:

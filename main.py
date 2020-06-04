@@ -158,8 +158,7 @@ if __name__ == '__main__':
         validation_dataloader = DataLoader(dataset=validation_dataset)
         test_dataset = PhysionetDataset('test', dataset_name)
         test_dataloader = DataLoader(dataset=test_dataset)
-        fig = plt.figure(constrained_layout=True, figsize=(6, 6))
-        ax_main = plt.gca()
+        fig, ax_main = plt.subplots(constrained_layout=True, figsize=(6, 6))
         for index_sparse_activation, (sparse_activation, sparse_activation_color) in enumerate(zip(sparse_activation_list, sparse_activation_color_list)):
             mean_flithos_best = float('inf')
             for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
@@ -221,8 +220,7 @@ if __name__ == '__main__':
     formatters = 5*[lambda x: f'{x:.0f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}']
     df.to_latex(f'{path_tables}/mean_inverse_compression_ratio_mean_reconstruction_loss_variable_kernel_size.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
-    fig = plt.figure(constrained_layout=True, figsize=(6, 6))
-    ax = plt.gca()
+    fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_name_list), num_epochs_physionet))
     p1 = [0, 0, 0, 0, 0]
     p2 = [0, 0, 0, 0, 0]
@@ -245,8 +243,7 @@ if __name__ == '__main__':
     plt.savefig(f'{path_paper}/images_1d/mean_flithos_validation_epochs.pdf')
     plt.close()
 
-    fig = plt.figure(constrained_layout=True, figsize=(6, 6))
-    ax = plt.gca()
+    fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = [0, 0, 0, 0, 0]
     p2 = [0, 0, 0, 0, 0]
     for index, (sparse_activation, sparse_activation_name, sparse_activation_color, c) in enumerate(zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, mean_flithos)):
@@ -285,8 +282,7 @@ if __name__ == '__main__':
     plt.savefig(f'{path_images_mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list}/legend.pdf')
     plt.close()
 
-    fig = plt.figure(constrained_layout=True, figsize=(6, 6))
-    ax = plt.gca()
+    fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     for_density_plot = for_density_plot.reshape(for_density_plot.shape[0], -1, 2)
     nbins = 200
     yi, xi = np.mgrid[0:2.5:nbins*1j, 0:2.5:nbins*1j]
