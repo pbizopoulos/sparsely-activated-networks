@@ -1,10 +1,6 @@
 from torch import nn
 from torch.nn import functional as F
 
-path_tmp = 'tmp'
-path_paper = 'paper'
-path_dataset = f'{path_tmp}/datasets'
-
 
 def calculate_inverse_compression_ratio(model, data, num_activations):
     activation_multiplier = 1 + len(model.neuron_list[0].weights.shape)
