@@ -90,9 +90,6 @@ if __name__ == '__main__':
     path_tmp = 'tmp'
     if not os.path.exists(path_tmp):
         os.mkdir(path_tmp)
-    path_dataset = f'{path_tmp}/datasets'
-    if not os.path.exists(path_dataset):
-        os.mkdir(path_dataset)
     sparse_activation_name_list = ['Identity', 'ReLU', 'top-k absolutes', 'Extrema-Pool idx', 'Extrema']
     uci_epilepsy_supervised_accuracy = 0
     mnist_supervised_accuracy = 0
@@ -138,7 +135,7 @@ if __name__ == '__main__':
     print('Physionet, X: mean reconstruction loss, Y: mean inverse compression ratio, Color: sparse activation')
     dataset_name_list = ['apnea-ecg', 'bidmc', 'bpssrat', 'cebsdb', 'ctu-uhb-ctgdb', 'drivedb', 'emgdb', 'mitdb', 'noneeg', 'prcp', 'shhpsgdb', 'slpdb', 'sufhsdb', 'voiced', 'wrist']
     xlim_weights_list = [74, 113, 10, 71, 45, 20, 9, 229, 37, 105, 15, 232, 40, 70, 173]
-    download_physionet(dataset_name_list, path_dataset)
+    download_physionet(dataset_name_list, path_tmp)
     sparse_activation_list = [identity_1d, relu_1d, topk_absolutes_1d, extrema_pool_indices_1d, extrema_1d]
     kernel_size_list_list = [[k] for k in physionet_kernel_size_list_list_range]
     batch_size = 2
@@ -153,11 +150,11 @@ if __name__ == '__main__':
     for index_dataset_name, (dataset_name, xlim_weights) in enumerate(zip(dataset_name_list, xlim_weights_list)):
         print(dataset_name)
         physionet_latex_table_row = []
-        training_dataset = PhysionetDataset('training', dataset_name, path_dataset)
+        training_dataset = PhysionetDataset('training', dataset_name, path_tmp)
         training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, shuffle=True)
-        validation_dataset = PhysionetDataset('validation', dataset_name, path_dataset)
+        validation_dataset = PhysionetDataset('validation', dataset_name, path_tmp)
         validation_dataloader = DataLoader(dataset=validation_dataset)
-        test_dataset = PhysionetDataset('test', dataset_name, path_dataset)
+        test_dataset = PhysionetDataset('test', dataset_name, path_tmp)
         test_dataloader = DataLoader(dataset=test_dataset)
         fig, ax_main = plt.subplots(constrained_layout=True, figsize=(6, 6))
         for index_sparse_activation, (sparse_activation, sparse_activation_color) in enumerate(zip(sparse_activation_list, sparse_activation_color_list)):
@@ -308,12 +305,12 @@ if __name__ == '__main__':
     print('UCI baseline, Supervised CNN classification')
     batch_size = 64
     lr = 0.01
-    download_uci_epilepsy(path_dataset)
-    training_dataset = UCIepilepsyDataset('training', path_dataset)
+    download_uci_epilepsy(path_tmp)
+    training_dataset = UCIepilepsyDataset('training', path_tmp)
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    validation_dataset = UCIepilepsyDataset('validation', path_dataset)
+    validation_dataset = UCIepilepsyDataset('validation', path_tmp)
     validation_dataloader = DataLoader(dataset=validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    test_dataset = UCIepilepsyDataset('test', path_dataset)
+    test_dataset = UCIepilepsyDataset('test', path_tmp)
     test_dataloader = DataLoader(dataset=test_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     best_accuracy = 0
     supervised_model = CNN(len(training_dataset.labels.unique())).to(device)
@@ -361,11 +358,11 @@ if __name__ == '__main__':
     batch_size = 64
     lr = 0.01
     uci_epilepsy_supervised_latex_table = []
-    training_dataset = UCIepilepsyDataset('training', path_dataset)
+    training_dataset = UCIepilepsyDataset('training', path_tmp)
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    validation_dataset = UCIepilepsyDataset('validation', path_dataset)
+    validation_dataset = UCIepilepsyDataset('validation', path_tmp)
     validation_dataloader = DataLoader(dataset=validation_dataset, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    test_dataset = UCIepilepsyDataset('test', path_dataset)
+    test_dataset = UCIepilepsyDataset('test', path_tmp)
     test_dataloader = DataLoader(dataset=test_dataset, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
@@ -414,10 +411,10 @@ if __name__ == '__main__':
     print('MNIST baseline, Supervised FNN classification')
     batch_size = 64
     lr = 0.01
-    training_validation_dataset = datasets.MNIST(path_dataset, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.MNIST(path_tmp, download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_validation_range), batch_size=batch_size)
-    test_dataset = datasets.MNIST(path_dataset, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.MNIST(path_tmp, train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_test_range))
     best_accuracy = 0
     supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
@@ -465,10 +462,10 @@ if __name__ == '__main__':
     batch_size = 64
     lr = 0.01
     mnist_supervised_latex_table = []
-    training_validation_dataset = datasets.MNIST(path_dataset, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.MNIST(path_tmp, download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_validation_range))
-    test_dataset = datasets.MNIST(path_dataset, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.MNIST(path_tmp, train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
@@ -517,10 +514,10 @@ if __name__ == '__main__':
     print('FashionMNIST baseline, Supervised FNN classification')
     batch_size = 64
     lr = 0.01
-    training_validation_dataset = datasets.FashionMNIST(path_dataset, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.FashionMNIST(path_tmp, download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(fashionmnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(fashionmnist_validation_range), batch_size=batch_size)
-    test_dataset = datasets.FashionMNIST(path_dataset, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.FashionMNIST(path_tmp, train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(fashionmnist_test_range))
     best_accuracy = 0
     supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
@@ -568,10 +565,10 @@ if __name__ == '__main__':
     batch_size = 64
     lr = 0.01
     fashionmnist_supervised_latex_table = []
-    training_validation_dataset = datasets.FashionMNIST(path_dataset, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.FashionMNIST(path_tmp, download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(fashionmnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(fashionmnist_validation_range))
-    test_dataset = datasets.FashionMNIST(path_dataset, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.FashionMNIST(path_tmp, train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(fashionmnist_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
