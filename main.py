@@ -84,23 +84,21 @@ if __name__ == '__main__':
     torch.manual_seed(0)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    path_results = 'results'
-    if not os.path.exists(path_results):
-        os.mkdir(path_results)
+    np.random.seed(0)
     path_cache = 'cache'
     if not os.path.exists(path_cache):
         os.mkdir(path_cache)
-    sparse_activation_name_list = ['Identity', 'ReLU', 'top-k absolutes', 'Extrema-Pool idx', 'Extrema']
-    uci_epilepsy_supervised_accuracy = 0
-    mnist_supervised_accuracy = 0
-    fashionmnist_supervised_accuracy = 0
-    uci_epilepsy_kernel_size_range = range(8, 16)
-    mnist_kernel_size_range = range(1, 7)
-    fashionmnist_kernel_size_range = range(1, 7)
+    path_results = 'results'
+    if not os.path.exists(path_results):
+        os.mkdir(path_results)
     parser = argparse.ArgumentParser()
-    parser.add_argument('--full', default=False, action='store_true')
     parser.add_argument('--gpu', default=False, action='store_true')
+    parser.add_argument('--full', default=False, action='store_true')
     args = parser.parse_args()
+    if args.gpu:
+        device = 'cuda'
+    else:
+        device = 'cpu'
     if args.full:
         num_epochs_physionet = 30
         num_epochs = 5
@@ -127,10 +125,11 @@ if __name__ == '__main__':
         fashionmnist_training_range = range(10)
         fashionmnist_validation_range = range(10, 20)
         fashionmnist_test_range = range(10)
-    if args.gpu:
-        device = 'cuda'
-    else:
-        device = 'cpu'
+
+    sparse_activation_name_list = ['Identity', 'ReLU', 'top-k absolutes', 'Extrema-Pool idx', 'Extrema']
+    uci_epilepsy_kernel_size_range = range(8, 16)
+    mnist_kernel_size_range = range(1, 7)
+    fashionmnist_kernel_size_range = range(1, 7)
 
     print('Physionet, X: mean reconstruction loss, Y: mean inverse compression ratio, Color: sparse activation')
     dataset_name_list = ['apnea-ecg', 'bidmc', 'bpssrat', 'cebsdb', 'ctu-uhb-ctgdb', 'drivedb', 'emgdb', 'mitdb', 'noneeg', 'prcp', 'shhpsgdb', 'slpdb', 'sufhsdb', 'voiced', 'wrist']
