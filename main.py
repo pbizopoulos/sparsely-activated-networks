@@ -16,8 +16,10 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision import datasets, transforms
 
-from san_1d import SAN1d, identity_1d, relu_1d, topk_absolutes_1d, extrema_pool_indices_1d, extrema_1d
-from san_2d import SAN2d, identity_2d, relu_2d, topk_absolutes_2d, extrema_pool_indices_2d, extrema_2d
+from sparsely_activated_functions_pytorch import topk_absolutes_1d, extrema_pool_indices_1d, extrema_1d, topk_absolutes_2d, extrema_pool_indices_2d, extrema_2d
+
+from san_1d import SAN1d, identity_1d, relu_1d
+from san_2d import SAN2d, identity_2d, relu_2d
 from utilities import calculate_inverse_compression_ratio, FNN, CNN
 from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset
 from utilities_2d import save_images_2d
@@ -472,6 +474,7 @@ if __name__ == '__main__':
         for index_sparse_activation, sparse_activation in enumerate(sparse_activation_list):
             if sparse_activation == extrema_2d:
                 sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
+                sparsity_density_list = [[s, s] for s in sparsity_density_list]
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
@@ -575,6 +578,7 @@ if __name__ == '__main__':
         for index_sparse_activation, sparse_activation in enumerate(sparse_activation_list):
             if sparse_activation == extrema_2d:
                 sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
+                sparsity_density_list = [[s, s] for s in sparsity_density_list]
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
