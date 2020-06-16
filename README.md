@@ -1,4 +1,4 @@
-[![arXiv](http://img.shields.io/badge/cs.SE-arXiv%3A1907.06592-B31B1B.svg)](https://arxiv.org/abs/1907.06592)
+[![arXiv](http://img.shields.io/badge/cs.LG-arXiv%3A1907.06592-B31B1B.svg)](https://arxiv.org/abs/1907.06592)
 [![citation](http://img.shields.io/badge/Citation-0091FF.svg)](https://scholar.google.com/scholar?q=Sparsely%20Activated%20Networks.%20arXiv%202020)
 
 # Sparsely Activated Networks
