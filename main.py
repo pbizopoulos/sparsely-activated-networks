@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision import datasets, transforms
 
-from sparsely_activated_functions_pytorch import topk_absolutes_1d, extrema_pool_indices_1d, extrema_1d, topk_absolutes_2d, extrema_pool_indices_2d, extrema_2d
+from sparse_activation_functions_pytorch import topk_absolutes_1d, extrema_pool_indices_1d, extrema_1d, topk_absolutes_2d, extrema_pool_indices_2d, extrema_2d
 
 from san_1d import SAN1d, identity_1d, relu_1d
 from san_2d import SAN2d, identity_2d, relu_2d
