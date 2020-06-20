@@ -10,6 +10,12 @@ import wfdb
 from torch.utils.data import Dataset
 
 
+def identity_1d(x, kernel_size):
+    return x
+
+def relu_1d(x, kernel_size):
+    return torch.relu(x)
+
 def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results):
     fig, ax = plt.subplots(constrained_layout=True)
     ax.tick_params(labelbottom=False, labelleft=False)
@@ -17,17 +23,19 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_signal.pdf')
+    plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_signal.pdf')
     plt.close()
 
     model.eval()
-    reconstructed, similarity_list, activations_list, reconstructions = model(data.unsqueeze(0).unsqueeze(0).to(device))
-    for index_neuron, (neuron, similarity, activations, reconstruction) in enumerate(zip(model.neuron_list, similarity_list[0, :, 0], activations_list[0, :, 0], reconstructions[0, :, 0])):
+    reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0).to(device))
+    similarity_list = torch.zeros_like(activations_list)
+    reconstructions = torch.zeros_like(activations_list)
+    for index_weights, (weights, similarity, activations, reconstruction) in enumerate(zip(model.weights_list, similarity_list[0, :, 0], activations_list[0, :, 0], reconstructions[0, :, 0])):
         fig, ax = plt.subplots(constrained_layout=True, figsize=(2, 2.2))
         ax.tick_params(labelbottom=False, labelleft=False)
         plt.grid(True)
         plt.autoscale(enable=True, axis='x', tight=True)
-        plt.plot(neuron.weights.flip(0).cpu().detach().numpy().T, 'r')
+        plt.plot(weights.flip(0).cpu().detach().numpy().T, 'r')
         plt.xlim([0, xlim_weights])
         if dataset_name == 'apnea-ecg':
             if model.sparse_activation.__name__ == 'identity_1d':
@@ -43,7 +51,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
             plt.ylabel(sparse_activation_name, fontsize=20)
         if model.sparse_activation.__name__ == 'relu_1d':
             plt.title(dataset_name, fontsize=20)
-        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_kernel_{index_neuron}.pdf')
+        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_kernel_{index_weights}.pdf')
         plt.close()
 
         fig, ax = plt.subplots(constrained_layout=True)
@@ -51,7 +59,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
         plt.grid(True)
         plt.autoscale(enable=True, axis='x', tight=True)
         plt.plot(similarity.cpu().detach().numpy(), 'g')
-        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_similarity_{index_neuron}.pdf')
+        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_similarity_{index_weights}.pdf')
         plt.close()
 
         fig, ax = plt.subplots(constrained_layout=True)
@@ -62,7 +70,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
         plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
         if p.shape[0] != 0:
             plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), 'c', basefmt=' ', use_line_collection=True)
-        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_activations_{index_neuron}.pdf')
+        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_activations_{index_weights}.pdf')
         plt.close()
 
         fig, ax = plt.subplots(constrained_layout=True)
@@ -70,9 +78,9 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
         plt.grid(True)
         plt.autoscale(enable=True, axis='x', tight=True)
         reconstruction = reconstruction.cpu().detach().numpy()
-        left = p - neuron.weights.shape[0]/2
-        right = p + neuron.weights.shape[0]/2
-        if neuron.weights.shape[0] % 2 == 1:
+        left = p - weights.shape[0]/2
+        right = p + weights.shape[0]/2
+        if weights.shape[0] % 2 == 1:
             right += 1
         step = np.zeros_like(reconstruction, dtype=np.bool)
         left[left < 0] = 0
@@ -86,7 +94,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
         plt.plot(pos_signal)
         plt.plot(neg_signal, color='r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_reconstruction_{index_neuron}.pdf')
+        plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_reconstruction_{index_weights}.pdf')
         plt.close()
 
     fig, ax = plt.subplots(constrained_layout=True)
@@ -96,7 +104,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
     plt.plot(data.cpu().detach().numpy(), alpha=0.5)
     plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.neuron_list)}_reconstructed.pdf')
+    plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_reconstructed.pdf')
     plt.close()
 
 def download_physionet(dataset_name_list, path_cache):

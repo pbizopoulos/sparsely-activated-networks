@@ -17,12 +17,11 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision import datasets, transforms
 
 from sparse_activation_functions_pytorch import topk_absolutes_1d, extrema_pool_indices_1d, extrema_1d, topk_absolutes_2d, extrema_pool_indices_2d, extrema_2d
+from sparsely_activated_networks_pytorch import SAN1d, SAN2d
 
-from san_1d import SAN1d, identity_1d, relu_1d
-from san_2d import SAN2d, identity_2d, relu_2d
 from utilities import calculate_inverse_compression_ratio, FNN, CNN
-from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset
-from utilities_2d import save_images_2d
+from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset, identity_1d, relu_1d
+from utilities_2d import save_images_2d, identity_2d, relu_2d
 
 plt.rcParams['font.size'] = 20
 
@@ -31,7 +30,7 @@ def train_unsupervised_model(model, optimizer, training_dataloader, device):
     for data, _ in training_dataloader:
         data = data.to(device)
         optimizer.zero_grad()
-        data_reconstructed, *_ = model(data)
+        data_reconstructed, _ = model(data)
         reconstruction_loss = F.l1_loss(data, data_reconstructed)
         reconstruction_loss.backward()
         optimizer.step()
@@ -43,7 +42,7 @@ def validate_or_test_unsupervised_model(model, dataloader, device):
     with torch.no_grad():
         for index, (data, _) in enumerate(dataloader):
             data = data.to(device)
-            data_reconstructed, _, activations_list, _ = model(data)
+            data_reconstructed, activations_list = model(data)
             reconstruction_loss[index] = F.l1_loss(data, data_reconstructed) / F.l1_loss(data, torch.zeros_like(data))
             num_activations[index] = activations_list.nonzero().shape[0]
     inverse_compression_ratio = calculate_inverse_compression_ratio(model, data, num_activations)
@@ -71,7 +70,7 @@ def validate_or_test_supervised_model(supervised_model, unsupervised_model, data
         for index, (data, target) in enumerate(dataloader):
             data = data.to(device)
             target = target.to(device)
-            data_reconstructed, _, activations_list, _ = unsupervised_model(data)
+            data_reconstructed, activations_list = unsupervised_model(data)
             reconstruction_loss[index] = F.l1_loss(data, data_reconstructed) / F.l1_loss(data, torch.zeros_like(data))
             num_activations[index] = activations_list.nonzero().shape[0]
             output = supervised_model(data_reconstructed)
@@ -166,7 +165,7 @@ if __name__ == '__main__':
                     sparsity_density_list = np.clip([k - 3 for k in kernel_size_list], 1, 999).tolist()
                 else:
                     sparsity_density_list = kernel_size_list
-                model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list, device)
+                model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list)
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 for epoch in range(num_epochs_physionet):
                     train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -190,7 +189,7 @@ if __name__ == '__main__':
             save_images_1d(model_best, dataset_name, test_dataset[0][0][0], xlim_weights, device, path_results)
             ax_main.arrow(reconstruction_loss_best.mean(), inverse_compression_ratio_best.mean(), 1.83 - reconstruction_loss_best.mean(), 2.25 - 0.5*index_sparse_activation - inverse_compression_ratio_best.mean())
             fig.add_axes([0.75, 0.81 - 0.165*index_sparse_activation, .1, .1], facecolor='y')
-            plt.plot(model_best.neuron_list[0].weights.flip(0).cpu().detach().numpy().T, c=sparse_activation_color)
+            plt.plot(model_best.weights_list[0].flip(0).cpu().detach().numpy().T, c=sparse_activation_color)
             plt.xlim([0, xlim_weights])
             plt.xticks([])
             plt.yticks([])
@@ -374,7 +373,7 @@ if __name__ == '__main__':
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
-            model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list, device)
+            model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list)
             optimizer = optim.Adam(model.parameters(), lr=lr)
             for epoch in range(num_epochs):
                 train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -382,8 +381,8 @@ if __name__ == '__main__':
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            for neuron in model.neuron_list:
-                neuron.weights.requires_grad_(False)
+            for weights in model.weights_list:
+                weights.requires_grad_(False)
             mean_flithos_epoch_best = float('inf')
             supervised_model = CNN(len(training_dataset.labels.unique())).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
@@ -478,7 +477,7 @@ if __name__ == '__main__':
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
-            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list, device)
+            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list)
             optimizer = optim.Adam(model.parameters(), lr=lr)
             for epoch in range(num_epochs):
                 train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -486,8 +485,8 @@ if __name__ == '__main__':
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            for neuron in model.neuron_list:
-                neuron.weights.requires_grad_(False)
+            for weights in model.weights_list:
+                weights.requires_grad_(False)
             mean_flithos_epoch_best = float('inf')
             supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
@@ -582,7 +581,7 @@ if __name__ == '__main__':
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
-            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list, device)
+            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list)
             optimizer = optim.Adam(model.parameters(), lr=lr)
             for epoch in range(num_epochs):
                 train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -590,8 +589,8 @@ if __name__ == '__main__':
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            for neuron in model.neuron_list:
-                neuron.weights.requires_grad_(False)
+            for weights in model.weights_list:
+                weights.requires_grad_(False)
             mean_flithos_epoch_best = float('inf')
             supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
