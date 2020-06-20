@@ -19,7 +19,7 @@ def relu_1d(x, kernel_size):
     return torch.relu(x)
 
 def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results):
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
     plt.grid(True)
     plt.autoscale(enable=True, axis='x', tight=True)
@@ -32,11 +32,13 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
     with torch.no_grad():
         reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0).to(device))
         for index_weights, (weights, activations) in enumerate(zip(model.weights_list, activations_list[0, :, 0])):
-            fig, ax = plt.subplots(constrained_layout=True, figsize=(2, 2.2))
+            fig, ax = plt.subplots(figsize=(2, 2.2))
             ax.tick_params(labelbottom=False, labelleft=False)
+            ax.xaxis.get_offset_text().set_visible(False)
+            ax.yaxis.get_offset_text().set_visible(False)
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
-            plt.plot(weights.flip(0).cpu().detach().numpy().T, 'r')
+            plt.plot(weights.cpu().detach().numpy(), 'r')
             plt.xlim([0, xlim_weights])
             if dataset_name == 'apnea-ecg':
                 if model.sparse_activation.__name__ == 'identity_1d':
@@ -56,7 +58,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
             plt.close()
 
             similarity = _conv1d_same_padding(data.unsqueeze(0).unsqueeze(0), weights)[0, 0]
-            fig, ax = plt.subplots(constrained_layout=True)
+            fig, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
@@ -64,7 +66,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
             plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_similarity_{index_weights}.pdf')
             plt.close()
 
-            fig, ax = plt.subplots(constrained_layout=True)
+            fig, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
@@ -76,7 +78,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
             plt.close()
 
             reconstruction = _conv1d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
-            fig, ax = plt.subplots(constrained_layout=True)
+            fig, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
@@ -100,7 +102,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
             plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_reconstruction_{index_weights}.pdf')
             plt.close()
 
-        fig, ax = plt.subplots(constrained_layout=True)
+        fig, ax = plt.subplots()
         ax.tick_params(labelbottom=False, labelleft=False)
         plt.grid(True)
         plt.autoscale(enable=True, axis='x', tight=True)
