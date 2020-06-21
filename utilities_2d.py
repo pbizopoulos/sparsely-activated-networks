@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import os
 import torch
 
 from sparsely_activated_networks_pytorch import _conv2d_same_padding
