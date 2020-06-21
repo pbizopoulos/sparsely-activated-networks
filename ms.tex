@@ -312,22 +312,22 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
 			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_reconstruction_0"}};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[] at (4.5, -3.1){$\bm{r}^{(0)}$};
+			\node[] at (4, -3){$\bm{r}^{(0)}$};
 			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_activations_0"}};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
-			\node[] at (4.5, -6.8){$\bm{\alpha}^{(0)}$};
+			\node[] at (4, -6.3){$\bm{\alpha}^{(0)}$};
 			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_similarity_0"}};
-			\node[] at (0.1, -6.8){$\bm{s}^{(0)}$};
+			\node[] at (0.1, -6.3){$\bm{s}^{(0)}$};
 			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{"results/UCI-epilepsy_extrema_1d_2_kernel_0"}};
-			\node[] at (2.3, -5){\tiny $\bm{w}^{(0)}$};
+			\node[] at (2, -4.7){\tiny $\bm{w}^{(0)}$};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0,xscale=-1, transform shape]
 			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_signal"}};
-			\node[] at (0.1, 0.7){$\bm{x}$};
+			\node[] at (0.1, 0.5){$\bm{x}$};
 			\node[draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
 			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_reconstructed"}};
-			\node[] at (4.5, 0.7){$\hat{\bm{x}}$};
+			\node[] at (4, 0.5){$\hat{\bm{x}}$};
 			\node[draw, below=0.5cm of reconstructed, circle] (plus){$+$};
 			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_reconstruction_0"}};
 			\node[draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
@@ -355,15 +355,15 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_reconstructed"}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
 			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_reconstruction_1"}};
-			\node[] at (4.5, -3.1){$\bm{r}^{(1)}$};
+			\node[] at (4, -3){$\bm{r}^{(1)}$};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
 			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_activations_1"}};
-			\node[] at (4.5, -6.8){$\bm{\alpha}^{(1)}$};
+			\node[] at (4, -6.3){$\bm{\alpha}^{(1)}$};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
 			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{"results/UCI-epilepsy_extrema_1d_2_similarity_1"}};
-			\node[] at (0.1, -6.8){$\bm{s}^{(1)}$};
+			\node[] at (0.1, -6.3){$\bm{s}^{(1)}$};
 			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{"results/UCI-epilepsy_extrema_1d_2_kernel_1"}};
-			\node[] at (2.3, -5){\tiny $\bm{w}^{(1)}$};
+			\node[] at (2, -4.7){\tiny $\bm{w}^{(1)}$};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 	\end{tikzpicture}
