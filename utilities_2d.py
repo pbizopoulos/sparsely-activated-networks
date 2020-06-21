@@ -24,7 +24,7 @@ def save_images_2d(model, data, dataset_name, device, path_results):
     with torch.no_grad():
         reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0).to(device))
         for index_weights, (weights, activations) in enumerate(zip(model.weights_list, activations_list[0, :, 0])):
-            fig = plt.figure(figsize=(6.4/2, 4.8/2))
+            fig = plt.figure(figsize=(4.8/2, 4.8/2))
             plt.imshow(weights.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(weights).max(), vmax=2*abs(weights).max())
             plt.xticks([])
             plt.yticks([])
