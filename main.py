@@ -19,11 +19,15 @@ from torchvision import datasets, transforms
 from sparse_activation_functions_pytorch import topk_absolutes_1d, extrema_pool_indices_1d, extrema_1d, topk_absolutes_2d, extrema_pool_indices_2d, extrema_2d
 from sparsely_activated_networks_pytorch import SAN1d, SAN2d
 
-from utilities import calculate_inverse_compression_ratio, FNN, CNN
-from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset, identity_1d, relu_1d
-from utilities_2d import save_images_2d, identity_2d, relu_2d
+from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset, identity_1d, relu_1d, CNN
+from utilities_2d import save_images_2d, identity_2d, relu_2d, FNN
 
 plt.rcParams['font.size'] = 20
+
+def calculate_inverse_compression_ratio(model, data, num_activations):
+    activation_multiplier = 1 + len(model.weights_list[0].shape)
+    num_parameters = sum([weights.shape[0] for weights in model.weights_list])
+    return (activation_multiplier*num_activations + num_parameters)/(data.shape[-1]*data.shape[-2])
 
 def train_unsupervised_model(model, optimizer, training_dataloader, device):
     model.train()

@@ -1,4 +1,4 @@
-git+https://github.com/pbizopoulos/sparsely_activated_networks_pytorch.git
 git+https://github.com/pbizopoulos/sparse_activation_functions_pytorch.git
+git+https://github.com/pbizopoulos/sparsely_activated_networks_pytorch.git
 torchvision
 wfdb

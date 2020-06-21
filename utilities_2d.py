@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import torch
 
+from torch import nn
+
 from sparsely_activated_networks_pytorch import _conv2d_same_padding
 
 
@@ -58,3 +60,14 @@ def save_images_2d(model, data, dataset_name, device, path_results):
         plt.imshow(reconstructed[0, 0].cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(reconstructed).max(), vmax=2*abs(reconstructed).max())
         plt.savefig(f'{path_results}/{dataset_name}_{model.sparse_activation.__name__}_{len(model.weights_list)}_reconstructed.pdf', bbox_inches='tight')
         plt.close()
+
+
+class FNN(nn.Module):
+    def __init__(self, sample_data, num_classes):
+        super(FNN, self).__init__()
+        self.fc = nn.Linear(sample_data.shape[-1]*sample_data.shape[-2], num_classes)
+
+    def forward(self, batch_x):
+        x = batch_x.view(batch_x.shape[0], -1)
+        out = self.fc(x)
+        return out
