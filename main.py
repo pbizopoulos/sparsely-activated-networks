@@ -190,7 +190,7 @@ if __name__ == '__main__':
                     mean_flithos_best = mean_flithos[index_sparse_activation, index_dataset_name, index_kernel_size_list]
                     model_best = model_epoch_best
             physionet_latex_table_row.extend([kernel_size_list_best[index_sparse_activation, index_dataset_name], inverse_compression_ratio_best.mean(), reconstruction_loss_best.mean(), mean_flithos_best])
-            save_images_1d(model_best, dataset_name, test_dataset[0][0][0], xlim_weights, device, path_results)
+            save_images_1d(model_best, dataset_name, test_dataset[0][0][0], xlim_weights, path_results)
             ax_main.arrow(reconstruction_loss_best.mean(), inverse_compression_ratio_best.mean(), 1.83 - reconstruction_loss_best.mean(), 2.25 - 0.5*index_sparse_activation - inverse_compression_ratio_best.mean())
             fig.add_axes([0.75, 0.81 - 0.165*index_sparse_activation, .1, .1], facecolor='y')
             plt.plot(model_best.weights_list[0].flip(0).cpu().detach().numpy().T, c=sparse_activation_color)
@@ -400,7 +400,7 @@ if __name__ == '__main__':
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, test_dataloader, device)
             uci_epilepsy_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - uci_epilepsy_supervised_accuracy])
             if kernel_size_list[0] == 10:
-                save_images_1d(model_best, dataset_name, test_dataset[0][0][0], kernel_size_list[0], device, path_results)
+                save_images_1d(model_best, dataset_name, test_dataset[0][0][0], kernel_size_list[0], path_results)
         uci_epilepsy_supervised_latex_table.append(uci_epilepsy_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -504,7 +504,7 @@ if __name__ == '__main__':
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, test_dataloader, device)
             mnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - mnist_supervised_accuracy])
             if kernel_size_list[0] == 4:
-                save_images_2d(model_best, test_dataset[0][0][0], dataset_name, device, path_results)
+                save_images_2d(model_best, test_dataset[0][0][0], dataset_name, path_results)
         mnist_supervised_latex_table.append(mnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -608,7 +608,7 @@ if __name__ == '__main__':
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, test_dataloader, device)
             fashionmnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - fashionmnist_supervised_accuracy])
             if kernel_size_list[0] == 3:
-                save_images_2d(model_best, test_dataset[0][0][0], dataset_name, device, path_results)
+                save_images_2d(model_best, test_dataset[0][0][0], dataset_name, path_results)
         fashionmnist_supervised_latex_table.append(fashionmnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])

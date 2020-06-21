@@ -12,7 +12,7 @@ def identity_2d(x, kernel_size):
 def relu_2d(x, kernel_size):
     return torch.relu(x)
 
-def save_images_2d(model, data, dataset_name, device, path_results):
+def save_images_2d(model, data, dataset_name, path_results):
     fig = plt.figure()
     plt.xticks([])
     plt.yticks([])
@@ -22,7 +22,7 @@ def save_images_2d(model, data, dataset_name, device, path_results):
 
     model.eval()
     with torch.no_grad():
-        reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0).to(device))
+        reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0))
         for index_weights, (weights, activations) in enumerate(zip(model.weights_list, activations_list[0, :, 0])):
             fig = plt.figure(figsize=(4.8/2, 4.8/2))
             plt.imshow(weights.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(weights).max(), vmax=2*abs(weights).max())

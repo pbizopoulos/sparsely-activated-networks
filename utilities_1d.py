@@ -20,7 +20,7 @@ def identity_1d(x, kernel_size):
 def relu_1d(x, kernel_size):
     return torch.relu(x)
 
-def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results):
+def save_images_1d(model, dataset_name, data, xlim_weights, path_results):
     fig, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
     plt.grid(True)
@@ -33,7 +33,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, device, path_results
 
     model.eval()
     with torch.no_grad():
-        reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0).to(device))
+        reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0))
         for index_weights, (weights, activations) in enumerate(zip(model.weights_list, activations_list[0, :, 0])):
             fig, ax = plt.subplots(figsize=(2, 2.2))
             ax.tick_params(labelbottom=False, labelleft=False)
