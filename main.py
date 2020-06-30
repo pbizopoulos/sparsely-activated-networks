@@ -206,7 +206,7 @@ if __name__ == '__main__':
         plt.axvspan(1, 2.5, alpha=0.3, color='gray')
         wedge = patches.Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
         ax_main.add_patch(wedge)
-        plt.savefig(f'{path_results}/mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list_{dataset_name}.pdf')
+        plt.savefig(f'{path_results}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-{dataset_name}.pdf')
         plt.close()
     header = ['$m$', r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     df.index = dataset_name_list
     df.index.names = ['Datasets']
     formatters = 5*[lambda x: f'{x:.0f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}']
-    df.to_latex(f'{path_results}/mean_inverse_compression_ratio_mean_reconstruction_loss_variable_kernel_size.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex(f'{path_results}/mean-inverse-compression-ratio-mean-reconstruction-loss-variable-kernel-size.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_name_list), num_epochs_physionet))
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{path_results}/mean_flithos_validation_epochs.pdf')
+    plt.savefig(f'{path_results}/mean-flithos-validation-epochs.pdf')
     plt.close()
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{path_results}/mean_flithos_variable_kernel_size_list.pdf')
+    plt.savefig(f'{path_results}/mean-flithos-variable-kernel-size-list.pdf')
     plt.close()
 
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
@@ -277,7 +277,7 @@ if __name__ == '__main__':
             Line2D([0], [0], marker='o', color='w', label='Extrema', markerfacecolor=sparse_activation_color_list[4])
             ]
     fig_legend.legend(handles=legend_elements, fontsize=22, loc='upper center')
-    plt.savefig(f'{path_results}/mean_inverse_compression_ratio_vs_mean_reconstruction_loss_variable_kernel_size_list_legend.pdf')
+    plt.savefig(f'{path_results}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-legend.pdf')
     plt.close()
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
@@ -299,7 +299,7 @@ if __name__ == '__main__':
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(True)
-    plt.savefig(f'{path_results}/crrl_density_plot.pdf')
+    plt.savefig(f'{path_results}/crrl-density-plot.pdf')
     plt.close()
 
     print('UCI baseline, Supervised CNN classification')
@@ -406,7 +406,7 @@ if __name__ == '__main__':
     df.index = list(uci_epilepsy_kernel_size_range)
     df.index.names = [r'$m$']
     formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{path_results}/uci_epilepsy_supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex(f'{path_results}/uci-epilepsy-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     print('MNIST baseline, Supervised FNN classification')
     batch_size = 64
@@ -510,7 +510,7 @@ if __name__ == '__main__':
     df.index = list(mnist_kernel_size_range)
     df.index.names = [r'$m$']
     formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{path_results}/mnist_supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex(f'{path_results}/mnist-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     print('FashionMNIST baseline, Supervised FNN classification')
     batch_size = 64
@@ -614,7 +614,7 @@ if __name__ == '__main__':
     df.index = list(fashionmnist_kernel_size_range)
     df.index.names = [r'$m$']
     formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{path_results}/fashionmnist_supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex(f'{path_results}/fashionmnist-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     df = pd.DataFrame({'key': ['uci_epilepsy_supervised_accuracy', 'mnist_supervised_accuracy', 'fashionmnist_supervised_accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_supervised_accuracy, fashionmnist_supervised_accuracy]})
-    df.to_csv(f'{path_results}/keys_values.csv', index=False, float_format='%.2f')
+    df.to_csv(f'{path_results}/keys-values.csv', index=False, float_format='%.2f')
