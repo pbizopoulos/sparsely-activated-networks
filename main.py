@@ -23,6 +23,10 @@ from utilities_1d import save_images_1d, download_physionet, download_uci_epilep
 from utilities_2d import save_images_2d, identity_2d, relu_2d, FNN
 
 plt.rcParams['font.size'] = 20
+plt.rcParams['image.interpolation'] = 'none'
+plt.rcParams['savefig.format'] = 'pdf'
+plt.rcParams['savefig.bbox'] = 'tight'
+
 
 def calculate_inverse_compression_ratio(model, data, num_activations):
     activation_multiplier = 1 + len(model.weights_list[0].shape)
@@ -165,7 +169,7 @@ if __name__ == '__main__':
                     sparsity_density_list = np.clip([k - 3 for k in kernel_size_list], 1, 999).tolist()
                 else:
                     sparsity_density_list = kernel_size_list
-                model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list)
+                model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list).to(device)
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 for epoch in range(num_epochs_physionet):
                     train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -206,7 +210,7 @@ if __name__ == '__main__':
         plt.axvspan(1, 2.5, alpha=0.3, color='gray')
         wedge = patches.Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
         ax_main.add_patch(wedge)
-        plt.savefig(f'{path_results}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-{dataset_name}.pdf')
+        plt.savefig(f'{path_results}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-{dataset_name}')
         plt.close()
     header = ['$m$', r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -238,7 +242,7 @@ if __name__ == '__main__':
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{path_results}/mean-flithos-validation-epochs.pdf')
+    plt.savefig(f'{path_results}/mean-flithos-validation-epochs')
     plt.close()
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
@@ -258,7 +262,7 @@ if __name__ == '__main__':
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{path_results}/mean-flithos-variable-kernel-size-list.pdf')
+    plt.savefig(f'{path_results}/mean-flithos-variable-kernel-size-list')
     plt.close()
 
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
@@ -277,7 +281,7 @@ if __name__ == '__main__':
             Line2D([0], [0], marker='o', color='w', label='Extrema', markerfacecolor=sparse_activation_color_list[4])
             ]
     fig_legend.legend(handles=legend_elements, fontsize=22, loc='upper center')
-    plt.savefig(f'{path_results}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-legend.pdf')
+    plt.savefig(f'{path_results}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-legend')
     plt.close()
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
@@ -299,7 +303,7 @@ if __name__ == '__main__':
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(True)
-    plt.savefig(f'{path_results}/crrl-density-plot.pdf')
+    plt.savefig(f'{path_results}/crrl-density-plot')
     plt.close()
 
     print('UCI baseline, Supervised CNN classification')
@@ -373,7 +377,7 @@ if __name__ == '__main__':
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
-            model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list)
+            model = SAN1d(sparse_activation, kernel_size_list, sparsity_density_list).to(device)
             optimizer = optim.Adam(model.parameters(), lr=lr)
             for epoch in range(num_epochs):
                 train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -384,7 +388,7 @@ if __name__ == '__main__':
             for weights in model.weights_list:
                 weights.requires_grad_(False)
             mean_flithos_epoch_best = float('inf')
-            supervised_model = CNN(len(training_dataset.labels.unique())).to(device)
+            supervised_model = CNN(len(training_dataset.labels.unique())).to(device).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
                 train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
@@ -477,7 +481,7 @@ if __name__ == '__main__':
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
-            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list)
+            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list).to(device)
             optimizer = optim.Adam(model.parameters(), lr=lr)
             for epoch in range(num_epochs):
                 train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -581,7 +585,7 @@ if __name__ == '__main__':
             else:
                 sparsity_density_list = kernel_size_list
             mean_flithos_epoch_best = float('inf')
-            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list)
+            model = SAN2d(sparse_activation, kernel_size_list, sparsity_density_list).to(device)
             optimizer = optim.Adam(model.parameters(), lr=lr)
             for epoch in range(num_epochs):
                 train_unsupervised_model(model, optimizer, training_dataloader, device)

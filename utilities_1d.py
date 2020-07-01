@@ -13,6 +13,10 @@ from torch.utils.data import Dataset
 
 from sparsely_activated_networks_pytorch import _conv1d_same_padding
 
+plt.rcParams['image.interpolation'] = 'none'
+plt.rcParams['savefig.format'] = 'pdf'
+plt.rcParams['savefig.bbox'] = 'tight'
+
 
 def identity_1d(x, kernel_size):
     return x
@@ -21,13 +25,14 @@ def relu_1d(x, kernel_size):
     return torch.relu(x)
 
 def save_images_1d(model, dataset_name, data, xlim_weights, path_results):
+    model = model.to('cpu')
     fig, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
     plt.grid(True)
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-signal.pdf', bbox_inches='tight')
+    plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-signal')
     plt.close()
 
     model.eval()
@@ -56,7 +61,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, path_results):
                 plt.ylabel(sparse_activation_name, fontsize=20)
             if model.sparse_activation.__name__ == 'relu_1d':
                 plt.title(dataset_name, fontsize=20)
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}.pdf', bbox_inches='tight')
+            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}')
             plt.close()
 
             similarity = _conv1d_same_padding(data.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -65,7 +70,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, path_results):
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.plot(similarity.cpu().detach().numpy(), 'g')
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}.pdf', bbox_inches='tight')
+            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}')
             plt.close()
 
             fig, ax = plt.subplots()
@@ -76,7 +81,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, path_results):
             plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
             if p.shape[0] != 0:
                 plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), 'c', basefmt=' ', use_line_collection=True)
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}.pdf', bbox_inches='tight')
+            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}')
             plt.close()
 
             reconstruction = _conv1d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -101,7 +106,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, path_results):
             plt.plot(pos_signal)
             plt.plot(neg_signal, color='r')
             plt.ylim([data.min(), data.max()])
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}.pdf', bbox_inches='tight')
+            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}')
             plt.close()
 
         fig, ax = plt.subplots()
@@ -111,7 +116,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, path_results):
         plt.plot(data.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstructed.pdf', bbox_inches='tight')
+        plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
         plt.close()
 
 def download_physionet(dataset_name_list, path_cache):
