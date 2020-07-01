@@ -9,4 +9,4 @@ jobs:
       - name: Certify paper reproducibility
         uses: pbizopoulos/reproducible-build-action@master
         with:
-          make_call: "make ARGS=--full"
+          make_call: "make"
