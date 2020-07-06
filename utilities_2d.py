@@ -16,13 +16,13 @@ def identity_2d(x, kernel_size):
 def relu_2d(x, kernel_size):
     return torch.relu(x)
 
-def save_images_2d(model, data, dataset_name, path_results):
+def save_images_2d(model, data, dataset_name, results_dir):
     model = model.to('cpu')
     fig = plt.figure()
     plt.xticks([])
     plt.yticks([])
     plt.imshow(data.cpu().detach().numpy(), cmap='twilight', vmin=-2, vmax=2)
-    plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-signal')
+    plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-signal')
     plt.close()
 
     model.eval()
@@ -33,7 +33,7 @@ def save_images_2d(model, data, dataset_name, path_results):
             plt.imshow(weights.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(weights).max(), vmax=2*abs(weights).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}')
             plt.close()
 
             similarity = _conv2d_same_padding(data.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -41,14 +41,14 @@ def save_images_2d(model, data, dataset_name, path_results):
             plt.xticks([])
             plt.yticks([])
             plt.imshow(similarity.cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(similarity).max(), vmax=2*abs(similarity).max())
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}')
             plt.close()
 
             fig = plt.figure()
             plt.imshow(activations.cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(activations).max(), vmax=2*abs(activations).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}')
             plt.close()
 
             reconstruction = _conv2d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -56,14 +56,14 @@ def save_images_2d(model, data, dataset_name, path_results):
             plt.imshow(reconstruction.cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(reconstruction).max(), vmax=2*abs(reconstruction).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}')
             plt.close()
 
         fig = plt.figure()
         plt.xticks([])
         plt.yticks([])
         plt.imshow(reconstructed[0, 0].cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(reconstructed).max(), vmax=2*abs(reconstructed).max())
-        plt.savefig(f'{path_results}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
+        plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
         plt.close()
 
 
