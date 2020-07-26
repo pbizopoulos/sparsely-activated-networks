@@ -5,4 +5,4 @@
 # Sparsely Activated Networks
 This repository contains the code that generates the results of the paper **Sparsely Activated Networks** appeared in TNNLS.
 
-[Build instructions](https://pbizopoulos.github.io/reconciler-a-workflow-for-certifying-computational-research-reproducibility/build_instructions.txt)
+[Build instructions](https://pbizopoulos.github.io/reconciler-a-workflow-for-writing-reproducible-computational-research-papers/build_instructions.txt)
