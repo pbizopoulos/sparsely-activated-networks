@@ -4,4 +4,15 @@
 # Sparsely Activated Networks
 This repository contains the code that generates the results of the paper **Sparsely Activated Networks** appeared in TNNLS.
 
-[Build instructions](https://pbizopoulos.github.io/reconciler-a-template-for-reproducible-computational-research-papers/build_instructions.txt)
+## Requirements
+- docker
+- grep
+- make
+- nvidia-container-toolkit [required only for using cuda]
+- python3-venv
+
+## Instructions
+1. `git clone https://github.com/pbizopoulos/sparsely-activated-networks`
+2. `cd sparsely-activated-networks`
+3. `sudo systemctl start docker`
+4. `make venv-verify` or `make docker-verify`
