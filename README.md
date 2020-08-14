@@ -5,13 +5,13 @@
 This repository contains the code that generates the results of the paper **Sparsely Activated Networks** appeared in TNNLS.
 
 ## Requirements
+- UNIX tools (awk, cut, grep)
 - docker
-- grep
 - make
-- nvidia-container-toolkit [required only for using cuda]
+- nvidia-container-toolkit [required only when using CUDA]
 - python3-venv
 
-## Instructions
+## Instructions for verifying the reproducibility of this paper
 1. `git clone https://github.com/pbizopoulos/sparsely-activated-networks`
 2. `cd sparsely-activated-networks`
 3. `sudo systemctl start docker`
