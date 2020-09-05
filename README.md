@@ -9,10 +9,9 @@ This repository contains the code that generates the results of the paper **Spar
 - docker
 - make
 - nvidia-container-toolkit [required only when using CUDA]
-- python3-venv
 
 ## Instructions for verifying the reproducibility of this paper
 1. `git clone https://github.com/pbizopoulos/sparsely-activated-networks`
 2. `cd sparsely-activated-networks`
 3. `sudo systemctl start docker`
-4. `make venv-verify` or `make docker-verify`
+4. `make verify`
