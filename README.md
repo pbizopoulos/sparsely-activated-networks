@@ -14,4 +14,4 @@ This repository contains the code that generates the results of the paper **Spar
 1. `git clone https://github.com/pbizopoulos/sparsely-activated-networks`
 2. `cd sparsely-activated-networks`
 3. `sudo systemctl start docker`
-4. `make verify`
+4. `make ARGS=--full`
