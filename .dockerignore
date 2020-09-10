@@ -1,4 +1,5 @@
 .git/
+.texlive2020/
 cache/*
 results/*
 !cache/.gitkeep
