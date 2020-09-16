@@ -44,7 +44,7 @@ results/.completed: Dockerfile $(shell find . -maxdepth 1 -name '*.py')
 		--rm \
 		--user $(shell id -u):$(shell id -g) \
 		--volume $(MAKEFILE_DIR):/usr/src/app \
-		 $(DOCKER_GPU_ARGS)  sparsely-activated-networks \
+		$(DOCKER_GPU_ARGS) sparsely-activated-networks \
 		python main.py $(ARGS)
 	touch results/.completed
 
