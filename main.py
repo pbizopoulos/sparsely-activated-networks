@@ -17,8 +17,8 @@ from torchvision import datasets, transforms
 from sparse_activation_functions_pytorch import TopKAbsolutes1D, ExtremaPoolIndices1D, Extrema1D, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D
 from sparsely_activated_networks_pytorch import SAN1d, SAN2d
 
-from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset, identity_1d, CNN
-from utilities_2d import save_images_2d, identity_2d, FNN
+from utilities_1d import save_images_1d, download_physionet, download_uci_epilepsy, PhysionetDataset, UCIepilepsyDataset, identity_1d, relu_1d, CNN, Hook
+from utilities_2d import save_images_2d, identity_2d, relu_2d, FNN
 
 plt.rcParams['font.size'] = 20
 plt.rcParams['image.interpolation'] = 'none'
@@ -36,7 +36,7 @@ def train_unsupervised_model(model, optimizer, training_dataloader, device):
     for data, _ in training_dataloader:
         data = data.to(device)
         optimizer.zero_grad()
-        data_reconstructed, _ = model(data)
+        data_reconstructed = model(data)
         reconstruction_loss = F.l1_loss(data, data_reconstructed)
         reconstruction_loss.backward()
         optimizer.step()
@@ -48,7 +48,11 @@ def validate_or_test_unsupervised_model(model, dataloader, device):
     with torch.no_grad():
         for index, (data, _) in enumerate(dataloader):
             data = data.to(device)
-            data_reconstructed, activations_list = model(data)
+            data_reconstructed = model(data)
+            activations_list = []
+            for hook_handle in hook_handle_list:
+                activations_list.append(hook_handle.output)
+            activations_list = torch.stack(activations_list, 1)
             reconstruction_loss[index] = F.l1_loss(data, data_reconstructed) / F.l1_loss(data, torch.zeros_like(data))
             num_activations[index] = torch.nonzero(activations_list, as_tuple=False).shape[0]
     inverse_compression_ratio = calculate_inverse_compression_ratio(model, data, num_activations)
@@ -61,7 +65,7 @@ def train_supervised_model(supervised_model, unsupervised_model, optimizer, trai
         data = data.to(device)
         target = target.to(device)
         optimizer.zero_grad()
-        data_reconstructed, *_ = unsupervised_model(data)
+        data_reconstructed = unsupervised_model(data)
         output = supervised_model(data_reconstructed)
         classification_loss = F.cross_entropy(output, target)
         classification_loss.backward()
@@ -76,7 +80,11 @@ def validate_or_test_supervised_model(supervised_model, unsupervised_model, data
         for index, (data, target) in enumerate(dataloader):
             data = data.to(device)
             target = target.to(device)
-            data_reconstructed, activations_list = unsupervised_model(data)
+            data_reconstructed = unsupervised_model(data)
+            activations_list = []
+            for hook_handle in hook_handle_list:
+                activations_list.append(hook_handle.output)
+            activations_list = torch.stack(activations_list, 1)
             reconstruction_loss[index] = F.l1_loss(data, data_reconstructed) / F.l1_loss(data, torch.zeros_like(data))
             num_activations[index] = torch.nonzero(activations_list, as_tuple=False).shape[0]
             output = supervised_model(data_reconstructed)
@@ -139,7 +147,7 @@ if __name__ == '__main__':
     dataset_name_list = ['apnea-ecg', 'bidmc', 'bpssrat', 'cebsdb', 'ctu-uhb-ctgdb', 'drivedb', 'emgdb', 'mitdb', 'noneeg', 'prcp', 'shhpsgdb', 'slpdb', 'sufhsdb', 'voiced', 'wrist']
     xlim_weights_list = [74, 113, 10, 71, 45, 20, 9, 229, 37, 105, 15, 232, 40, 70, 173]
     download_physionet(dataset_name_list, cache_dir)
-    sparse_activation_list = [identity_1d, torch.nn.ReLU, TopKAbsolutes1D, ExtremaPoolIndices1D, Extrema1D]
+    sparse_activation_list = [identity_1d, relu_1d, TopKAbsolutes1D, ExtremaPoolIndices1D, Extrema1D]
     kernel_size_list_list = [[k] for k in physionet_kernel_size_list_list_range]
     batch_size = 2
     lr = 0.01
@@ -172,6 +180,7 @@ if __name__ == '__main__':
                     sparsity_density_list = kernel_size_list
                 sparse_activation_list_ = [sparse_activation(sparsity_density) for sparsity_density in sparsity_density_list]
                 model = SAN1d(sparse_activation_list_, kernel_size_list).to(device)
+                hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 for epoch in range(num_epochs_physionet):
                     train_unsupervised_model(model, optimizer, training_dataloader, device)
@@ -359,7 +368,7 @@ if __name__ == '__main__':
 
     print('UCI-epilepsy, Supervised CNN classification')
     dataset_name = 'UCI-epilepsy'
-    sparse_activation_list = [identity_1d, torch.nn.ReLU, TopKAbsolutes1D, ExtremaPoolIndices1D, Extrema1D]
+    sparse_activation_list = [identity_1d, relu_1d, TopKAbsolutes1D, ExtremaPoolIndices1D, Extrema1D]
     kernel_size_list_list = [2*[k] for k in uci_epilepsy_kernel_size_range]
     batch_size = 64
     lr = 0.01
@@ -382,6 +391,7 @@ if __name__ == '__main__':
                 sparsity_density_list = kernel_size_list
             sparse_activation_list_ = [sparse_activation(sparsity_density) for sparsity_density in sparsity_density_list]
             model = SAN1d(sparse_activation_list_, kernel_size_list).to(device)
+            hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             optimizer = optim.Adam(model.parameters(), lr=lr)
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
@@ -466,7 +476,7 @@ if __name__ == '__main__':
 
     print('MNIST, Supervised FNN classification')
     dataset_name = 'MNIST'
-    sparse_activation_list = [identity_2d, torch.nn.ReLU, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D]
+    sparse_activation_list = [identity_2d, relu_2d, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D]
     kernel_size_list_list = [2*[k] for k in mnist_kernel_size_range]
     batch_size = 64
     lr = 0.01
@@ -489,6 +499,7 @@ if __name__ == '__main__':
                 sparsity_density_list = kernel_size_list
             sparse_activation_list_ = [sparse_activation(sparsity_density) for sparsity_density in sparsity_density_list]
             model = SAN2d(sparse_activation_list_, kernel_size_list).to(device)
+            hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             optimizer = optim.Adam(model.parameters(), lr=lr)
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
@@ -573,7 +584,7 @@ if __name__ == '__main__':
 
     print('FashionMNIST, Supervised FNN classification')
     dataset_name = 'FashionMNIST'
-    sparse_activation_list = [identity_2d, torch.nn.ReLU, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D]
+    sparse_activation_list = [identity_2d, relu_2d, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D]
     kernel_size_list_list = [2*[k] for k in fashionmnist_kernel_size_range]
     batch_size = 64
     lr = 0.01
@@ -596,6 +607,7 @@ if __name__ == '__main__':
                 sparsity_density_list = kernel_size_list
             sparse_activation_list_ = [sparse_activation(sparsity_density) for sparsity_density in sparsity_density_list]
             model = SAN2d(sparse_activation_list_, kernel_size_list).to(device)
+            hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             optimizer = optim.Adam(model.parameters(), lr=lr)
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):

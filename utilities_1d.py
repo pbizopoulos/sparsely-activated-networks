@@ -17,12 +17,29 @@ plt.rcParams['image.interpolation'] = 'none'
 plt.rcParams['savefig.format'] = 'pdf'
 plt.rcParams['savefig.bbox'] = 'tight'
 
+class Hook():
+    def __init__(self, module):
+        self.hook = module.register_forward_hook(self.hook_fn)
 
-def identity_1d(x):
-    return lambda x: x
+    def hook_fn(self, module, input, output):
+        self.input = input
+        self.output = output
 
-def relu_1d(x):
-    return nn.ReLU
+
+class identity_1d(nn.Module):
+    def __init__(self, k):
+        super().__init__()
+
+    def forward(self, input):
+        return input
+
+class relu_1d(nn.Module):
+    def __init__(self, k):
+        super().__init__()
+
+    def forward(self, input):
+        return F.relu(input)
+
 
 def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights, results_dir):
     model = model.to('cpu')
@@ -36,8 +53,13 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
     plt.close()
 
     model.eval()
+    hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
     with torch.no_grad():
-        reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0))
+        reconstructed = model(data.unsqueeze(0).unsqueeze(0))
+        activations_list = []
+        for hook_handle in hook_handle_list:
+            activations_list.append(hook_handle.output)
+        activations_list = torch.stack(activations_list, 1)
         for index_weights, (weights, activations) in enumerate(zip(model.weights_list, activations_list[0, :, 0])):
             fig, ax = plt.subplots(figsize=(2, 2.2))
             ax.tick_params(labelbottom=False, labelleft=False)

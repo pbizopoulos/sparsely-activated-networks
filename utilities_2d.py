@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import torch
 
 from torch import nn
+from torch.nn import functional as F
+from utilities_1d import Hook
 
 from sparsely_activated_networks_pytorch import _conv2d_same_padding
 
@@ -10,11 +12,20 @@ plt.rcParams['savefig.format'] = 'pdf'
 plt.rcParams['savefig.bbox'] = 'tight'
 
 
-def identity_2d(x):
-    return lambda x: x
+class identity_2d(nn.Module):
+    def __init__(self, k):
+        super().__init__()
 
-def relu_2d():
-    return nn.ReLU
+    def forward(self, input):
+        return input
+
+class relu_2d(nn.Module):
+    def __init__(self, k):
+        super().__init__()
+
+    def forward(self, input):
+        return F.relu(input)
+
 
 def save_images_2d(model, sparse_activation_name, data, dataset_name, results_dir):
     model = model.to('cpu')
@@ -26,8 +37,13 @@ def save_images_2d(model, sparse_activation_name, data, dataset_name, results_di
     plt.close()
 
     model.eval()
+    hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
     with torch.no_grad():
-        reconstructed, activations_list = model(data.unsqueeze(0).unsqueeze(0))
+        reconstructed = model(data.unsqueeze(0).unsqueeze(0))
+        activations_list = []
+        for hook_handle in hook_handle_list:
+            activations_list.append(hook_handle.output)
+        activations_list = torch.stack(activations_list, 1)
         for index_weights, (weights, activations) in enumerate(zip(model.weights_list, activations_list[0, :, 0])):
             fig = plt.figure(figsize=(4.8/2, 4.8/2))
             plt.imshow(weights.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2*abs(weights).max(), vmax=2*abs(weights).max())
