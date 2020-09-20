@@ -18,13 +18,13 @@ plt.rcParams['savefig.format'] = 'pdf'
 plt.rcParams['savefig.bbox'] = 'tight'
 
 
-def identity_1d(x, kernel_size):
-    return x
+def identity_1d(x):
+    return lambda x: x
 
-def relu_1d(x, kernel_size):
-    return torch.relu(x)
+def relu_1d(x):
+    return nn.ReLU
 
-def save_images_1d(model, dataset_name, data, xlim_weights, results_dir):
+def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights, results_dir):
     model = model.to('cpu')
     fig, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
@@ -32,7 +32,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, results_dir):
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-signal')
+    plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-signal')
     plt.close()
 
     model.eval()
@@ -48,20 +48,20 @@ def save_images_1d(model, dataset_name, data, xlim_weights, results_dir):
             plt.plot(weights.cpu().detach().numpy(), 'r')
             plt.xlim([0, xlim_weights])
             if dataset_name == 'apnea-ecg':
-                if model.sparse_activation.__name__ == 'identity_1d':
+                if sparse_activation_name == 'identity_1d':
                     sparse_activation_name = 'Identity'
-                elif model.sparse_activation.__name__ == 'relu_1d':
+                elif sparse_activation_name == 'relu_1d':
                     sparse_activation_name = 'ReLU'
-                elif model.sparse_activation.__name__ == 'topk_absolutes_1d':
+                elif sparse_activation_name == 'topk_absolutes_1d':
                     sparse_activation_name = 'top-k absolutes'
-                elif model.sparse_activation.__name__ == 'extrema_pool_indices_1d':
+                elif sparse_activation_name == 'extrema_pool_indices_1d':
                     sparse_activation_name = 'Extrema-Pool idx'
-                elif model.sparse_activation.__name__ == 'extrema_1d':
+                elif sparse_activation_name == 'extrema_1d':
                     sparse_activation_name = 'Extrema'
                 plt.ylabel(sparse_activation_name, fontsize=20)
-            if model.sparse_activation.__name__ == 'relu_1d':
+            if sparse_activation_name == 'relu_1d':
                 plt.title(dataset_name, fontsize=20)
-            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}')
             plt.close()
 
             similarity = _conv1d_same_padding(data.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -70,18 +70,18 @@ def save_images_1d(model, dataset_name, data, xlim_weights, results_dir):
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.plot(similarity.cpu().detach().numpy(), 'g')
-            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}')
             plt.close()
 
             fig, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
-            p = activations.nonzero()[:, 0]
+            p = torch.nonzero(activations, as_tuple=False)[:, 0]
             plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
             if p.shape[0] != 0:
                 plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), 'c', basefmt=' ', use_line_collection=True)
-            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}')
             plt.close()
 
             reconstruction = _conv1d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -106,7 +106,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, results_dir):
             plt.plot(pos_signal)
             plt.plot(neg_signal, color='r')
             plt.ylim([data.min(), data.max()])
-            plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}')
+            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}')
             plt.close()
 
         fig, ax = plt.subplots()
@@ -116,7 +116,7 @@ def save_images_1d(model, dataset_name, data, xlim_weights, results_dir):
         plt.plot(data.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(f'{results_dir}/{dataset_name}-{model.sparse_activation.__name__.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
+        plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
         plt.close()
 
 def download_physionet(dataset_name_list, cache_dir):

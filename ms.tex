@@ -71,18 +71,18 @@ Recently, in $k$-Sparse Autoencoders~\cite{makhzani2013k} the authors used an ac
 
 \begin{figure*}[!t]
 	\centering
-	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-identity-1d-2-activations-0}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-relu-1d-2-activations-0}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-topk-absolutes-1d-2-activations-0}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-extrema-pool-indices-1d-2-activations-0}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-extrema-1d-2-activations-0}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-identity-2-activations-0}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-relu-2-activations-0}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-top-k-absolutes-2-activations-0}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-extrema-pool-idx-2-activations-0}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{results/UCI-epilepsy-extrema-2-activations-0}}
 	\\
 	\setcounter{subfigure}{0}
-	\subfloat[Identity]{\includegraphics[width=0.2\textwidth]{results/MNIST-identity-2d-2-activations-1}\label{subfig:identity}}
-	\subfloat[ReLU]{\includegraphics[width=0.2\textwidth]{results/MNIST-relu-2d-2-activations-0}\label{subfig:relu}}
-	\subfloat[top-k absolutes]{\includegraphics[width=0.2\textwidth]{results/MNIST-topk-absolutes-2d-2-activations-0}\label{subfig:topkabsolutes}}
-	\subfloat[Extrema-Pool indices]{\includegraphics[width=0.2\textwidth]{results/MNIST-extrema-pool-indices-2d-2-activations-0}\label{subfig:extremapoolindices}}
-	\subfloat[Extrema]{\includegraphics[width=0.2\textwidth]{results/MNIST-extrema-2d-2-activations-0}\label{subfig:extrema}}
+	\subfloat[Identity]{\includegraphics[width=0.2\textwidth]{results/MNIST-identity-2-activations-1}\label{subfig:identity}}
+	\subfloat[ReLU]{\includegraphics[width=0.2\textwidth]{results/MNIST-relu-2-activations-0}\label{subfig:relu}}
+	\subfloat[top-k absolutes]{\includegraphics[width=0.2\textwidth]{results/MNIST-top-k-absolutes-2-activations-0}\label{subfig:topkabsolutes}}
+	\subfloat[Extrema-Pool indices]{\includegraphics[width=0.2\textwidth]{results/MNIST-extrema-pool-idx-2-activations-0}\label{subfig:extremapoolindices}}
+	\subfloat[Extrema]{\includegraphics[width=0.2\textwidth]{results/MNIST-extrema-2-activations-0}\label{subfig:extrema}}
 	\caption{Visualization of the activation maps of five activation functions (Identity, ReLU, top-k absolutes, Extrema-Pool indices and Extrema) for 1D and 2D input in the top and bottom row respectively.
 	The 1D input to the activation functions is denoted with the continuous transparent green line using an example from the UCI dataset.
 	The output of each activation function is denoted with the cyan stem lines with blue markers.
@@ -302,35 +302,35 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 \begin{figure*}[!t]
 	\subfloat[1D SAN]{\begin{tikzpicture}[]
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=-0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-signal}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-signal}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-reconstructed}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-reconstructed}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-reconstruction-0}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-reconstruction-0}};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
 			\node[] at (4, -3){$\bm{r}^{(0)}$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-activations-0}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-activations-0}};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
 			\node[] at (4, -6.3){$\bm{\alpha}^{(0)}$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-similarity-0}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-similarity-0}};
 			\node[] at (0.1, -6.3){$\bm{s}^{(0)}$};
-			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{results/UCI-epilepsy-extrema-1d-2-kernel-0}};
+			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{results/UCI-epilepsy-extrema-2-kernel-0}};
 			\node[] at (2, -4.7){\tiny $\bm{w}^{(0)}$};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0,xscale=-1, transform shape]
-			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-signal}};
+			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-signal}};
 			\node[] at (0.1, 0.5){$\bm{x}$};
 			\node[draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-reconstructed}};
+			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-reconstructed}};
 			\node[] at (4, 0.5){$\hat{\bm{x}}$};
 			\node[draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-reconstruction-0}};
+			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-reconstruction-0}};
 			\node[draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-activations-0}};
+			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-activations-0}};
 			\node[draw, left=0.55cm of extrema, circle, inner sep=2pt] (phi){$\phi$};
-			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-similarity-0}};
-			\node[opacity=0, left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{results/UCI-epilepsy-extrema-1d-2-kernel-0}};
+			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-similarity-0}};
+			\node[opacity=0, left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{results/UCI-epilepsy-extrema-2-kernel-0}};
 			\node[draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 			\draw[->](input) -- node{} (conv1);
 			\draw[->](conv1) -- node{} (similarity);
@@ -346,19 +346,19 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 			\draw[->](reconstructed) -- node{} (loss);
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-signal}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-signal}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-reconstructed}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-reconstructed}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-reconstruction-1}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-reconstruction-1}};
 			\node[] at (4, -3){$\bm{r}^{(1)}$};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-activations-1}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-activations-1}};
 			\node[] at (4, -6.3){$\bm{\alpha}^{(1)}$};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-1d-2-similarity-1}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/UCI-epilepsy-extrema-2-similarity-1}};
 			\node[] at (0.1, -6.3){$\bm{s}^{(1)}$};
-			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{results/UCI-epilepsy-extrema-1d-2-kernel-1}};
+			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{results/UCI-epilepsy-extrema-2-kernel-1}};
 			\node[] at (2, -4.7){\tiny $\bm{w}^{(1)}$};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
@@ -372,29 +372,29 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 	\qquad
 	\subfloat[2D SAN]{\begin{tikzpicture}[]
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=-0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-signal}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-signal}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-reconstructed}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-reconstructed}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-reconstruction-0}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-reconstruction-0}};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-activations-0}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-activations-0}};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-similarity-0}};
-			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{results/MNIST-extrema-2d-2-kernel-0}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-similarity-0}};
+			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{results/MNIST-extrema-2-kernel-0}};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0,xscale=-1, transform shape]
-			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-signal}};
+			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-signal}};
 			\node[draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-reconstructed}};
+			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-reconstructed}};
 			\node[draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-reconstruction-0}};
+			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-reconstruction-0}};
 			\node[draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-activations-0}};
+			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-activations-0}};
 			\node[draw, left=0.55cm of extrema, circle, inner sep=2pt] (phi){$\phi$};
-			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-similarity-0}};
-			\node[opacity=0, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{results/MNIST-extrema-2d-2-kernel-0}};
+			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-similarity-0}};
+			\node[opacity=0, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{results/MNIST-extrema-2-kernel-0}};
 			\node[draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 			\draw[->](input) -- node{} (conv1);
 			\draw[->](conv1) -- node{} (similarity);
@@ -410,16 +410,16 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 			\draw[->](reconstructed) -- node{} (loss);
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-signal}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-signal}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-reconstructed}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-reconstructed}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-reconstruction-1}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-reconstruction-1}};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-activations-1}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-activations-1}};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/MNIST-extrema-2d-2-similarity-1}};
-			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{results/MNIST-extrema-2d-2-kernel-1}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{results/MNIST-extrema-2-similarity-1}};
+			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{results/MNIST-extrema-2-kernel-1}};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 	\end{tikzpicture}
@@ -612,69 +612,69 @@ Comparing the differences of $\bar\varphi$ between the Identity, the ReLU and th
 
 \begin{figure*}[!t]
 	\centering
-	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bidmc-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bpssrat-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/cebsdb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/drivedb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/emgdb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/mitdb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/noneeg-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/prcp-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/slpdb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/sufhsdb-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/voiced-relu-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/wrist-relu-1d-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bidmc-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bpssrat-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/cebsdb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/drivedb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/emgdb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/mitdb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/noneeg-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/prcp-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/slpdb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/sufhsdb-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/voiced-relu-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/wrist-relu-1-kernel-0}
 	\\
-	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bidmc-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bpssrat-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/cebsdb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/drivedb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/emgdb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/mitdb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/noneeg-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/prcp-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/slpdb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/sufhsdb-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/voiced-topk-absolutes-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/wrist-topk-absolutes-1d-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bidmc-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bpssrat-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/cebsdb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/drivedb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/emgdb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/mitdb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/noneeg-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/prcp-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/slpdb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/sufhsdb-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/voiced-top-k-absolutes-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/wrist-top-k-absolutes-1-kernel-0}
 	\\
-	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bidmc-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bpssrat-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/cebsdb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/drivedb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/emgdb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/mitdb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/noneeg-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/prcp-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/slpdb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/sufhsdb-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/voiced-extrema-pool-indices-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/wrist-extrema-pool-indices-1d-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bidmc-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bpssrat-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/cebsdb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/drivedb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/emgdb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/mitdb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/noneeg-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/prcp-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/slpdb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/sufhsdb-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/voiced-extrema-pool-idx-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/wrist-extrema-pool-idx-1-kernel-0}
 	\\
-	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bidmc-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/bpssrat-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/cebsdb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/drivedb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/emgdb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/mitdb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/noneeg-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/prcp-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/slpdb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/sufhsdb-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/voiced-extrema-1d-1-kernel-0}
-	\includegraphics[width=0.06\textwidth]{results/wrist-extrema-1d-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/apnea-ecg-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bidmc-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/bpssrat-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/cebsdb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/ctu-uhb-ctgdb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/drivedb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/emgdb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/mitdb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/noneeg-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/prcp-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/shhpsgdb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/slpdb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/sufhsdb-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/voiced-extrema-1-kernel-0}
+	\includegraphics[width=0.06\textwidth]{results/wrist-extrema-1-kernel-0}
 	\caption{Visualization of the learned kernels for each sparse activation function (row) and for each Physionet database (column).
 	}
 	\label{fig:kernelvisualization}
