@@ -164,7 +164,9 @@ if __name__ == '__main__':
             mean_flithos_best = float('inf')
             for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
                 mean_flithos_epoch_best = float('inf')
-                if sparse_activation == extrema_1d:
+                if sparse_activation == topk_absolutes_1d:
+                    sparsity_density_list = [int(test_dataset.data.shape[-1]/k) for k in kernel_size_list]
+                elif sparse_activation == extrema_1d:
                     sparsity_density_list = np.clip([k - 3 for k in kernel_size_list], 1, 999).tolist()
                 else:
                     sparsity_density_list = kernel_size_list
@@ -371,7 +373,9 @@ if __name__ == '__main__':
         print(f'index_kernel_size_list: {index_kernel_size_list}')
         uci_epilepsy_supervised_latex_table_row = []
         for index_sparse_activation, sparse_activation in enumerate(sparse_activation_list):
-            if sparse_activation == extrema_1d:
+            if sparse_activation == topk_absolutes_1d:
+                sparsity_density_list = [int(test_dataset.data.shape[-1]/k) for k in kernel_size_list]
+            elif sparse_activation == extrema_1d:
                 sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
             else:
                 sparsity_density_list = kernel_size_list
@@ -474,7 +478,9 @@ if __name__ == '__main__':
         print(f'index_kernel_size_list: {index_kernel_size_list}')
         mnist_supervised_latex_table_row = []
         for index_sparse_activation, sparse_activation in enumerate(sparse_activation_list):
-            if sparse_activation == extrema_2d:
+            if sparse_activation == topk_absolutes_2d:
+                sparsity_density_list = [int(test_dataset.data.shape[-1]/k)**2 for k in kernel_size_list]
+            elif sparse_activation == extrema_2d:
                 sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
                 sparsity_density_list = [[s, s] for s in sparsity_density_list]
             else:
@@ -578,7 +584,9 @@ if __name__ == '__main__':
         print(f'index_kernel_size_list: {index_kernel_size_list}')
         fashionmnist_supervised_latex_table_row = []
         for index_sparse_activation, sparse_activation in enumerate(sparse_activation_list):
-            if sparse_activation == extrema_2d:
+            if sparse_activation == topk_absolutes_2d:
+                sparsity_density_list = [int(test_dataset.data.shape[-1]/k)**2 for k in kernel_size_list]
+            elif sparse_activation == extrema_2d:
                 sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
                 sparsity_density_list = [[s, s] for s in sparsity_density_list]
             else:
