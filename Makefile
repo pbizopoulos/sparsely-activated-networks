@@ -16,7 +16,7 @@ cache/ms.pdf: ms.tex ms.bib results/completed
 		--user `id -u`:`id -g` \
 		--volume $(MAKEFILE_DIR):$(VOLUME_DIR) \
 		ghcr.io/pbizopoulos/texlive-full \
-		-outdir=cache/ -usepretex="\pdfinfoomitdate=1\pdfsuppressptexinfo=-1\pdftrailerid{}" -gg -pdf -cd $(VOLUME_DIR)/ms.tex
+		latexmk -outdir=cache/ -usepretex="\pdfinfoomitdate=1\pdfsuppressptexinfo=-1\pdftrailerid{}" -gg -pdf -cd $(VOLUME_DIR)/ms.tex
 	@if [ -f cache/.tmp.pdf ]; then \
 		cmp cache/ms.pdf cache/.tmp.pdf && echo 'ms.pdf unchanged.' || echo 'ms.pdf changed.'; fi
 	@cp cache/ms.pdf cache/.tmp.pdf
