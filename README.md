@@ -4,7 +4,7 @@
 [![test-reproducible-build](https://github.com/pbizopoulos/sparsely-activated-networks/workflows/test-reproducible-build/badge.svg)](https://github.com/pbizopoulos/sparsely-activated-networks/actions?query=workflow%3Atest-reproducible-build)
 
 # Sparsely Activated Networks
-This repository contains the code that generates the results of the paper **Sparsely Activated Networks** appeared in TNNLS.
+This repository contains the code that generates the paper **Sparsely Activated Networks** appeared in TNNLS.
 
 ## Requirements
 - UNIX utilities (cmp, cp, echo, rm, touch)
@@ -19,4 +19,4 @@ This repository contains the code that generates the results of the paper **Spar
 4. make options
     * `make`             # Generate pdf.
     * `make ARGS=--full` # Generate full pdf.
-    * `make clean`       # Remove cache, results directories and tex auxiliary files.
+    * `make clean`       # Remove build and cache directories.
