@@ -1,12 +1,13 @@
 .POSIX:
 
 ARGS= 
-DEBUG_ARGS=--interactive --tty
 PAPER_TITLE=sparsely-activated-networks
 
-ifeq (, $(shell which nvidia-smi))
-	GPU_ARGS=
-else
+ifeq (1, $(shell [ -t 0 ] && echo 1))
+	DEBUG_ARGS=--interactive --tty
+endif
+
+ifneq (, $(shell which nvidia-smi))
 	GPU_ARGS=--gpus all
 endif
 
