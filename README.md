@@ -1,7 +1,7 @@
 [![arXiv](http://img.shields.io/badge/cs.LG-arXiv%3A1907.06592-B31B1B.svg)](https://arxiv.org/abs/1907.06592)
 [![citation](http://img.shields.io/badge/citation-0091FF.svg)](https://scholar.google.com/scholar?q=Sparsely%20Activated%20Networks.%20arXiv%202020)
-[![template](http://img.shields.io/badge/template-EEE0B1.svg)](https://github.com/pbizopoulos/reproducible-builds-for-computational-research-papers-template)
-[![test-reproducible-build](https://github.com/pbizopoulos/sparsely-activated-networks/workflows/test-reproducible-build/badge.svg)](https://github.com/pbizopoulos/sparsely-activated-networks/actions?query=workflow%3Atest-reproducible-build)
+[![template](http://img.shields.io/badge/template-EEE0B1.svg)](https://github.com/pbizopoulos/docker-as-a-development-environment-for-research-papers-template)
+[![test-local-reproducibility](https://github.com/pbizopoulos/sparsely-activated-networks/workflows/test-local-reproducibility/badge.svg)](https://github.com/pbizopoulos/sparsely-activated-networks/actions?query=workflow%3Atest-local-reproducibility)
 
 # Sparsely Activated Networks
 This repository contains the code that generates the paper **Sparsely Activated Networks** appeared in TNNLS.
