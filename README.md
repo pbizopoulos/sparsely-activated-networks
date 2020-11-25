@@ -1,15 +1,15 @@
 [![arXiv](http://img.shields.io/badge/cs.LG-arXiv%3A1907.06592-B31B1B.svg)](https://arxiv.org/abs/1907.06592)
 [![citation](http://img.shields.io/badge/citation-0091FF.svg)](https://scholar.google.com/scholar?q=Sparsely%20Activated%20Networks.%20arXiv%202020)
-[![template](http://img.shields.io/badge/template-EEE0B1.svg)](https://github.com/pbizopoulos/docker-as-a-development-environment-for-research-papers-template)
+[![template](http://img.shields.io/badge/template-EEE0B1.svg)](https://github.com/pbizopoulos/docker-as-a-development-environment-for-documenting-results-template)
 [![test-local-reproducibility](https://github.com/pbizopoulos/sparsely-activated-networks/workflows/test-local-reproducibility/badge.svg)](https://github.com/pbizopoulos/sparsely-activated-networks/actions?query=workflow%3Atest-local-reproducibility)
 
 # Sparsely Activated Networks
-This repository contains the code that generates the paper **Sparsely Activated Networks** appeared in TNNLS.
+This repository contains the code that generates **Sparsely Activated Networks** appeared in TNNLS.
 
 ## Requirements
-- UNIX utilities (cmp, cp, echo, rm, touch)
+- [POSIX](https://en.wikipedia.org/wiki/POSIX)-oriented operating system
 - [docker](https://docs.docker.com/get-docker/)
-- make
+- [make](https://www.gnu.org/software/make/)
 - [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit) (required only when using CUDA)
 
 ## Instructions
