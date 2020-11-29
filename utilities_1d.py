@@ -141,20 +141,20 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
         plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
         plt.close()
 
-def download_physionet(dataset_name_list, cache_dir):
+def download_physionet(dataset_name_list, tmp_dir):
     for dataset_name in dataset_name_list:
-        path = f'{cache_dir}/{dataset_name}'
+        path = f'{tmp_dir}/{dataset_name}'
         if not os.path.exists(path):
             record_name = wfdb.get_record_list(dataset_name)[0]
             wfdb.dl_database(dataset_name, path, records=[record_name], annotators=None)
 
 
 class PhysionetDataset(Dataset):
-    def __init__(self, training_validation_test, dataset_name, cache_dir):
-        files = glob.glob(f'{cache_dir}/{dataset_name}/*.hea')
+    def __init__(self, training_validation_test, dataset_name, tmp_dir):
+        files = glob.glob(f'{tmp_dir}/{dataset_name}/*.hea')
         file = files[0]
         filename = os.path.splitext(os.path.basename(file))[0]
-        records = wfdb.rdrecord(f'{cache_dir}/{dataset_name}/{filename}')
+        records = wfdb.rdrecord(f'{tmp_dir}/{dataset_name}/{filename}')
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if training_validation_test == 'training':
             self.data = data[:6000]
@@ -173,15 +173,15 @@ class PhysionetDataset(Dataset):
         return self.data.shape[0]
 
 
-def download_uci_epilepsy(cache_dir):
-    path = f'{cache_dir}/UCI-epilepsy'
+def download_uci_epilepsy(tmp_dir):
+    path = f'{tmp_dir}/UCI-epilepsy'
     if not os.path.exists(path):
         os.mkdir(path)
         urllib.request.urlretrieve('http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', f'{path}/data.csv')
 
 class UCIepilepsyDataset(Dataset):
-    def __init__(self, training_validation_test, cache_dir):
-        dataset = pd.read_csv(f'{cache_dir}/UCI-epilepsy/data.csv')
+    def __init__(self, training_validation_test, tmp_dir):
+        dataset = pd.read_csv(f'{tmp_dir}/UCI-epilepsy/data.csv')
         dataset['y'].loc[dataset['y'] == 3] = 2
         dataset['y'].loc[dataset['y'] == 5] = 3
         dataset['y'].loc[dataset['y'] == 4] = 3
