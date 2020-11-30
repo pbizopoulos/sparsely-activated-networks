@@ -19,4 +19,4 @@ This repository contains the code that generates **Sparsely Activated Networks**
 4. make options
     * `make`             # Generate pdf.
     * `make ARGS=--full` # Generate full pdf.
-    * `make clean`       # Remove results and tmp directories.
+    * `make clean`       # Remove tmp directory.
