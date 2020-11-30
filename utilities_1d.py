@@ -41,7 +41,7 @@ class relu_1d(nn.Module):
         return F.relu(input)
 
 
-def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights, results_dir):
+def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights):
     model = model.to('cpu')
     fig, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
@@ -49,7 +49,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-signal')
+    plt.savefig(f'tmp/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-signal')
     plt.close()
 
     model.eval()
@@ -83,7 +83,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
                 plt.ylabel(sparse_activation_name, fontsize=20)
             if sparse_activation_name == 'relu_1d':
                 plt.title(dataset_name, fontsize=20)
-            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}')
+            plt.savefig(f'tmp/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-kernel-{index_weights}')
             plt.close()
 
             similarity = _conv1d_same_padding(data.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -92,7 +92,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.plot(similarity.cpu().detach().numpy(), 'g')
-            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}')
+            plt.savefig(f'tmp/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-similarity-{index_weights}')
             plt.close()
 
             fig, ax = plt.subplots()
@@ -103,7 +103,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
             plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
             if p.shape[0] != 0:
                 plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), 'c', basefmt=' ', use_line_collection=True)
-            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}')
+            plt.savefig(f'tmp/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-activations-{index_weights}')
             plt.close()
 
             reconstruction = _conv1d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -128,7 +128,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
             plt.plot(pos_signal)
             plt.plot(neg_signal, color='r')
             plt.ylim([data.min(), data.max()])
-            plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}')
+            plt.savefig(f'tmp/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-reconstruction-{index_weights}')
             plt.close()
 
         fig, ax = plt.subplots()
@@ -138,23 +138,23 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
         plt.plot(data.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(f'{results_dir}/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
+        plt.savefig(f'tmp/{dataset_name}-{sparse_activation_name.replace("_", "-")}-{len(model.weights_list)}-reconstructed')
         plt.close()
 
-def download_physionet(dataset_name_list, tmp_dir):
+def download_physionet(dataset_name_list):
     for dataset_name in dataset_name_list:
-        path = f'{tmp_dir}/{dataset_name}'
+        path = f'tmp/{dataset_name}'
         if not os.path.exists(path):
             record_name = wfdb.get_record_list(dataset_name)[0]
             wfdb.dl_database(dataset_name, path, records=[record_name], annotators=None)
 
 
 class PhysionetDataset(Dataset):
-    def __init__(self, training_validation_test, dataset_name, tmp_dir):
-        files = glob.glob(f'{tmp_dir}/{dataset_name}/*.hea')
+    def __init__(self, training_validation_test, dataset_name):
+        files = glob.glob(f'tmp/{dataset_name}/*.hea')
         file = files[0]
         filename = os.path.splitext(os.path.basename(file))[0]
-        records = wfdb.rdrecord(f'{tmp_dir}/{dataset_name}/{filename}')
+        records = wfdb.rdrecord(f'tmp/{dataset_name}/{filename}')
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if training_validation_test == 'training':
             self.data = data[:6000]
@@ -173,15 +173,15 @@ class PhysionetDataset(Dataset):
         return self.data.shape[0]
 
 
-def download_uci_epilepsy(tmp_dir):
-    path = f'{tmp_dir}/UCI-epilepsy'
+def download_uci_epilepsy():
+    path = 'tmp/UCI-epilepsy'
     if not os.path.exists(path):
         os.mkdir(path)
         urllib.request.urlretrieve('http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', f'{path}/data.csv')
 
 class UCIepilepsyDataset(Dataset):
-    def __init__(self, training_validation_test, tmp_dir):
-        dataset = pd.read_csv(f'{tmp_dir}/UCI-epilepsy/data.csv')
+    def __init__(self, training_validation_test):
+        dataset = pd.read_csv('tmp/UCI-epilepsy/data.csv')
         dataset['y'].loc[dataset['y'] == 3] = 2
         dataset['y'].loc[dataset['y'] == 5] = 3
         dataset['y'].loc[dataset['y'] == 4] = 3

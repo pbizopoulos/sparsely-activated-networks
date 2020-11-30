@@ -98,8 +98,6 @@ def validate_or_test_supervised_model(supervised_model, unsupervised_model, data
 if __name__ == '__main__':
     # DO NOT EDIT BLOCK - Required by the Makefile
     parser = argparse.ArgumentParser()
-    parser.add_argument('results_dir')
-    parser.add_argument('tmp_dir')
     parser.add_argument('--full', default=False, action='store_true')
     args = parser.parse_args()
     # END OF DO NOT EDIT BLOCK
@@ -146,7 +144,7 @@ if __name__ == '__main__':
     print('Physionet, X: mean reconstruction loss, Y: mean inverse compression ratio, Color: sparse activation')
     dataset_name_list = ['apnea-ecg', 'bidmc', 'bpssrat', 'cebsdb', 'ctu-uhb-ctgdb', 'drivedb', 'emgdb', 'mitdb', 'noneeg', 'prcp', 'shhpsgdb', 'slpdb', 'sufhsdb', 'voiced', 'wrist']
     xlim_weights_list = [74, 113, 10, 71, 45, 20, 9, 229, 37, 105, 15, 232, 40, 70, 173]
-    download_physionet(dataset_name_list, args.tmp_dir)
+    download_physionet(dataset_name_list)
     sparse_activation_list = [identity_1d, relu_1d, TopKAbsolutes1D, ExtremaPoolIndices1D, Extrema1D]
     kernel_size_list_list = [[k] for k in physionet_kernel_size_list_list_range]
     batch_size = 2
@@ -161,11 +159,11 @@ if __name__ == '__main__':
     for index_dataset_name, (dataset_name, xlim_weights) in enumerate(zip(dataset_name_list, xlim_weights_list)):
         print(dataset_name)
         physionet_latex_table_row = []
-        training_dataset = PhysionetDataset('training', dataset_name, args.tmp_dir)
+        training_dataset = PhysionetDataset('training', dataset_name)
         training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, shuffle=True)
-        validation_dataset = PhysionetDataset('validation', dataset_name, args.tmp_dir)
+        validation_dataset = PhysionetDataset('validation', dataset_name)
         validation_dataloader = DataLoader(dataset=validation_dataset)
-        test_dataset = PhysionetDataset('test', dataset_name, args.tmp_dir)
+        test_dataset = PhysionetDataset('test', dataset_name)
         test_dataloader = DataLoader(dataset=test_dataset)
         fig, ax_main = plt.subplots(constrained_layout=True, figsize=(6, 6))
         for index_sparse_activation, (sparse_activation, sparse_activation_color, sparse_activation_name) in enumerate(zip(sparse_activation_list, sparse_activation_color_list, sparse_activation_name_list)):
@@ -201,7 +199,7 @@ if __name__ == '__main__':
                     mean_flithos_best = mean_flithos[index_sparse_activation, index_dataset_name, index_kernel_size_list]
                     model_best = model_epoch_best
             physionet_latex_table_row.extend([kernel_size_list_best[index_sparse_activation, index_dataset_name], inverse_compression_ratio_best.mean(), reconstruction_loss_best.mean(), mean_flithos_best])
-            save_images_1d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), dataset_name, test_dataset[0][0][0], xlim_weights, args.results_dir)
+            save_images_1d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), dataset_name, test_dataset[0][0][0], xlim_weights)
             ax_main.arrow(reconstruction_loss_best.mean(), inverse_compression_ratio_best.mean(), 1.83 - reconstruction_loss_best.mean(), 2.25 - 0.5*index_sparse_activation - inverse_compression_ratio_best.mean())
             fig.add_axes([0.75, 0.81 - 0.165*index_sparse_activation, .1, .1], facecolor='y')
             plt.plot(model_best.weights_list[0].flip(0).cpu().detach().numpy().T, c=sparse_activation_color)
@@ -221,7 +219,7 @@ if __name__ == '__main__':
         plt.axvspan(1, 2.5, alpha=0.3, color='gray')
         wedge = patches.Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
         ax_main.add_patch(wedge)
-        plt.savefig(f'{args.results_dir}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-{dataset_name}')
+        plt.savefig(f'tmp/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-{dataset_name}')
         plt.close()
     header = ['$m$', r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -231,7 +229,7 @@ if __name__ == '__main__':
     df.index = dataset_name_list
     df.index.names = ['Datasets']
     formatters = 5*[lambda x: f'{x:.0f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}']
-    df.to_latex(f'{args.results_dir}/mean-inverse-compression-ratio-mean-reconstruction-loss-variable-kernel-size.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex('tmp/mean-inverse-compression-ratio-mean-reconstruction-loss-variable-kernel-size.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_name_list), num_epochs_physionet))
@@ -253,7 +251,7 @@ if __name__ == '__main__':
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{args.results_dir}/mean-flithos-validation-epochs')
+    plt.savefig('tmp/mean-flithos-validation-epochs')
     plt.close()
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
@@ -273,7 +271,7 @@ if __name__ == '__main__':
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{args.results_dir}/mean-flithos-variable-kernel-size-list')
+    plt.savefig('tmp/mean-flithos-variable-kernel-size-list')
     plt.close()
 
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
@@ -292,7 +290,7 @@ if __name__ == '__main__':
             Line2D([0], [0], marker='o', color='w', label='Extrema', markerfacecolor=sparse_activation_color_list[4])
             ]
     fig_legend.legend(handles=legend_elements, fontsize=22, loc='upper center')
-    plt.savefig(f'{args.results_dir}/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-legend')
+    plt.savefig('tmp/mean-inverse-compression-ratio-vs-mean-reconstruction-loss-variable-kernel-size-list-legend')
     plt.close()
 
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
@@ -314,18 +312,18 @@ if __name__ == '__main__':
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(True)
-    plt.savefig(f'{args.results_dir}/crrl-density-plot')
+    plt.savefig('tmp/crrl-density-plot')
     plt.close()
 
     print('UCI baseline, Supervised CNN classification')
     batch_size = 64
     lr = 0.01
-    download_uci_epilepsy(args.tmp_dir)
-    training_dataset = UCIepilepsyDataset('training', args.tmp_dir)
+    download_uci_epilepsy()
+    training_dataset = UCIepilepsyDataset('training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    validation_dataset = UCIepilepsyDataset('validation', args.tmp_dir)
+    validation_dataset = UCIepilepsyDataset('validation')
     validation_dataloader = DataLoader(dataset=validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    test_dataset = UCIepilepsyDataset('test', args.tmp_dir)
+    test_dataset = UCIepilepsyDataset('test')
     test_dataloader = DataLoader(dataset=test_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     best_accuracy = 0
     supervised_model = CNN(len(training_dataset.labels.unique())).to(device)
@@ -373,11 +371,11 @@ if __name__ == '__main__':
     batch_size = 64
     lr = 0.01
     uci_epilepsy_supervised_latex_table = []
-    training_dataset = UCIepilepsyDataset('training', args.tmp_dir)
+    training_dataset = UCIepilepsyDataset('training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    validation_dataset = UCIepilepsyDataset('validation', args.tmp_dir)
+    validation_dataset = UCIepilepsyDataset('validation')
     validation_dataloader = DataLoader(dataset=validation_dataset, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    test_dataset = UCIepilepsyDataset('test', args.tmp_dir)
+    test_dataset = UCIepilepsyDataset('test')
     test_dataloader = DataLoader(dataset=test_dataset, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
@@ -415,7 +413,7 @@ if __name__ == '__main__':
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, test_dataloader, device)
             uci_epilepsy_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - uci_epilepsy_supervised_accuracy])
             if kernel_size_list[0] == 10:
-                save_images_1d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), dataset_name, test_dataset[0][0][0], kernel_size_list[0], args.results_dir)
+                save_images_1d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), dataset_name, test_dataset[0][0][0], kernel_size_list[0])
         uci_epilepsy_supervised_latex_table.append(uci_epilepsy_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -425,15 +423,15 @@ if __name__ == '__main__':
     df.index = list(uci_epilepsy_kernel_size_range)
     df.index.names = [r'$m$']
     formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{args.results_dir}/uci-epilepsy-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex('tmp/uci-epilepsy-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     print('MNIST baseline, Supervised FNN classification')
     batch_size = 64
     lr = 0.01
-    training_validation_dataset = datasets.MNIST(args.tmp_dir, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.MNIST('tmp', download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_validation_range), batch_size=batch_size)
-    test_dataset = datasets.MNIST(args.tmp_dir, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.MNIST('tmp', train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_test_range))
     best_accuracy = 0
     supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
@@ -481,10 +479,10 @@ if __name__ == '__main__':
     batch_size = 64
     lr = 0.01
     mnist_supervised_latex_table = []
-    training_validation_dataset = datasets.MNIST(args.tmp_dir, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.MNIST('tmp', download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_validation_range))
-    test_dataset = datasets.MNIST(args.tmp_dir, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.MNIST('tmp', train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
@@ -523,7 +521,7 @@ if __name__ == '__main__':
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, test_dataloader, device)
             mnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - mnist_supervised_accuracy])
             if kernel_size_list[0] == 4:
-                save_images_2d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), test_dataset[0][0][0], dataset_name, args.results_dir)
+                save_images_2d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), test_dataset[0][0][0], dataset_name)
         mnist_supervised_latex_table.append(mnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -533,15 +531,15 @@ if __name__ == '__main__':
     df.index = list(mnist_kernel_size_range)
     df.index.names = [r'$m$']
     formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{args.results_dir}/mnist-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex('tmp/mnist-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     print('FashionMNIST baseline, Supervised FNN classification')
     batch_size = 64
     lr = 0.01
-    training_validation_dataset = datasets.FashionMNIST(args.tmp_dir, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.FashionMNIST('tmp', download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(fashionmnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(fashionmnist_validation_range), batch_size=batch_size)
-    test_dataset = datasets.FashionMNIST(args.tmp_dir, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.FashionMNIST('tmp', train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(fashionmnist_test_range))
     best_accuracy = 0
     supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
@@ -589,10 +587,10 @@ if __name__ == '__main__':
     batch_size = 64
     lr = 0.01
     fashionmnist_supervised_latex_table = []
-    training_validation_dataset = datasets.FashionMNIST(args.tmp_dir, download=True, train=True, transform=transforms.ToTensor())
+    training_validation_dataset = datasets.FashionMNIST('tmp', download=True, train=True, transform=transforms.ToTensor())
     training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(fashionmnist_training_range))
     validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(fashionmnist_validation_range))
-    test_dataset = datasets.FashionMNIST(args.tmp_dir, train=False, transform=transforms.ToTensor())
+    test_dataset = datasets.FashionMNIST('tmp', train=False, transform=transforms.ToTensor())
     test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(fashionmnist_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
@@ -631,7 +629,7 @@ if __name__ == '__main__':
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, test_dataloader, device)
             fashionmnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - fashionmnist_supervised_accuracy])
             if kernel_size_list[0] == 3:
-                save_images_2d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), test_dataset[0][0][0], dataset_name, args.results_dir)
+                save_images_2d(model_best, sparse_activation_name.lower().replace('_', '-').replace(' ', '-'), test_dataset[0][0][0], dataset_name)
         fashionmnist_supervised_latex_table.append(fashionmnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -641,7 +639,7 @@ if __name__ == '__main__':
     df.index = list(fashionmnist_kernel_size_range)
     df.index.names = [r'$m$']
     formatters = 5*[lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{args.results_dir}/fashionmnist-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
+    df.to_latex('tmp/fashionmnist-supervised.tex', bold_rows=True, escape=False, column_format='l|rrrr|rrrr|rrrr|rrrr|rrrr', multicolumn_format='c', formatters=formatters)
 
     df = pd.DataFrame({'key': ['uci_epilepsy_supervised_accuracy', 'mnist_supervised_accuracy', 'fashionmnist_supervised_accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_supervised_accuracy, fashionmnist_supervised_accuracy]})
-    df.to_csv(f'{args.results_dir}/keys-values.csv', index=False, float_format='%.2f')
+    df.to_csv('tmp/keys-values.csv', index=False, float_format='%.2f')
