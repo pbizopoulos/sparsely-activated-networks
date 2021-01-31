@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+import requests
 import torch
-import urllib
 import wfdb
 
 from matplotlib import patches
@@ -610,7 +610,9 @@ if __name__ == '__main__':
     uci_download_path = 'tmp/UCI-epilepsy'
     if not os.path.exists(uci_download_path):
         os.mkdir(uci_download_path)
-        urllib.request.urlretrieve('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', f'{uci_download_path}/data.csv')
+        with open(f'{uci_download_path}/data.csv', 'wb') as file:
+            response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv')
+            file.write(response.content)
     training_dataset = UCIepilepsyDataset(uci_download_path, 'training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
     validation_dataset = UCIepilepsyDataset(uci_download_path, 'validation')
