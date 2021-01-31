@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 import torch
+import urllib
 import wfdb
 
 from matplotlib import patches
@@ -264,9 +265,8 @@ class PhysionetDataset(Dataset):
 
 
 class UCIepilepsyDataset(Dataset):
-    def __init__(self, training_validation_test):
-        # http://web.archive.org/web/20200211041631/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv
-        dataset = pd.read_csv('data.csv')
+    def __init__(self, path, training_validation_test):
+        dataset = pd.read_csv(f'{path}/data.csv')
         dataset['y'].loc[dataset['y'] == 3] = 2
         dataset['y'].loc[dataset['y'] == 5] = 3
         dataset['y'].loc[dataset['y'] == 4] = 3
@@ -607,11 +607,15 @@ if __name__ == '__main__':
     print('UCI baseline, Supervised CNN classification')
     batch_size = 64
     lr = 0.01
-    training_dataset = UCIepilepsyDataset('training')
+    uci_download_path = 'tmp/UCI-epilepsy'
+    if not os.path.exists(uci_download_path):
+        os.mkdir(uci_download_path)
+        urllib.request.urlretrieve('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', f'{uci_download_path}/data.csv')
+    training_dataset = UCIepilepsyDataset(uci_download_path, 'training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    validation_dataset = UCIepilepsyDataset('validation')
+    validation_dataset = UCIepilepsyDataset(uci_download_path, 'validation')
     validation_dataloader = DataLoader(dataset=validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    test_dataset = UCIepilepsyDataset('test')
+    test_dataset = UCIepilepsyDataset(uci_download_path, 'test')
     test_dataloader = DataLoader(dataset=test_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     best_accuracy = 0
     supervised_model = CNN(len(training_dataset.labels.unique())).to(device)
@@ -659,11 +663,11 @@ if __name__ == '__main__':
     batch_size = 64
     lr = 0.01
     uci_epilepsy_supervised_latex_table = []
-    training_dataset = UCIepilepsyDataset('training')
+    training_dataset = UCIepilepsyDataset(uci_download_path, 'training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    validation_dataset = UCIepilepsyDataset('validation')
+    validation_dataset = UCIepilepsyDataset(uci_download_path, 'validation')
     validation_dataloader = DataLoader(dataset=validation_dataset, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    test_dataset = UCIepilepsyDataset('test')
+    test_dataset = UCIepilepsyDataset(uci_download_path, 'test')
     test_dataloader = DataLoader(dataset=test_dataset, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
