@@ -5,7 +5,6 @@ import numpy as np
 import os
 import pandas as pd
 import torch
-import urllib
 import wfdb
 
 from matplotlib import patches
@@ -264,15 +263,10 @@ class PhysionetDataset(Dataset):
         return self.data.shape[0]
 
 
-def download_uci_epilepsy():
-    path = 'tmp/UCI-epilepsy'
-    if not os.path.exists(path):
-        os.mkdir(path)
-        urllib.request.urlretrieve('http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', f'{path}/data.csv')
-
 class UCIepilepsyDataset(Dataset):
     def __init__(self, training_validation_test):
-        dataset = pd.read_csv('tmp/UCI-epilepsy/data.csv')
+        # http://web.archive.org/web/20200211041631/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv
+        dataset = pd.read_csv('data.csv')
         dataset['y'].loc[dataset['y'] == 3] = 2
         dataset['y'].loc[dataset['y'] == 5] = 3
         dataset['y'].loc[dataset['y'] == 4] = 3
@@ -613,7 +607,6 @@ if __name__ == '__main__':
     print('UCI baseline, Supervised CNN classification')
     batch_size = 64
     lr = 0.01
-    download_uci_epilepsy()
     training_dataset = UCIepilepsyDataset('training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
     validation_dataset = UCIepilepsyDataset('validation')
