@@ -17,6 +17,6 @@ This repository contains the code that generates **Sparsely Activated Networks**
 2. `cd sparsely-activated-networks/`
 3. `sudo systemctl start docker`
 4. make options
-    * `make`             # Generate the draft (fast) version document.
-    * `make VER=--full`  # Generate the full (slow) version document.
-    * `make clean`       # Remove the tmp/ directory.
+    * `make`                # Generate the draft (fast) version document.
+    * `make VERSION=--full` # Generate the full (slow) version document.
+    * `make clean`          # Remove the tmp/ directory.

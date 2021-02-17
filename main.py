@@ -385,19 +385,10 @@ def validate_or_test_supervised_model(supervised_model, unsupervised_model, data
 
 
 if __name__ == '__main__':
-    # DO NOT EDIT BLOCK - Required by the Makefile
+    # Set appropriate variables (e.g. num_samples) to a lower value to reduce the computational cost of the draft (fast) version document.
     parser = argparse.ArgumentParser()
     parser.add_argument('--full', default=False, action='store_true')
     args = parser.parse_args()
-    # END OF DO NOT EDIT BLOCK
-
-    # Set random seeds for reproducibility.
-    np.random.seed(0)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
-    torch.manual_seed(0)
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if args.full:
         num_epochs_physionet = 30
         num_epochs = 5
@@ -425,6 +416,13 @@ if __name__ == '__main__':
         fashionmnist_validation_range = range(10, 20)
         fashionmnist_test_range = range(10)
 
+    # Set random seeds for reproducibility.
+    np.random.seed(0)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.manual_seed(0)
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     sparse_activation_name_list = ['Identity', 'ReLU', 'top-k absolutes', 'Extrema-Pool idx', 'Extrema']
     uci_epilepsy_kernel_size_range = range(8, 16)
     mnist_kernel_size_range = range(1, 7)
