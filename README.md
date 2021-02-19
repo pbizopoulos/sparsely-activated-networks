@@ -8,7 +8,7 @@ This repository contains the code that generates **Sparsely Activated Networks**
 
 ## Requirements
 - [Docker](https://docs.docker.com/get-docker/)
-    - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit) (required only when using CUDA)
+    - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit) (Optional)
 - [Make](https://www.gnu.org/software/make/)
 
 ## Instructions
