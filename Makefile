@@ -78,35 +78,35 @@ $(tmpdir)/texlive-lint: $(bibfile) $(texfile) $(tmpdir)/python-run
 $(tmpdir)/texlive-update:
 	docker image pull texlive/texlive
 
-$(tmpdir)/upload-to-arxiv.tar:
+$(tmpdir)/arxiv-upload.tar:
 	cp $(tmpdir)/ms.bbl .
 	docker container run \
 		--rm \
 		--user `id -u`:`id -g` \
 		--volume `pwd`:$(workdir)/ \
 		--workdir $(workdir)/ \
-		texlive/texlive bash -c 'tar cf $(tmpdir)/upload-to-arxiv.tar ms.bbl $(bibfile) $(texfile) `grep "./$(tmpdir)" $(tmpdir)/ms.fls | uniq | cut -b 9-`'
+		texlive/texlive bash -c 'tar cf $(tmpdir)/arxiv-upload.tar ms.bbl $(bibfile) $(texfile) `grep "./$(tmpdir)" $(tmpdir)/ms.fls | uniq | cut -b 9-`'
 	rm ms.bbl
 
-$(tmpdir)/ms-from-arxiv.pdf:
+$(tmpdir)/arxiv-download.pdf:
 	mkdir -p $(tmpdir)/
 	docker container run \
 		--rm \
 		--user `id -u`:`id -g` \
 		--volume `pwd`:$(workdir)/ \
 		--workdir $(workdir)/ \
-		texlive/texlive wget -U Mozilla -O $(tmpdir)/download-from-arxiv.tar https://arxiv.org/e-print/`grep arxiv.org README | cut -d '/' -f5`
+		texlive/texlive wget -U Mozilla -O $(tmpdir)/arxiv-download.tar https://arxiv.org/e-print/`grep arxiv.org README | cut -d '/' -f5`
 	docker container run \
 		--rm \
 		--user `id -u`:`id -g` \
 		--volume `pwd`:$(workdir)/ \
 		--workdir $(workdir)/ \
-		texlive/texlive tar xfz $(tmpdir)/download-from-arxiv.tar
-	rm $(tmpdir)/download-from-arxiv.tar
+		texlive/texlive tar xfz $(tmpdir)/arxiv-download.tar
+	rm $(tmpdir)/arxiv-download.tar
 	mv ms.bbl $(tmpdir)/
 	touch $(tmpdir)/python-run
 	make $(tmpdir)/ms.pdf
-	mv $(tmpdir)/ms.pdf $(tmpdir)/ms-from-arxiv.pdf
+	mv $(tmpdir)/ms.pdf $(tmpdir)/arxiv-download.pdf
 
 $(pythonfile):
 	echo -e "import os\n\ntmpdir = os.getenv('TMPDIR')\nfull = os.getenv('FULL')\n\n\ndef main():\n    pass\n\n\nif __name__ == '__main__':\n    main()" > $(pythonfile)
