@@ -1,0 +1,8 @@
+# Makefile requirements
+autoflake
+autopep8
+coverage
+isort
+
+# pythonfile requirements
+wfdb==3.4.1
