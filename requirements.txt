@@ -4,4 +4,4 @@ coverage==5.5
 isort==5.9.3
 
 # document requirements
-wfdb==3.4.0
+wfdb==3.4.1
