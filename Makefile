@@ -109,25 +109,25 @@ $(tmpdir)/arxiv-download.pdf:
 	mv $(tmpdir)/ms.pdf $(tmpdir)/arxiv-download.pdf
 
 $(pythonfile):
-	echo -e "import os\n\ntmpdir = os.getenv('TMPDIR')\nfull = os.getenv('FULL')\n\n\ndef main():\n    pass\n\n\nif __name__ == '__main__':\n    main()" > $(pythonfile)
+	printf "import os\n\ntmpdir = os.getenv('TMPDIR')\nfull = os.getenv('FULL')\n\n\ndef main():\n    pass\n\n\nif __name__ == '__main__':\n    main()\n" > $(pythonfile)
 
 Dockerfile:
-	echo -e "FROM python\nCOPY requirements.txt .\nRUN python3 -m pip install --no-cache-dir --upgrade pip && python3 -m pip install --no-cache-dir -r requirements.txt" > Dockerfile
+	printf "FROM python\nCOPY requirements.txt .\nRUN python3 -m pip install --no-cache-dir --upgrade pip && python3 -m pip install --no-cache-dir -r requirements.txt\n" > Dockerfile
 
 requirements.txt:
-	echo -e "# Makefile requirements\nautoflake\nautopep8\ncoverage\nisort\n\n# document requirements\n" > requirements.txt
+	printf "# Makefile requirements\nautoflake\nautopep8\ncoverage\nisort\n\n# document requirements\n\n" > requirements.txt
 
 $(texfile):
-	echo -e "\documentclass{article}\n\\\begin{document}\nTitle\\\end{document}" > $(texfile)
+	printf "\documentclass{article}\n\\\begin{document}\nTitle\n\\\end{document}\n" > $(texfile)
 
 $(bibfile):
 	touch $(bibfile)
 
 .gitignore:
-	echo -e "tmp/" > .gitignore
+	printf "tmp/\n" > .gitignore
 
 .dockerignore:
-	echo -e ".git/\ntmp/" > .dockerignore
+	printf ".git/\ntmp/\n" > .dockerignore
 
 clean:
 	rm -rf $(tmpdir)/
