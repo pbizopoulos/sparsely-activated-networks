@@ -373,7 +373,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
             p = torch.nonzero(activations, as_tuple=False)[:, 0]
             plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
             if p.shape[0] != 0:
-                plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), 'c', basefmt=' ', use_line_collection=True)
+                plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), linefmt='c', basefmt=' ')
             plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-activations-{index_weights}')
             plt.close()
             reconstruction = _conv1d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
@@ -445,10 +445,15 @@ class PhysionetDataset(Dataset):
 
 class UCIepilepsyDataset(Dataset):
     def __init__(self, path, training_validation_test):
+        if not os.path.exists(path):
+            os.mkdir(path)
+            with open(f'{path}/data.csv', 'wb') as file:
+                response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv')
+                file.write(response.content)
         dataset = pd.read_csv(f'{path}/data.csv')
-        dataset['y'].loc[dataset['y'] == 3] = 2
-        dataset['y'].loc[dataset['y'] == 5] = 3
-        dataset['y'].loc[dataset['y'] == 4] = 3
+        dataset['y'].replace(3, 2, inplace=True)
+        dataset['y'].replace(4, 3, inplace=True)
+        dataset['y'].replace(5, 3, inplace=True)
         data_all = dataset.drop(columns=['Unnamed: 0', 'y'])
         data_max = data_all.max().max()
         data_min = data_all.min().min()
@@ -775,11 +780,6 @@ def main():
     batch_size = 64
     lr = 0.01
     uci_download_path = f'{tmpdir}/UCI-epilepsy'
-    if not os.path.exists(uci_download_path):
-        os.mkdir(uci_download_path)
-        with open(f'{uci_download_path}/data.csv', 'wb') as file:
-            response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv')
-            file.write(response.content)
     training_dataset = UCIepilepsyDataset(uci_download_path, 'training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
     validation_dataset = UCIepilepsyDataset(uci_download_path, 'validation')
