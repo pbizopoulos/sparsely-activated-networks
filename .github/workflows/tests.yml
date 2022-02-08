@@ -1,5 +1,18 @@
 name: tests
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+      - 'Makefile'
+      - 'main.py'
+      - 'requirements.txt'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'Makefile'
+      - 'main.py'
+      - 'requirements.txt'
+
 jobs:
   make:
     runs-on: ubuntu-20.04
