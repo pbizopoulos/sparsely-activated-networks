@@ -26,6 +26,114 @@ plt.rcParams['savefig.bbox'] = 'tight'
 plt.rcParams['savefig.format'] = 'pdf'
 
 
+class Identity1D(nn.Module):
+    def __init__(self, _):
+        super().__init__()
+
+    def forward(self, input_):
+        return input_
+
+
+class Relu1D(nn.Module):
+    def __init__(self, _):
+        super().__init__()
+
+    def forward(self, input_):
+        return F.relu(input_)
+
+
+def topk_absolutes_1d(input_, k):
+    primary_extrema = torch.zeros_like(input_)
+    _, extrema_indices = torch.topk(abs(input_), k)
+    return primary_extrema.scatter(-1, extrema_indices, input_.gather(-1, extrema_indices))
+
+
+class TopKAbsolutes1D(nn.Module):
+    def __init__(self, k):
+        super().__init__()
+        self.k = k
+
+    def forward(self, input_):
+        return topk_absolutes_1d(input_, self.k)
+
+
+def extrema_pool_indices_1d(input_, kernel_size):
+    primary_extrema = torch.zeros_like(input_)
+    _, extrema_indices = F.max_pool1d_with_indices(abs(input_), kernel_size)
+    return primary_extrema.scatter(-1, extrema_indices, input_.gather(-1, extrema_indices))
+
+
+class ExtremaPoolIndices1D(nn.Module):
+    def __init__(self, k):
+        super().__init__()
+        self.k = k
+
+    def forward(self, input_):
+        return extrema_pool_indices_1d(input_, self.k)
+
+
+def extrema_1d(input_, minimum_extrema_distance):
+    primary_extrema = torch.zeros_like(input_)
+    dx = input_[:, :, 1:] - input_[:, :, :-1]
+    dx_padright_greater = F.pad(dx, [0, 1]) > 0
+    dx_padleft_less = F.pad(dx, [1, 0]) <= 0
+    sign = (1 - torch.sign(input_)).bool()
+    valleys = dx_padright_greater & dx_padleft_less & sign
+    peaks = ~dx_padright_greater & ~dx_padleft_less & ~sign
+    extrema = peaks | valleys
+    extrema.squeeze_(1)
+    for index, (x_, e_) in enumerate(zip(input_, extrema)):
+        extrema_indices = torch.nonzero(e_, as_tuple=False)
+        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, True)
+        extrema_indices_sorted = extrema_indices[extrema_indices_indices][:, 0]
+        is_secondary_extrema = torch.zeros_like(extrema_indices_indices, dtype=torch.bool)
+        for i, extrema_index in enumerate(extrema_indices_sorted):
+            if not is_secondary_extrema[i]:
+                extrema_indices_r = extrema_indices_sorted >= extrema_index - minimum_extrema_distance
+                extrema_indices_l = extrema_indices_sorted <= extrema_index + minimum_extrema_distance
+                extrema_indices_m = extrema_indices_r & extrema_indices_l
+                is_secondary_extrema = is_secondary_extrema | extrema_indices_m
+                is_secondary_extrema[i] = False
+        primary_extrema_indices = extrema_indices_sorted[~is_secondary_extrema]
+        primary_extrema[index, :, primary_extrema_indices] = x_[0, primary_extrema_indices]
+    return primary_extrema
+
+
+class Extrema1D(nn.Module):
+    def __init__(self, minimum_extrema_distance):
+        super().__init__()
+        self.minimum_extrema_distance = minimum_extrema_distance
+
+    def forward(self, input_):
+        return extrema_1d(input_, self.minimum_extrema_distance)
+
+
+def _conv1d_same_padding(input_, weights):
+    padding = weights.shape[0] - 1
+    odd = int(padding % 2 != 0)
+    if odd:
+        input_ = F.pad(input_, [0, odd])
+    out = F.conv1d(input_, weights.unsqueeze(0).unsqueeze(0), padding=padding // 2)
+    return out
+
+
+class SAN1d(nn.Module):
+    def __init__(self, sparse_activation_list, kernel_size_list):
+        super().__init__()
+        self.sparse_activation_list = nn.ModuleList(sparse_activation_list)
+        self.weights_list = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size)) for kernel_size in kernel_size_list])
+
+    def forward(self, batch_x):
+        activations_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
+        reconstructions_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
+        for index_weights, (sparse_activation, weights) in enumerate(zip(self.sparse_activation_list, self.weights_list)):
+            similarity = _conv1d_same_padding(batch_x, weights)
+            activations_list[:, index_weights] = sparse_activation(similarity)
+            reconstructions_list[:, index_weights] = _conv1d_same_padding(activations_list[:, index_weights], weights)
+        reconstruction = reconstructions_list.sum(1)
+        return reconstruction
+
+
 class Identity2D(nn.Module):
     def __init__(self, _):
         super().__init__()
@@ -49,11 +157,29 @@ def topk_absolutes_2d(input_, k):
     return primary_extrema.scatter(-1, extrema_indices, x_flattened.gather(-1, extrema_indices)).view(input_.shape)
 
 
+class TopKAbsolutes2D(nn.Module):
+    def __init__(self, k):
+        super().__init__()
+        self.k = k
+
+    def forward(self, input_):
+        return topk_absolutes_2d(input_, self.k)
+
+
 def extrema_pool_indices_2d(input_, kernel_size):
     x_flattened = input_.view(input_.shape[0], -1)
     primary_extrema = torch.zeros_like(x_flattened)
     _, extrema_indices = F.max_pool2d_with_indices(abs(input_), kernel_size)
     return primary_extrema.scatter(-1, extrema_indices[..., 0, 0], x_flattened.gather(-1, extrema_indices[..., 0, 0])).view(input_.shape)
+
+
+class ExtremaPoolIndices2D(nn.Module):
+    def __init__(self, k):
+        super().__init__()
+        self.k = k
+
+    def forward(self, input_):
+        return extrema_pool_indices_2d(input_, self.k)
 
 
 def extrema_2d(input_, minimum_extrema_distance):
@@ -93,24 +219,6 @@ def extrema_2d(input_, minimum_extrema_distance):
     return primary_extrema
 
 
-class TopKAbsolutes2D(nn.Module):
-    def __init__(self, k):
-        super().__init__()
-        self.k = k
-
-    def forward(self, input_):
-        return topk_absolutes_2d(input_, self.k)
-
-
-class ExtremaPoolIndices2D(nn.Module):
-    def __init__(self, k):
-        super().__init__()
-        self.k = k
-
-    def forward(self, input_):
-        return extrema_pool_indices_2d(input_, self.k)
-
-
 class Extrema2D(nn.Module):
     def __init__(self, minimum_extrema_distance):
         super().__init__()
@@ -118,6 +226,15 @@ class Extrema2D(nn.Module):
 
     def forward(self, input_):
         return extrema_2d(input_, self.minimum_extrema_distance)
+
+
+def _conv2d_same_padding(input_, weights):
+    padding = weights.shape[0] - 1
+    odd = int(padding % 2 != 0)
+    if odd:
+        input_ = F.pad(input_, [0, odd, 0, odd])
+    out = F.conv2d(input_, weights.unsqueeze(0).unsqueeze(0), padding=padding // 2)
+    return out
 
 
 class SAN2d(nn.Module):
@@ -137,16 +254,16 @@ class SAN2d(nn.Module):
         return reconstruction
 
 
-def _conv2d_same_padding(input_, weights):
-    padding = weights.shape[0] - 1
-    odd = int(padding % 2 != 0)
-    if odd:
-        input_ = F.pad(input_, [0, odd, 0, odd])
-    out = F.conv2d(input_, weights.unsqueeze(0).unsqueeze(0), padding=padding // 2)
-    return out
+class Hook:
+    def __init__(self, module):
+        self.hook = module.register_forward_hook(self.hook_fn)
+
+    def hook_fn(self, _, input_, output):
+        self.input_ = input_
+        self.output = output
 
 
-def save_images_2d(model, sparse_activation_name, data, dataset_name):
+def _save_images_2d(model, sparse_activation_name, data, dataset_name):
     model = model.to('cpu')
     plt.figure()
     plt.xticks([])
@@ -208,124 +325,7 @@ class FNN(nn.Module):
         return out
 
 
-class Hook:
-    def __init__(self, module):
-        self.hook = module.register_forward_hook(self.hook_fn)
-
-    def hook_fn(self, _, input_, output):
-        self.input_ = input_
-        self.output = output
-
-
-class Identity1D(nn.Module):
-    def __init__(self, _):
-        super().__init__()
-
-    def forward(self, input_):
-        return input_
-
-
-class Relu1D(nn.Module):
-    def __init__(self, _):
-        super().__init__()
-
-    def forward(self, input_):
-        return F.relu(input_)
-
-
-def topk_absolutes_1d(input_, k):
-    primary_extrema = torch.zeros_like(input_)
-    _, extrema_indices = torch.topk(abs(input_), k)
-    return primary_extrema.scatter(-1, extrema_indices, input_.gather(-1, extrema_indices))
-
-
-def extrema_pool_indices_1d(input_, kernel_size):
-    primary_extrema = torch.zeros_like(input_)
-    _, extrema_indices = F.max_pool1d_with_indices(abs(input_), kernel_size)
-    return primary_extrema.scatter(-1, extrema_indices, input_.gather(-1, extrema_indices))
-
-
-def extrema_1d(input_, minimum_extrema_distance):
-    primary_extrema = torch.zeros_like(input_)
-    dx = input_[:, :, 1:] - input_[:, :, :-1]
-    dx_padright_greater = F.pad(dx, [0, 1]) > 0
-    dx_padleft_less = F.pad(dx, [1, 0]) <= 0
-    sign = (1 - torch.sign(input_)).bool()
-    valleys = dx_padright_greater & dx_padleft_less & sign
-    peaks = ~dx_padright_greater & ~dx_padleft_less & ~sign
-    extrema = peaks | valleys
-    extrema.squeeze_(1)
-    for index, (x_, e_) in enumerate(zip(input_, extrema)):
-        extrema_indices = torch.nonzero(e_, as_tuple=False)
-        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, True)
-        extrema_indices_sorted = extrema_indices[extrema_indices_indices][:, 0]
-        is_secondary_extrema = torch.zeros_like(extrema_indices_indices, dtype=torch.bool)
-        for i, extrema_index in enumerate(extrema_indices_sorted):
-            if not is_secondary_extrema[i]:
-                extrema_indices_r = extrema_indices_sorted >= extrema_index - minimum_extrema_distance
-                extrema_indices_l = extrema_indices_sorted <= extrema_index + minimum_extrema_distance
-                extrema_indices_m = extrema_indices_r & extrema_indices_l
-                is_secondary_extrema = is_secondary_extrema | extrema_indices_m
-                is_secondary_extrema[i] = False
-        primary_extrema_indices = extrema_indices_sorted[~is_secondary_extrema]
-        primary_extrema[index, :, primary_extrema_indices] = x_[0, primary_extrema_indices]
-    return primary_extrema
-
-
-class TopKAbsolutes1D(nn.Module):
-    def __init__(self, k):
-        super().__init__()
-        self.k = k
-
-    def forward(self, input_):
-        return topk_absolutes_1d(input_, self.k)
-
-
-class ExtremaPoolIndices1D(nn.Module):
-    def __init__(self, k):
-        super().__init__()
-        self.k = k
-
-    def forward(self, input_):
-        return extrema_pool_indices_1d(input_, self.k)
-
-
-class Extrema1D(nn.Module):
-    def __init__(self, minimum_extrema_distance):
-        super().__init__()
-        self.minimum_extrema_distance = minimum_extrema_distance
-
-    def forward(self, input_):
-        return extrema_1d(input_, self.minimum_extrema_distance)
-
-
-class SAN1d(nn.Module):
-    def __init__(self, sparse_activation_list, kernel_size_list):
-        super().__init__()
-        self.sparse_activation_list = nn.ModuleList(sparse_activation_list)
-        self.weights_list = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size)) for kernel_size in kernel_size_list])
-
-    def forward(self, batch_x):
-        activations_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
-        reconstructions_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
-        for index_weights, (sparse_activation, weights) in enumerate(zip(self.sparse_activation_list, self.weights_list)):
-            similarity = _conv1d_same_padding(batch_x, weights)
-            activations_list[:, index_weights] = sparse_activation(similarity)
-            reconstructions_list[:, index_weights] = _conv1d_same_padding(activations_list[:, index_weights], weights)
-        reconstruction = reconstructions_list.sum(1)
-        return reconstruction
-
-
-def _conv1d_same_padding(input_, weights):
-    padding = weights.shape[0] - 1
-    odd = int(padding % 2 != 0)
-    if odd:
-        input_ = F.pad(input_, [0, odd])
-    out = F.conv1d(input_, weights.unsqueeze(0).unsqueeze(0), padding=padding // 2)
-    return out
-
-
-def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights):
+def _save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights):
     model = model.to('cpu')
     _, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
@@ -411,20 +411,16 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
         plt.close()
 
 
-def download_physionet(dataset_name_list):
-    for dataset_name in dataset_name_list:
-        path = f'{tmpdir}/{dataset_name}'
-        if not os.path.exists(path):
-            record_name = wfdb.get_record_list(dataset_name)[0]
-            wfdb.dl_database(dataset_name, path, records=[record_name], annotators=None)
-
-
 class PhysionetDataset(Dataset):
     def __init__(self, training_validation_test, dataset_name):
-        files = glob.glob(f'{tmpdir}/{dataset_name}/*.hea')
+        dataset_dir = f'{tmpdir}/{dataset_name}'
+        if not os.path.exists(dataset_dir):
+            record_name = wfdb.get_record_list(dataset_name)[0]
+            wfdb.dl_database(dataset_name, dataset_dir, records=[record_name], annotators=None)
+        files = glob.glob(f'{dataset_dir}/*.hea')
         file = files[0]
         filename = os.path.splitext(os.path.basename(file))[0]
-        records = wfdb.rdrecord(f'{tmpdir}/{dataset_name}/{filename}')
+        records = wfdb.rdrecord(f'{dataset_dir}/{filename}')
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if training_validation_test == 'training':
             self.data = data[:6000]
@@ -500,13 +496,13 @@ class CNN(nn.Module):
         return out
 
 
-def calculate_inverse_compression_ratio(model, data, num_activations):
+def _calculate_inverse_compression_ratio(model, data, num_activations):
     activation_multiplier = 1 + len(model.weights_list[0].shape)
     num_parameters = sum([weights.shape[0] for weights in model.weights_list])
     return (activation_multiplier * num_activations + num_parameters) / (data.shape[-1] * data.shape[-2])
 
 
-def train_unsupervised_model(model, optimizer, training_dataloader, device):
+def _train_unsupervised_model(model, optimizer, training_dataloader, device):
     model.train()
     for data, _ in training_dataloader:
         data = data.to(device)
@@ -517,7 +513,7 @@ def train_unsupervised_model(model, optimizer, training_dataloader, device):
         optimizer.step()
 
 
-def validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, device):
+def _validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, device):
     model.eval()
     num_activations = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
@@ -531,12 +527,12 @@ def validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, dev
             activations_list = torch.stack(activations_list, 1)
             reconstruction_loss[index] = F.l1_loss(data, data_reconstructed) / F.l1_loss(data, torch.zeros_like(data))
             num_activations[index] = torch.nonzero(activations_list, as_tuple=False).shape[0]
-    inverse_compression_ratio = calculate_inverse_compression_ratio(model, data, num_activations)
+    inverse_compression_ratio = _calculate_inverse_compression_ratio(model, data, num_activations)
     flithos = np.mean([np.sqrt(i ** 2 + r ** 2) for i, r in zip(inverse_compression_ratio, reconstruction_loss)])
     return flithos, inverse_compression_ratio, reconstruction_loss
 
 
-def train_supervised_model(supervised_model, unsupervised_model, optimizer, training_dataloader, device):
+def _train_supervised_model(supervised_model, unsupervised_model, optimizer, training_dataloader, device):
     supervised_model.train()
     for data, target in training_dataloader:
         data = data.to(device)
@@ -549,7 +545,7 @@ def train_supervised_model(supervised_model, unsupervised_model, optimizer, trai
         optimizer.step()
 
 
-def validate_or_test_supervised_model(supervised_model, unsupervised_model, hook_handle_list, dataloader, device):
+def _validate_or_test_supervised_model(supervised_model, unsupervised_model, hook_handle_list, dataloader, device):
     supervised_model.eval()
     correct = 0
     num_activations = np.zeros(len(dataloader))
@@ -568,7 +564,7 @@ def validate_or_test_supervised_model(supervised_model, unsupervised_model, hook
             output = supervised_model(data_reconstructed)
             pred = output.argmax(dim=1)
             correct += (pred == target).sum().item()
-    inverse_compression_ratio = calculate_inverse_compression_ratio(unsupervised_model, data, num_activations)
+    inverse_compression_ratio = _calculate_inverse_compression_ratio(unsupervised_model, data, num_activations)
     flithos = np.mean([np.sqrt(i ** 2 + r ** 2) for i, r in zip(inverse_compression_ratio, reconstruction_loss)])
     return flithos, inverse_compression_ratio, reconstruction_loss, 100 * correct / len(dataloader.sampler)
 
@@ -611,7 +607,6 @@ def main():
     print('Physionet, X: mean reconstruction loss, Y: mean inverse compression ratio, Color: sparse activation')
     dataset_name_list = ['apnea-ecg', 'bidmc', 'bpssrat', 'cebsdb', 'ctu-uhb-ctgdb', 'drivedb', 'emgdb', 'mitdb', 'noneeg', 'prcp', 'shhpsgdb', 'slpdb', 'sufhsdb', 'voiced', 'wrist']
     xlim_weights_list = [74, 113, 10, 71, 45, 20, 9, 229, 37, 105, 15, 232, 40, 70, 173]
-    download_physionet(dataset_name_list)
     sparse_activation_list = [Identity1D, Relu1D, TopKAbsolutes1D, ExtremaPoolIndices1D, Extrema1D]
     kernel_size_list_list = [[k] for k in physionet_kernel_size_list_list_range]
     batch_size = 2
@@ -647,13 +642,13 @@ def main():
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
                 for epoch in range(num_epochs_physionet):
-                    train_unsupervised_model(model, optimizer, training_dataloader, device)
-                    flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                    _train_unsupervised_model(model, optimizer, training_dataloader, device)
+                    flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                     flithos_all_validation[index_sparse_activation, index_dataset_name, index_kernel_size_list, epoch] = flithos_epoch.mean()
                     if flithos_epoch.mean() < mean_flithos_epoch_best:
                         model_epoch_best = model
                         mean_flithos_epoch_best = flithos_epoch.mean()
-                flithos_epoch_best, inverse_compression_ratio_epoch_best, reconstruction_loss_epoch_best = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, test_dataloader, device)
+                flithos_epoch_best, inverse_compression_ratio_epoch_best, reconstruction_loss_epoch_best = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, test_dataloader, device)
                 mean_flithos[index_sparse_activation, index_dataset_name, index_kernel_size_list] = flithos_epoch_best.mean()
                 plt.sca(ax_main)
                 plt.plot(reconstruction_loss_epoch_best.mean(), inverse_compression_ratio_epoch_best.mean(), 'o', c=sparse_activation_color, markersize=3)
@@ -665,7 +660,7 @@ def main():
                     mean_flithos_best = mean_flithos[index_sparse_activation, index_dataset_name, index_kernel_size_list]
                     model_best = model_epoch_best
             physionet_latex_table_row.extend([kernel_size_list_best[index_sparse_activation, index_dataset_name], inverse_compression_ratio_best.mean(), reconstruction_loss_best.mean(), mean_flithos_best])
-            save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], xlim_weights)
+            _save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], xlim_weights)
             ax_main.arrow(reconstruction_loss_best.mean(), inverse_compression_ratio_best.mean(), 1.83 - reconstruction_loss_best.mean(), 2.25 - 0.5 * index_sparse_activation - inverse_compression_ratio_best.mean())
             fig.add_axes([0.75, 0.81 - 0.165 * index_sparse_activation, 0.1, 0.1], facecolor='y')
             plt.plot(model_best.weights_list[0].flip(0).cpu().detach().numpy().T, c=sparse_activation_color)
@@ -853,8 +848,8 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
-                train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                _train_unsupervised_model(model, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
@@ -864,16 +859,16 @@ def main():
             supervised_model = CNN(len(training_dataset.labels.unique())).to(device).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
-                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
+                _train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     supervised_model_best = supervised_model
                     model_best = model_epoch_best
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = _validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
             uci_epilepsy_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - uci_epilepsy_supervised_accuracy])
             if kernel_size_list[0] == 10:
-                save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], kernel_size_list[0])
+                _save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], kernel_size_list[0])
         uci_epilepsy_supervised_latex_table.append(uci_epilepsy_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -959,8 +954,8 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
-                train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                _train_unsupervised_model(model, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
@@ -970,16 +965,16 @@ def main():
             supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
-                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
+                _train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     supervised_model_best = supervised_model
                     model_best = model_epoch_best
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = _validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
             mnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - mnist_supervised_accuracy])
             if kernel_size_list[0] == 4:
-                save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
+                _save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
         mnist_supervised_latex_table.append(mnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -1065,8 +1060,8 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
-                train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                _train_unsupervised_model(model, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
@@ -1076,16 +1071,16 @@ def main():
             supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
-                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
+                _train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     supervised_model_best = supervised_model
                     model_best = model_epoch_best
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = _validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
             fashionmnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - fashionmnist_supervised_accuracy])
             if kernel_size_list[0] == 3:
-                save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
+                _save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
         fashionmnist_supervised_latex_table.append(fashionmnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
