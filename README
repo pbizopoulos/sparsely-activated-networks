@@ -14,8 +14,8 @@ git clone https://github.com/pbizopoulos/sparsely-activated-networks
 cd sparsely-activated-networks/
 sudo systemctl start docker
 
-Basic usage:
+Basic commands:
 make		# Generate draft (fast) results.
 make FULL=1	# Generate full (slow) results.
 make clean 	# Remove tmp/ directory.
-make help	# Show help.
+make help	# Show basic/advanced commands.
