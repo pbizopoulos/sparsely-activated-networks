@@ -5,21 +5,16 @@ container_engine=docker
 tmpdir=tmp
 workdir=/app
 
-user_arg_podman=
-user_arg_docker=--user `id -u`:`id -g`
-user_arg=$(user_arg_$(container_engine))
+user_arg=$(shell [ $(container_engine) = "docker" ] && echo --user `id -u`:`id -g`)
+
+# Basic commands.
 
 .PHONY: clean
 
-debug_args=$(shell [ -t 0 ] && echo --interactive --tty)
-
-gpus_arg_0_docker=
-gpus_arg_1_docker=--gpus all
-gpus_arg_0_podman=
-gpus_arg_1_podman=
-gpus_arg=$(gpus_arg_$(shell command -v nvidia-container-toolkit > /dev/null && echo 1 || echo 0)_$(container_engine))
-
 pythonfile=main.py
+
+debug_args=$(shell [ -t 0 ] && echo --interactive --tty)
+gpus_arg=$(shell [ $(container_engine) = "docker" ] && command -v nvidia-container-toolkit > /dev/null && echo --gpus all)
 
 $(tmpdir)/python-run: $(pythonfile) .dockerignore .gitignore Dockerfile requirements.txt
 	mkdir -p $(tmpdir)/
@@ -42,24 +37,23 @@ clean:
 
 help:
 	@echo "Basic/Advanced commands:                                   "
+	@echo "                         # Basic commands.                 "
 	@echo "make                     # Generate draft (fast) results.  "
 	@echo "make FULL=1              # Generate full (slow) results.   "
 	@echo "make clean               # Remove tmp/ directory.          "
 	@echo "make help                # Show basic/advanced commands.   "
-	@echo "                         # [Optional] python commands.     "
+	@echo "                         # Advanced commands.              "
+	@echo "                         # python commands.                "
 	@echo "make tmp/python-coverage # Code coverage for main.py.      "
 	@echo "make tmp/python-format   # Format main.py.                 "
-	@echo "                         # [Optional] texlive commands.    "
+	@echo "                         # texlive commands.               "
 	@echo "make tmp/ms.pdf          # Generate document.              "
 	@echo "make tmp/texlive-lint    # Lint ms.tex.                    "
 	@echo "make tmp/texlive-test    # Test document reproducibility.  "
 	@echo "make tmp/texlive-update  # Update texlive container image. "
-	@echo "                         # [Optional] arxiv commands.      "
+	@echo "                         # arxiv commands.                 "
 	@echo "make tmp/arxiv-ms.pdf    # Generate document from arxiv.   "
 	@echo "make tmp/arxiv.tar       # Generate tar for arxiv.         "
-	@echo "                         # [Optional] app commands.        "
-	@echo "make index.html          # Generate index.html for app.    "
-	@echo "make serve               # Serve index.html for app.       "
 
 $(pythonfile):
 	printf "import os\n\ntmpdir = os.getenv('TMPDIR')\nfull = os.getenv('FULL')\n\n\ndef main():\n    pass\n\n\nif __name__ == '__main__':\n    main()\n" > $(pythonfile)
@@ -76,7 +70,7 @@ Dockerfile:
 requirements.txt:
 	printf "# Makefile requirements\nautoflake\nautopep8\ncoverage\nisort\n\n# document requirements\n\n" > requirements.txt
 
-# [Optional] python commands
+# python commands.
 
 $(tmpdir)/python-coverage: $(pythonfile) Dockerfile requirements.txt
 	mkdir -p $(tmpdir)/
@@ -103,7 +97,7 @@ $(tmpdir)/python-format: $(pythonfile)
 		`$(container_engine) image build --quiet .` bash -c "isort $(pythonfile) && autoflake --in-place --remove-all-unused-imports --remove-unused-variables $(pythonfile) && autopep8 -i --max-line-length 1000 $(pythonfile)"
 	touch $(tmpdir)/python-format
 
-# [Optional] texlive commands
+# texlive commands.
 
 .PHONY: $(tmpdir)/texlive-test $(tmpdir)/texlive-update
 
@@ -141,27 +135,21 @@ $(bibfile):
 $(texfile):
 	printf "\documentclass{article}\n\\\begin{document}\nTitle\n\\\end{document}\n" > $(texfile)
 
-# [Optional] arxiv commands
+# arxiv commands.
 
-$(tmpdir)/arxiv-download.pdf:
+$(tmpdir)/arxiv-ms.pdf:
 	mkdir -p $(tmpdir)/
 	$(container_engine) container run \
 		$(user_arg) \
 		--rm \
 		--volume `pwd`:$(workdir)/ \
 		--workdir $(workdir)/ \
-		texlive/texlive wget -U Mozilla -O $(tmpdir)/arxiv-download.tar https://arxiv.org/e-print/`grep arxiv.org README | cut -d '/' -f5`
-	$(container_engine) container run \
-		$(user_arg) \
-		--rm \
-		--volume `pwd`:$(workdir)/ \
-		--workdir $(workdir)/ \
-		texlive/texlive tar xfz $(tmpdir)/arxiv-download.tar
+		texlive/texlive bash -c "wget -U Mozilla -O $(tmpdir)/arxiv-download.tar https://arxiv.org/e-print/`grep arxiv.org README | cut -d '/' -f5` && tar xfz $(tmpdir)/arxiv-download.tar"
 	rm $(tmpdir)/arxiv-download.tar
 	mv ms.bbl $(tmpdir)/
 	touch $(tmpdir)/python-run
 	make $(tmpdir)/ms.pdf
-	mv $(tmpdir)/ms.pdf $(tmpdir)/arxiv-download.pdf
+	mv $(tmpdir)/ms.pdf $(tmpdir)/arxiv-ms.pdf
 
 $(tmpdir)/arxiv-upload.tar:
 	cp $(tmpdir)/ms.bbl .
@@ -172,32 +160,3 @@ $(tmpdir)/arxiv-upload.tar:
 		--workdir $(workdir)/ \
 		texlive/texlive bash -c 'tar cf $(tmpdir)/arxiv-upload.tar ms.bbl $(bibfile) $(texfile) `grep "./$(tmpdir)" $(tmpdir)/ms.fls | uniq | cut -b 9-`'
 	rm ms.bbl
-
-# [Optional] app commands
-
-appfile=app.py
-
-index.html: $(appfile) Dockerfile requirements.txt
-	$(container_engine) container run \
-		$(debug_args) \
-		$(user_arg) \
-		--detach-keys "ctrl-^,ctrl-^" \
-		--env HOME=$(workdir)/$(tmpdir) \
-		--rm \
-		--volume `pwd`:$(workdir)/ \
-		--workdir $(workdir)/ \
-		`$(container_engine) image build --quiet .` python3 $(appfile)
-
-serve: index.html
-	$(container_engine) container run \
-		$(user_arg) \
-		--detach-keys "ctrl-^,ctrl-^" \
-		--env HOME=$(workdir)/$(tmpdir) \
-		--publish 8000:8000 \
-		--rm \
-		--volume `pwd`:$(workdir)/ \
-		--workdir $(workdir)/ \
-		python python3 -m http.server --directory .
-
-$(appfile):
-	printf "from pyclientsideml import generate_page\n\n\n\ndef main():\n    generate_page('signal-classification', 'tmp/')\n\n\nif __name__ == '__main__':\n    main()\n" > $(appfile)
