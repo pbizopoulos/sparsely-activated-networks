@@ -108,15 +108,6 @@ class Extrema1D(nn.Module):
         return extrema_1d(input_, self.minimum_extrema_distance)
 
 
-def _conv1d_same_padding(input_, weights):
-    padding = weights.shape[0] - 1
-    odd = int(padding % 2 != 0)
-    if odd:
-        input_ = F.pad(input_, [0, odd])
-    out = F.conv1d(input_, weights.unsqueeze(0).unsqueeze(0), padding=padding // 2)
-    return out
-
-
 class SAN1d(nn.Module):
     def __init__(self, sparse_activation_list, kernel_size_list):
         super().__init__()
@@ -124,14 +115,12 @@ class SAN1d(nn.Module):
         self.weights_list = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size)) for kernel_size in kernel_size_list])
 
     def forward(self, batch_x):
-        activations_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
-        reconstructions_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
-        for index_weights, (sparse_activation, weights) in enumerate(zip(self.sparse_activation_list, self.weights_list)):
-            similarity = _conv1d_same_padding(batch_x, weights)
-            activations_list[:, index_weights] = sparse_activation(similarity)
-            reconstructions_list[:, index_weights] = _conv1d_same_padding(activations_list[:, index_weights], weights)
-        reconstruction = reconstructions_list.sum(1)
-        return reconstruction
+        reconstructions_sum = torch.zeros_like(batch_x)
+        for sparse_activation, weights in zip(self.sparse_activation_list, self.weights_list):
+            similarity = F.conv1d(batch_x, weights.unsqueeze(0).unsqueeze(0), padding='same')
+            activations_list = sparse_activation(similarity)
+            reconstructions_sum = reconstructions_sum + F.conv1d(activations_list, weights.unsqueeze(0).unsqueeze(0), padding='same')
+        return reconstructions_sum
 
 
 class Identity2D(nn.Module):
@@ -228,15 +217,6 @@ class Extrema2D(nn.Module):
         return extrema_2d(input_, self.minimum_extrema_distance)
 
 
-def _conv2d_same_padding(input_, weights):
-    padding = weights.shape[0] - 1
-    odd = int(padding % 2 != 0)
-    if odd:
-        input_ = F.pad(input_, [0, odd, 0, odd])
-    out = F.conv2d(input_, weights.unsqueeze(0).unsqueeze(0), padding=padding // 2)
-    return out
-
-
 class SAN2d(nn.Module):
     def __init__(self, sparse_activation_list, kernel_size_list):
         super().__init__()
@@ -244,14 +224,12 @@ class SAN2d(nn.Module):
         self.weights_list = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size, kernel_size)) for kernel_size in kernel_size_list])
 
     def forward(self, batch_x):
-        activations_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
-        reconstructions_list = torch.zeros(batch_x.shape[0], len(self.weights_list), *batch_x.shape[1:], device=batch_x.device)
+        reconstructions_sum = torch.zeros_like(batch_x)
         for index_weights, (sparse_activation, weights) in enumerate(zip(self.sparse_activation_list, self.weights_list)):
-            similarity = _conv2d_same_padding(batch_x, weights)
-            activations_list[:, index_weights] = sparse_activation(similarity)
-            reconstructions_list[:, index_weights] = _conv2d_same_padding(activations_list[:, index_weights], weights)
-        reconstruction = reconstructions_list.sum(1)
-        return reconstruction
+            similarity = F.conv2d(batch_x, weights.unsqueeze(0).unsqueeze(0), padding='same')
+            activations_list = sparse_activation(similarity)
+            reconstructions_sum = reconstructions_sum + F.conv2d(activations_list, weights.unsqueeze(0).unsqueeze(0), padding='same')
+        return reconstructions_sum
 
 
 class Hook:
@@ -263,7 +241,7 @@ class Hook:
         self.output = output
 
 
-def _save_images_2d(model, sparse_activation_name, data, dataset_name):
+def save_images_2d(model, sparse_activation_name, data, dataset_name):
     model = model.to('cpu')
     plt.figure()
     plt.xticks([])
@@ -286,7 +264,7 @@ def _save_images_2d(model, sparse_activation_name, data, dataset_name):
             plt.yticks([])
             plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-kernel-{index_weights}')
             plt.close()
-            similarity = _conv2d_same_padding(data.unsqueeze(0).unsqueeze(0), weights)[0, 0]
+            similarity = F.conv2d(data.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.xticks([])
             plt.yticks([])
@@ -299,7 +277,7 @@ def _save_images_2d(model, sparse_activation_name, data, dataset_name):
             plt.yticks([])
             plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-activations-{index_weights}')
             plt.close()
-            reconstruction = _conv2d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
+            reconstruction = F.conv2d(activations.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.imshow(reconstruction.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(reconstruction).max(), vmax=2 * abs(reconstruction).max())
             plt.xticks([])
@@ -325,7 +303,7 @@ class FNN(nn.Module):
         return out
 
 
-def _save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights):
+def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weights):
     model = model.to('cpu')
     _, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
@@ -358,7 +336,7 @@ def _save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weig
                 plt.title(dataset_name, fontsize=20)
             plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-kernel-{index_weights}')
             plt.close()
-            similarity = _conv1d_same_padding(data.unsqueeze(0).unsqueeze(0), weights)[0, 0]
+            similarity = F.conv1d(data.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             _, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
             plt.grid(True)
@@ -376,7 +354,7 @@ def _save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weig
                 plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), linefmt='c', basefmt=' ')
             plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-activations-{index_weights}')
             plt.close()
-            reconstruction = _conv1d_same_padding(activations.unsqueeze(0).unsqueeze(0), weights)[0, 0]
+            reconstruction = F.conv1d(activations.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             _, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
             plt.grid(True)
@@ -496,13 +474,13 @@ class CNN(nn.Module):
         return out
 
 
-def _calculate_inverse_compression_ratio(model, data, num_activations):
+def calculate_inverse_compression_ratio(model, data, num_activations):
     activation_multiplier = 1 + len(model.weights_list[0].shape)
     num_parameters = sum([weights.shape[0] for weights in model.weights_list])
     return (activation_multiplier * num_activations + num_parameters) / (data.shape[-1] * data.shape[-2])
 
 
-def _train_unsupervised_model(model, optimizer, training_dataloader, device):
+def train_unsupervised_model(model, optimizer, training_dataloader, device):
     model.train()
     for data, _ in training_dataloader:
         data = data.to(device)
@@ -513,7 +491,7 @@ def _train_unsupervised_model(model, optimizer, training_dataloader, device):
         optimizer.step()
 
 
-def _validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, device):
+def validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, device):
     model.eval()
     num_activations = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
@@ -527,12 +505,12 @@ def _validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, de
             activations_list = torch.stack(activations_list, 1)
             reconstruction_loss[index] = F.l1_loss(data, data_reconstructed) / F.l1_loss(data, torch.zeros_like(data))
             num_activations[index] = torch.nonzero(activations_list, as_tuple=False).shape[0]
-    inverse_compression_ratio = _calculate_inverse_compression_ratio(model, data, num_activations)
+    inverse_compression_ratio = calculate_inverse_compression_ratio(model, data, num_activations)
     flithos = np.mean([np.sqrt(i ** 2 + r ** 2) for i, r in zip(inverse_compression_ratio, reconstruction_loss)])
     return flithos, inverse_compression_ratio, reconstruction_loss
 
 
-def _train_supervised_model(supervised_model, unsupervised_model, optimizer, training_dataloader, device):
+def train_supervised_model(supervised_model, unsupervised_model, optimizer, training_dataloader, device):
     supervised_model.train()
     for data, target in training_dataloader:
         data = data.to(device)
@@ -545,7 +523,7 @@ def _train_supervised_model(supervised_model, unsupervised_model, optimizer, tra
         optimizer.step()
 
 
-def _validate_or_test_supervised_model(supervised_model, unsupervised_model, hook_handle_list, dataloader, device):
+def validate_or_test_supervised_model(supervised_model, unsupervised_model, hook_handle_list, dataloader, device):
     supervised_model.eval()
     correct = 0
     num_activations = np.zeros(len(dataloader))
@@ -564,7 +542,7 @@ def _validate_or_test_supervised_model(supervised_model, unsupervised_model, hoo
             output = supervised_model(data_reconstructed)
             pred = output.argmax(dim=1)
             correct += (pred == target).sum().item()
-    inverse_compression_ratio = _calculate_inverse_compression_ratio(unsupervised_model, data, num_activations)
+    inverse_compression_ratio = calculate_inverse_compression_ratio(unsupervised_model, data, num_activations)
     flithos = np.mean([np.sqrt(i ** 2 + r ** 2) for i, r in zip(inverse_compression_ratio, reconstruction_loss)])
     return flithos, inverse_compression_ratio, reconstruction_loss, 100 * correct / len(dataloader.sampler)
 
@@ -642,13 +620,13 @@ def main():
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
                 for epoch in range(num_epochs_physionet):
-                    _train_unsupervised_model(model, optimizer, training_dataloader, device)
-                    flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                    train_unsupervised_model(model, optimizer, training_dataloader, device)
+                    flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                     flithos_all_validation[index_sparse_activation, index_dataset_name, index_kernel_size_list, epoch] = flithos_epoch.mean()
                     if flithos_epoch.mean() < mean_flithos_epoch_best:
                         model_epoch_best = model
                         mean_flithos_epoch_best = flithos_epoch.mean()
-                flithos_epoch_best, inverse_compression_ratio_epoch_best, reconstruction_loss_epoch_best = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, test_dataloader, device)
+                flithos_epoch_best, inverse_compression_ratio_epoch_best, reconstruction_loss_epoch_best = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, test_dataloader, device)
                 mean_flithos[index_sparse_activation, index_dataset_name, index_kernel_size_list] = flithos_epoch_best.mean()
                 plt.sca(ax_main)
                 plt.plot(reconstruction_loss_epoch_best.mean(), inverse_compression_ratio_epoch_best.mean(), 'o', c=sparse_activation_color, markersize=3)
@@ -660,7 +638,7 @@ def main():
                     mean_flithos_best = mean_flithos[index_sparse_activation, index_dataset_name, index_kernel_size_list]
                     model_best = model_epoch_best
             physionet_latex_table_row.extend([kernel_size_list_best[index_sparse_activation, index_dataset_name], inverse_compression_ratio_best.mean(), reconstruction_loss_best.mean(), mean_flithos_best])
-            _save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], xlim_weights)
+            save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], xlim_weights)
             ax_main.arrow(reconstruction_loss_best.mean(), inverse_compression_ratio_best.mean(), 1.83 - reconstruction_loss_best.mean(), 2.25 - 0.5 * index_sparse_activation - inverse_compression_ratio_best.mean())
             fig.add_axes([0.75, 0.81 - 0.165 * index_sparse_activation, 0.1, 0.1], facecolor='y')
             plt.plot(model_best.weights_list[0].flip(0).cpu().detach().numpy().T, c=sparse_activation_color)
@@ -683,14 +661,12 @@ def main():
         plt.savefig(f'{tmpdir}/{dataset_name}')
         plt.close()
     header = ['$m$', r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
-    index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    physionet_latex_table = np.array(physionet_latex_table).T.tolist()
-    df = pd.DataFrame(physionet_latex_table, index=index)
-    df = df.T
-    df.index = dataset_name_list
+    columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+    df = pd.DataFrame(physionet_latex_table, columns=columns, index=dataset_name_list)
     df.index.names = ['Datasets']
-    formatters = 5 * [lambda x: f'{x:.0f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}']
-    df.to_latex(f'{tmpdir}/table-flithos-variable-kernel-size.tex', bold_rows=True, escape=False, multicolumn_format='c', formatters=formatters)
+    styler = df.style
+    styler.format(precision=2, formatter={columns[0]: '{:.0f}', columns[4]: '{:.0f}', columns[8]: '{:.0f}', columns[12]: '{:.0f}', columns[16]: '{:.0f}'})
+    styler.to_latex(f'{tmpdir}/table-flithos-variable-kernel-size.tex', hrules=True, multicol_align='c')
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_name_list), num_epochs_physionet))
     p1 = [0, 0, 0, 0, 0]
@@ -848,8 +824,8 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
-                _train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                train_unsupervised_model(model, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
@@ -859,26 +835,24 @@ def main():
             supervised_model = CNN(len(training_dataset.labels.unique())).to(device).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
-                _train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
+                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     supervised_model_best = supervised_model
                     model_best = model_epoch_best
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = _validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
             uci_epilepsy_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - uci_epilepsy_supervised_accuracy])
             if kernel_size_list[0] == 10:
-                _save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], kernel_size_list[0])
+                save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], kernel_size_list[0])
         uci_epilepsy_supervised_latex_table.append(uci_epilepsy_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-    index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    uci_epilepsy_supervised_latex_table = np.array(uci_epilepsy_supervised_latex_table).T.tolist()
-    df = pd.DataFrame(uci_epilepsy_supervised_latex_table, index=index)
-    df = df.T
-    df.index = list(uci_epilepsy_kernel_size_range)
+    columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+    df = pd.DataFrame(uci_epilepsy_supervised_latex_table, columns=columns, index=uci_epilepsy_kernel_size_range)
     df.index.names = [r'$m$']
-    formatters = 5 * [lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{tmpdir}/table-uci-epilepsy-supervised.tex', bold_rows=True, escape=False, multicolumn_format='c', formatters=formatters)
+    styler = df.style
+    styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
+    styler.to_latex(f'{tmpdir}/table-uci-epilepsy-supervised.tex', hrules=True, multicol_align='c')
     print('MNIST baseline, Supervised FNN classification')
     batch_size = 64
     lr = 0.01
@@ -954,8 +928,8 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
-                _train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                train_unsupervised_model(model, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
@@ -965,26 +939,24 @@ def main():
             supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
-                _train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
+                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     supervised_model_best = supervised_model
                     model_best = model_epoch_best
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = _validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
             mnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - mnist_supervised_accuracy])
             if kernel_size_list[0] == 4:
-                _save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
+                save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
         mnist_supervised_latex_table.append(mnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-    index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    mnist_supervised_latex_table = np.array(mnist_supervised_latex_table).T.tolist()
-    df = pd.DataFrame(mnist_supervised_latex_table, index=index)
-    df = df.T
-    df.index = list(mnist_kernel_size_range)
+    columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+    df = pd.DataFrame(mnist_supervised_latex_table, columns=columns, index=mnist_kernel_size_range)
     df.index.names = [r'$m$']
-    formatters = 5 * [lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{tmpdir}/table-mnist-supervised.tex', bold_rows=True, escape=False, multicolumn_format='c', formatters=formatters)
+    styler = df.style
+    styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
+    styler.to_latex(f'{tmpdir}/table-mnist-supervised.tex', hrules=True, multicol_align='c')
     print('FashionMNIST baseline, Supervised FNN classification')
     batch_size = 64
     lr = 0.01
@@ -1060,8 +1032,8 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
-                _train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                train_unsupervised_model(model, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
@@ -1071,26 +1043,24 @@ def main():
             supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
-                _train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = _validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
+                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     supervised_model_best = supervised_model
                     model_best = model_epoch_best
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = _validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
             fashionmnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - fashionmnist_supervised_accuracy])
             if kernel_size_list[0] == 3:
-                _save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
+                save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
         fashionmnist_supervised_latex_table.append(fashionmnist_supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-    index = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    fashionmnist_supervised_latex_table = np.array(fashionmnist_supervised_latex_table).T.tolist()
-    df = pd.DataFrame(fashionmnist_supervised_latex_table, index=index)
-    df = df.T
-    df.index = list(fashionmnist_kernel_size_range)
+    columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+    df = pd.DataFrame(fashionmnist_supervised_latex_table, columns=columns, index=fashionmnist_kernel_size_range)
     df.index.names = [r'$m$']
-    formatters = 5 * [lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:.2f}', lambda x: f'{x:+.1f}']
-    df.to_latex(f'{tmpdir}/table-fashionmnist-supervised.tex', bold_rows=True, escape=False, multicolumn_format='c', formatters=formatters)
+    styler = df.style
+    styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
+    styler.to_latex(f'{tmpdir}/table-fashionmnist-supervised.tex', hrules=True, multicol_align='c')
     df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_supervised_accuracy, fashionmnist_supervised_accuracy]})
     df.to_csv(f'{tmpdir}/keys-values.csv', index=False, float_format='%.2f')
 
