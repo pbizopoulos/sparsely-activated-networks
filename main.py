@@ -15,7 +15,8 @@ from torch import nn, optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
-from torchvision import datasets, transforms
+from torchvision.datasets import MNIST, FashionMNIST
+from torchvision.transforms import ToTensor
 
 tmpdir = os.getenv('TMPDIR')
 full = os.getenv('FULL')
@@ -396,8 +397,7 @@ class PhysionetDataset(Dataset):
             record_name = wfdb.get_record_list(dataset_name)[0]
             wfdb.dl_database(dataset_name, dataset_dir, records=[record_name], annotators=None)
         files = glob.glob(f'{dataset_dir}/*.hea')
-        file = files[0]
-        filename = os.path.splitext(os.path.basename(file))[0]
+        filename = os.path.splitext(os.path.basename(files[0]))[0]
         records = wfdb.rdrecord(f'{dataset_dir}/{filename}')
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if training_validation_test == 'training':
@@ -480,7 +480,8 @@ def calculate_inverse_compression_ratio(model, data, num_activations):
     return (activation_multiplier * num_activations + num_parameters) / (data.shape[-1] * data.shape[-2])
 
 
-def train_unsupervised_model(model, optimizer, training_dataloader, device):
+def train_unsupervised_model(model, optimizer, training_dataloader):
+    device = next(model.parameters()).device
     model.train()
     for data, _ in training_dataloader:
         data = data.to(device)
@@ -491,7 +492,8 @@ def train_unsupervised_model(model, optimizer, training_dataloader, device):
         optimizer.step()
 
 
-def validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, device):
+def validate_or_test_unsupervised_model(model, hook_handle_list, dataloader):
+    device = next(model.parameters()).device
     model.eval()
     num_activations = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
@@ -510,7 +512,8 @@ def validate_or_test_unsupervised_model(model, hook_handle_list, dataloader, dev
     return flithos, inverse_compression_ratio, reconstruction_loss
 
 
-def train_supervised_model(supervised_model, unsupervised_model, optimizer, training_dataloader, device):
+def train_supervised_model(supervised_model, unsupervised_model, optimizer, training_dataloader):
+    device = next(supervised_model.parameters()).device
     supervised_model.train()
     for data, target in training_dataloader:
         data = data.to(device)
@@ -523,7 +526,8 @@ def train_supervised_model(supervised_model, unsupervised_model, optimizer, trai
         optimizer.step()
 
 
-def validate_or_test_supervised_model(supervised_model, unsupervised_model, hook_handle_list, dataloader, device):
+def validate_or_test_supervised_model(supervised_model, unsupervised_model, hook_handle_list, dataloader):
+    device = next(supervised_model.parameters()).device
     supervised_model.eval()
     correct = 0
     num_activations = np.zeros(len(dataloader))
@@ -554,12 +558,9 @@ def main():
     uci_epilepsy_training_range = range(8740)
     uci_epilepsy_validation_range = range(1380)
     uci_epilepsy_test_range = range(1380)
-    mnist_training_range = range(50000)
-    mnist_validation_range = range(50000, 60000)
-    mnist_test_range = range(10000)
-    fashionmnist_training_range = range(50000)
-    fashionmnist_validation_range = range(50000, 60000)
-    fashionmnist_test_range = range(10000)
+    mnist_fashionmnist_training_range_list = [range(50000), range(50000)]
+    mnist_fashionmnist_validation_range_list = [range(50000, 60000), range(50000, 60000)]
+    mnist_fashionmnist_test_range_list = [range(10000), range(10000)]
     if not full:
         num_epochs_physionet = 3
         num_epochs = 2
@@ -567,12 +568,9 @@ def main():
         uci_epilepsy_training_range = range(10)
         uci_epilepsy_validation_range = range(10)
         uci_epilepsy_test_range = range(10)
-        mnist_training_range = range(10)
-        mnist_validation_range = range(10, 20)
-        mnist_test_range = range(10)
-        fashionmnist_training_range = range(10)
-        fashionmnist_validation_range = range(10, 20)
-        fashionmnist_test_range = range(10)
+        mnist_fashionmnist_training_range_list = [range(10), range(10)]
+        mnist_fashionmnist_validation_range_list = [range(10, 20), range(10, 20)]
+        mnist_fashionmnist_test_range_list = [range(10), range(10)]
     np.random.seed(0)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
@@ -580,8 +578,7 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     sparse_activation_name_list = ['Identity', 'ReLU', 'top-k absolutes', 'Extrema-Pool indices', 'Extrema']
     uci_epilepsy_kernel_size_range = range(8, 16)
-    mnist_kernel_size_range = range(1, 7)
-    fashionmnist_kernel_size_range = range(1, 7)
+    mnist_fashionmnist_kernel_size_range_list = [range(1, 7), range(1, 7)]
     print('Physionet, X: mean reconstruction loss, Y: mean inverse compression ratio, Color: sparse activation')
     dataset_name_list = ['apnea-ecg', 'bidmc', 'bpssrat', 'cebsdb', 'ctu-uhb-ctgdb', 'drivedb', 'emgdb', 'mitdb', 'noneeg', 'prcp', 'shhpsgdb', 'slpdb', 'sufhsdb', 'voiced', 'wrist']
     xlim_weights_list = [74, 113, 10, 71, 45, 20, 9, 229, 37, 105, 15, 232, 40, 70, 173]
@@ -620,13 +617,13 @@ def main():
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
                 for epoch in range(num_epochs_physionet):
-                    train_unsupervised_model(model, optimizer, training_dataloader, device)
-                    flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                    train_unsupervised_model(model, optimizer, training_dataloader)
+                    flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader)
                     flithos_all_validation[index_sparse_activation, index_dataset_name, index_kernel_size_list, epoch] = flithos_epoch.mean()
                     if flithos_epoch.mean() < mean_flithos_epoch_best:
                         model_epoch_best = model
                         mean_flithos_epoch_best = flithos_epoch.mean()
-                flithos_epoch_best, inverse_compression_ratio_epoch_best, reconstruction_loss_epoch_best = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, test_dataloader, device)
+                flithos_epoch_best, inverse_compression_ratio_epoch_best, reconstruction_loss_epoch_best = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, test_dataloader)
                 mean_flithos[index_sparse_activation, index_dataset_name, index_kernel_size_list] = flithos_epoch_best.mean()
                 plt.sca(ax_main)
                 plt.plot(reconstruction_loss_epoch_best.mean(), inverse_compression_ratio_epoch_best.mean(), 'o', c=sparse_activation_color, markersize=3)
@@ -801,7 +798,7 @@ def main():
     kernel_size_list_list = [2 * [k] for k in uci_epilepsy_kernel_size_range]
     batch_size = 64
     lr = 0.01
-    uci_epilepsy_supervised_latex_table = []
+    supervised_latex_table = []
     training_dataset = UCIepilepsyDataset(uci_download_path, 'training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
     validation_dataset = UCIepilepsyDataset(uci_download_path, 'validation')
@@ -810,7 +807,7 @@ def main():
     test_dataloader = DataLoader(dataset=test_dataset, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
         print(f'index_kernel_size_list: {index_kernel_size_list}')
-        uci_epilepsy_supervised_latex_table_row = []
+        supervised_latex_table_row = []
         for index_sparse_activation, (sparse_activation, sparse_activation_name) in enumerate(zip(sparse_activation_list, sparse_activation_name_list)):
             if sparse_activation == TopKAbsolutes1D:
                 sparsity_density_list = [int(test_dataset.data.shape[-1] / k) for k in kernel_size_list]
@@ -824,8 +821,8 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             mean_flithos_epoch_best = float('inf')
             for epoch in range(num_epochs):
-                train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
+                train_unsupervised_model(model, optimizer, training_dataloader)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     model_epoch_best = model
                     mean_flithos_epoch_best = flithos_epoch.mean()
@@ -835,233 +832,132 @@ def main():
             supervised_model = CNN(len(training_dataset.labels.unique())).to(device).to(device)
             optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
             for epoch in range(num_epochs):
-                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
+                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader)
+                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader)
                 if flithos_epoch.mean() < mean_flithos_epoch_best:
                     supervised_model_best = supervised_model
                     model_best = model_epoch_best
                     mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
-            uci_epilepsy_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - uci_epilepsy_supervised_accuracy])
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader)
+            supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - uci_epilepsy_supervised_accuracy])
             if kernel_size_list[0] == 10:
                 save_images_1d(model_best, sparse_activation_name.lower().replace(' ', '-'), dataset_name, test_dataset[0][0][0], kernel_size_list[0])
-        uci_epilepsy_supervised_latex_table.append(uci_epilepsy_supervised_latex_table_row)
+        supervised_latex_table.append(supervised_latex_table_row)
     header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
     columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    df = pd.DataFrame(uci_epilepsy_supervised_latex_table, columns=columns, index=uci_epilepsy_kernel_size_range)
+    df = pd.DataFrame(supervised_latex_table, columns=columns, index=uci_epilepsy_kernel_size_range)
     df.index.names = [r'$m$']
     styler = df.style
     styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
     styler.to_latex(f'{tmpdir}/table-uci-epilepsy-supervised.tex', hrules=True, multicol_align='c')
-    print('MNIST baseline, Supervised FNN classification')
-    batch_size = 64
-    lr = 0.01
-    training_validation_dataset = datasets.MNIST(tmpdir, download=True, train=True, transform=transforms.ToTensor())
-    training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_training_range))
-    validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_validation_range), batch_size=batch_size)
-    test_dataset = datasets.MNIST(tmpdir, train=False, transform=transforms.ToTensor())
-    test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_test_range))
-    best_accuracy = 0
-    supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
-    optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
-    for epoch in range(num_epochs):
-        supervised_model.train()
-        for data, target in training_dataloader:
-            data = data.to(device)
-            target = target.to(device)
-            optimizer.zero_grad()
-            output = supervised_model(data)
-            classification_loss = F.cross_entropy(output, target)
-            classification_loss.backward()
-            optimizer.step()
-        supervised_model.eval()
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for data, target in validation_dataloader:
+    dataset_name_list = ['MNIST', 'FashionMNIST']
+    dataset_list = [MNIST, FashionMNIST]
+    mnist_fashionmnist_supervised_accuracy_list = [0, 0]
+    for index_dataset_name, (dataset_name, dataset, mnist_fashionmnist_kernel_size_range, mnist_fashionmnist_training_range, mnist_fashionmnist_validation_range, mnist_fashionmnist_test_range) in enumerate(zip(dataset_name_list, dataset_list, mnist_fashionmnist_kernel_size_range_list, mnist_fashionmnist_training_range_list, mnist_fashionmnist_validation_range_list, mnist_fashionmnist_test_range_list)):
+        print(f'{dataset_name} baseline, Supervised FNN classification')
+        batch_size = 64
+        lr = 0.01
+        training_validation_dataset = dataset(tmpdir, download=True, train=True, transform=ToTensor())
+        training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
+        validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range), batch_size=batch_size)
+        test_dataset = dataset(tmpdir, train=False, transform=ToTensor())
+        test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
+        best_accuracy = 0
+        supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
+        optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
+        for epoch in range(num_epochs):
+            supervised_model.train()
+            for data, target in training_dataloader:
                 data = data.to(device)
                 target = target.to(device)
+                optimizer.zero_grad()
                 output = supervised_model(data)
+                classification_loss = F.cross_entropy(output, target)
+                classification_loss.backward()
+                optimizer.step()
+            supervised_model.eval()
+            correct = 0
+            total = 0
+            with torch.no_grad():
+                for data, target in validation_dataloader:
+                    data = data.to(device)
+                    target = target.to(device)
+                    output = supervised_model(data)
+                    pred = output.argmax(dim=1)
+                    correct += (pred == target).sum().item()
+                    total += output.shape[0]
+            accuracy = 100 * correct / total
+            if best_accuracy < accuracy:
+                supervised_model_best = supervised_model
+                best_accuracy = accuracy
+        supervised_model.eval()
+        with torch.no_grad():
+            for data, target in test_dataloader:
+                data = data.to(device)
+                target = target.to(device)
+                output = supervised_model_best(data)
                 pred = output.argmax(dim=1)
                 correct += (pred == target).sum().item()
                 total += output.shape[0]
-        accuracy = 100 * correct / total
-        if best_accuracy < accuracy:
-            supervised_model_best = supervised_model
-            best_accuracy = accuracy
-    supervised_model.eval()
-    with torch.no_grad():
-        for data, target in test_dataloader:
-            data = data.to(device)
-            target = target.to(device)
-            output = supervised_model_best(data)
-            pred = output.argmax(dim=1)
-            correct += (pred == target).sum().item()
-            total += output.shape[0]
-    mnist_supervised_accuracy = 100 * correct / total
-    print('MNIST, Supervised FNN classification')
-    dataset_name = 'MNIST'
-    sparse_activation_list = [Identity2D, Relu2D, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D]
-    kernel_size_list_list = [2 * [k] for k in mnist_kernel_size_range]
-    batch_size = 64
-    lr = 0.01
-    mnist_supervised_latex_table = []
-    training_validation_dataset = datasets.MNIST(tmpdir, download=True, train=True, transform=transforms.ToTensor())
-    training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_training_range))
-    validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_validation_range))
-    test_dataset = datasets.MNIST(tmpdir, train=False, transform=transforms.ToTensor())
-    test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_test_range))
-    for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
-        print(f'index_kernel_size_list: {index_kernel_size_list}')
-        mnist_supervised_latex_table_row = []
-        for index_sparse_activation, (sparse_activation, sparse_activation_name) in enumerate(zip(sparse_activation_list, sparse_activation_name_list)):
-            if sparse_activation == TopKAbsolutes2D:
-                sparsity_density_list = [int(test_dataset.data.shape[-1] / k) ** 2 for k in kernel_size_list]
-            elif sparse_activation == Extrema2D:
-                sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
-                sparsity_density_list = [[s, s] for s in sparsity_density_list]
-            else:
-                sparsity_density_list = kernel_size_list
-            sparse_activation_list_ = [sparse_activation(sparsity_density) for sparsity_density in sparsity_density_list]
-            model = SAN2d(sparse_activation_list_, kernel_size_list).to(device)
-            optimizer = optim.Adam(model.parameters(), lr=lr)
-            hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
-            mean_flithos_epoch_best = float('inf')
-            for epoch in range(num_epochs):
-                train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
-                if flithos_epoch.mean() < mean_flithos_epoch_best:
-                    model_epoch_best = model
-                    mean_flithos_epoch_best = flithos_epoch.mean()
-            for weights in model.weights_list:
-                weights.requires_grad_(False)
-            mean_flithos_epoch_best = float('inf')
-            supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
-            optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
-            for epoch in range(num_epochs):
-                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
-                if flithos_epoch.mean() < mean_flithos_epoch_best:
-                    supervised_model_best = supervised_model
-                    model_best = model_epoch_best
-                    mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
-            mnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - mnist_supervised_accuracy])
-            if kernel_size_list[0] == 4:
-                save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
-        mnist_supervised_latex_table.append(mnist_supervised_latex_table_row)
-    header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-    columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    df = pd.DataFrame(mnist_supervised_latex_table, columns=columns, index=mnist_kernel_size_range)
-    df.index.names = [r'$m$']
-    styler = df.style
-    styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-    styler.to_latex(f'{tmpdir}/table-mnist-supervised.tex', hrules=True, multicol_align='c')
-    print('FashionMNIST baseline, Supervised FNN classification')
-    batch_size = 64
-    lr = 0.01
-    training_validation_dataset = datasets.FashionMNIST(tmpdir, download=True, train=True, transform=transforms.ToTensor())
-    training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(fashionmnist_training_range))
-    validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(fashionmnist_validation_range), batch_size=batch_size)
-    test_dataset = datasets.FashionMNIST(tmpdir, train=False, transform=transforms.ToTensor())
-    test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(fashionmnist_test_range))
-    best_accuracy = 0
-    supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
-    optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
-    for epoch in range(num_epochs):
-        supervised_model.train()
-        for data, target in training_dataloader:
-            data = data.to(device)
-            target = target.to(device)
-            optimizer.zero_grad()
-            output = supervised_model(data)
-            classification_loss = F.cross_entropy(output, target)
-            classification_loss.backward()
-            optimizer.step()
-        supervised_model.eval()
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for data, target in validation_dataloader:
-                data = data.to(device)
-                target = target.to(device)
-                output = supervised_model(data)
-                pred = output.argmax(dim=1)
-                correct += (pred == target).sum().item()
-                total += output.shape[0]
-        accuracy = 100 * correct / total
-        if best_accuracy < accuracy:
-            supervised_model_best = supervised_model
-            best_accuracy = accuracy
-    supervised_model.eval()
-    with torch.no_grad():
-        for data, target in test_dataloader:
-            data = data.to(device)
-            target = target.to(device)
-            output = supervised_model_best(data)
-            pred = output.argmax(dim=1)
-            correct += (pred == target).sum().item()
-            total += output.shape[0]
-    fashionmnist_supervised_accuracy = 100 * correct / total
-    print('FashionMNIST, Supervised FNN classification')
-    dataset_name = 'FashionMNIST'
-    sparse_activation_list = [Identity2D, Relu2D, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D]
-    kernel_size_list_list = [2 * [k] for k in fashionmnist_kernel_size_range]
-    batch_size = 64
-    lr = 0.01
-    fashionmnist_supervised_latex_table = []
-    training_validation_dataset = datasets.FashionMNIST(tmpdir, download=True, train=True, transform=transforms.ToTensor())
-    training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(fashionmnist_training_range))
-    validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(fashionmnist_validation_range))
-    test_dataset = datasets.FashionMNIST(tmpdir, train=False, transform=transforms.ToTensor())
-    test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(fashionmnist_test_range))
-    for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
-        print(f'index_kernel_size_list: {index_kernel_size_list}')
-        fashionmnist_supervised_latex_table_row = []
-        for index_sparse_activation, (sparse_activation, sparse_activation_name) in enumerate(zip(sparse_activation_list, sparse_activation_name_list)):
-            if sparse_activation == TopKAbsolutes2D:
-                sparsity_density_list = [int(test_dataset.data.shape[-1] / k) ** 2 for k in kernel_size_list]
-            elif sparse_activation == Extrema2D:
-                sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
-                sparsity_density_list = [[s, s] for s in sparsity_density_list]
-            else:
-                sparsity_density_list = kernel_size_list
-            sparse_activation_list_ = [sparse_activation(sparsity_density) for sparsity_density in sparsity_density_list]
-            model = SAN2d(sparse_activation_list_, kernel_size_list).to(device)
-            optimizer = optim.Adam(model.parameters(), lr=lr)
-            hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
-            mean_flithos_epoch_best = float('inf')
-            for epoch in range(num_epochs):
-                train_unsupervised_model(model, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader, device)
-                if flithos_epoch.mean() < mean_flithos_epoch_best:
-                    model_epoch_best = model
-                    mean_flithos_epoch_best = flithos_epoch.mean()
-            for weights in model.weights_list:
-                weights.requires_grad_(False)
-            mean_flithos_epoch_best = float('inf')
-            supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
-            optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
-            for epoch in range(num_epochs):
-                train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader, device)
-                flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader, device)
-                if flithos_epoch.mean() < mean_flithos_epoch_best:
-                    supervised_model_best = supervised_model
-                    model_best = model_epoch_best
-                    mean_flithos_epoch_best = flithos_epoch.mean()
-            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader, device)
-            fashionmnist_supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - fashionmnist_supervised_accuracy])
-            if kernel_size_list[0] == 3:
-                save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
-        fashionmnist_supervised_latex_table.append(fashionmnist_supervised_latex_table_row)
-    header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
-    columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    df = pd.DataFrame(fashionmnist_supervised_latex_table, columns=columns, index=fashionmnist_kernel_size_range)
-    df.index.names = [r'$m$']
-    styler = df.style
-    styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-    styler.to_latex(f'{tmpdir}/table-fashionmnist-supervised.tex', hrules=True, multicol_align='c')
-    df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_supervised_accuracy, fashionmnist_supervised_accuracy]})
+        mnist_fashionmnist_supervised_accuracy_list[index_dataset_name] = 100 * correct / total
+        print(f'{dataset_name}, Supervised FNN classification')
+        sparse_activation_list = [Identity2D, Relu2D, TopKAbsolutes2D, ExtremaPoolIndices2D, Extrema2D]
+        kernel_size_list_list = [2 * [k] for k in mnist_fashionmnist_kernel_size_range]
+        batch_size = 64
+        lr = 0.01
+        supervised_latex_table = []
+        training_validation_dataset = dataset(tmpdir, download=True, train=True, transform=ToTensor())
+        training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
+        validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range))
+        test_dataset = dataset(tmpdir, train=False, transform=ToTensor())
+        test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
+        for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
+            print(f'index_kernel_size_list: {index_kernel_size_list}')
+            supervised_latex_table_row = []
+            for index_sparse_activation, (sparse_activation, sparse_activation_name) in enumerate(zip(sparse_activation_list, sparse_activation_name_list)):
+                if sparse_activation == TopKAbsolutes2D:
+                    sparsity_density_list = [int(test_dataset.data.shape[-1] / k) ** 2 for k in kernel_size_list]
+                elif sparse_activation == Extrema2D:
+                    sparsity_density_list = np.clip([k - 2 for k in kernel_size_list], 1, 999).tolist()
+                    sparsity_density_list = [[s, s] for s in sparsity_density_list]
+                else:
+                    sparsity_density_list = kernel_size_list
+                sparse_activation_list_ = [sparse_activation(sparsity_density) for sparsity_density in sparsity_density_list]
+                model = SAN2d(sparse_activation_list_, kernel_size_list).to(device)
+                optimizer = optim.Adam(model.parameters(), lr=lr)
+                hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
+                mean_flithos_epoch_best = float('inf')
+                for epoch in range(num_epochs):
+                    train_unsupervised_model(model, optimizer, training_dataloader)
+                    flithos_epoch, *_ = validate_or_test_unsupervised_model(model, hook_handle_list, validation_dataloader)
+                    if flithos_epoch.mean() < mean_flithos_epoch_best:
+                        model_epoch_best = model
+                        mean_flithos_epoch_best = flithos_epoch.mean()
+                for weights in model.weights_list:
+                    weights.requires_grad_(False)
+                mean_flithos_epoch_best = float('inf')
+                supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
+                optimizer = optim.Adam(supervised_model.parameters(), lr=lr)
+                for epoch in range(num_epochs):
+                    train_supervised_model(supervised_model, model_epoch_best, optimizer, training_dataloader)
+                    flithos_epoch, *_ = validate_or_test_unsupervised_model(model_epoch_best, hook_handle_list, validation_dataloader)
+                    if flithos_epoch.mean() < mean_flithos_epoch_best:
+                        supervised_model_best = supervised_model
+                        model_best = model_epoch_best
+                        mean_flithos_epoch_best = flithos_epoch.mean()
+                flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_supervised_model(supervised_model_best, model_best, hook_handle_list, test_dataloader)
+                supervised_latex_table_row.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - mnist_fashionmnist_supervised_accuracy_list[index_dataset_name]])
+                if kernel_size_list[0] == 4:
+                    save_images_2d(model_best, sparse_activation_name.lower().replace(' ', '-'), test_dataset[0][0][0], dataset_name)
+            supervised_latex_table.append(supervised_latex_table_row)
+        header = [r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$', r'A\textsubscript{$\pm$\%}']
+        columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
+        df = pd.DataFrame(supervised_latex_table, columns=columns, index=mnist_fashionmnist_kernel_size_range)
+        df.index.names = [r'$m$']
+        styler = df.style
+        styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
+        styler.to_latex(f'{tmpdir}/table-{dataset_name.lower()}-supervised.tex', hrules=True, multicol_align='c')
+    df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_fashionmnist_supervised_accuracy_list[0], mnist_fashionmnist_supervised_accuracy_list[1]]})
     df.to_csv(f'{tmpdir}/keys-values.csv', index=False, float_format='%.2f')
 
 
