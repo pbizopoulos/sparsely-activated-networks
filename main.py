@@ -20,7 +20,6 @@ from torchvision.transforms import ToTensor
 
 tmpdir = os.getenv('TMPDIR')
 full = os.getenv('FULL')
-
 plt.rcParams['font.size'] = 20
 plt.rcParams['image.interpolation'] = 'none'
 plt.rcParams['savefig.bbox'] = 'tight'
@@ -709,17 +708,14 @@ def main():
     fig_legend = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(range(2), range(2), range(2))
-    legend_elements = [
-        patches.Patch(color='r', alpha=0.3, label='non-sparse model description'),
-        patches.Patch(color='orange', alpha=0.3, label=r'worse $CR^{-1}$ than original data'),
-        patches.Patch(color='gray', alpha=0.3, label=r'worse $\tilde{\mathcal{L}}$ than constant prediction'),
-        patches.Patch(color='g', alpha=0.3, label=r'$\bar\varphi < 1$'),
-        Line2D([0], [0], marker='o', color='w', label=sparse_activation_name_list[0], markerfacecolor=sparse_activation_color_list[0]),
-        Line2D([0], [0], marker='o', color='w', label=sparse_activation_name_list[1], markerfacecolor=sparse_activation_color_list[1]),
-        Line2D([0], [0], marker='o', color='w', label=sparse_activation_name_list[2], markerfacecolor=sparse_activation_color_list[2]),
-        Line2D([0], [0], marker='o', color='w', label=sparse_activation_name_list[3], markerfacecolor=sparse_activation_color_list[3]),
-        Line2D([0], [0], marker='o', color='w', label=sparse_activation_name_list[4], markerfacecolor=sparse_activation_color_list[4]),
-    ]
+    patch_non_sparse_model_description = patches.Patch(color='r', alpha=0.3, label='non-sparse model description')
+    patch_worse_cr_than_original_data = patches.Patch(color='orange', alpha=0.3, label=r'worse $CR^{-1}$ than original data')
+    patch_worse_l_than_constant_prediction = patches.Patch(color='gray', alpha=0.3, label=r'worse $\tilde{\mathcal{L}}$ than constant prediction')
+    patch_varphi_less_than_one = patches.Patch(color='g', alpha=0.3, label=r'$\bar\varphi < 1$')
+    line2d_list = []
+    for sparse_activation_name, sparse_activation_color in zip(sparse_activation_name_list, sparse_activation_color_list):
+        line2d_list.append(Line2D([0], [0], marker='o', color='w', label=sparse_activation_name, markerfacecolor=sparse_activation_color))
+    legend_elements = [patch_non_sparse_model_description, patch_worse_cr_than_original_data, patch_worse_l_than_constant_prediction, patch_varphi_less_than_one, line2d_list[0], line2d_list[1], line2d_list[2], line2d_list[3], line2d_list[4]]
     fig_legend.legend(handles=legend_elements, fontsize=22, loc='upper center')
     plt.savefig(f'{tmpdir}/legend')
     plt.close()
