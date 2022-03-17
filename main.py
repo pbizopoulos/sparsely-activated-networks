@@ -475,7 +475,7 @@ class CNN(nn.Module):
 
 def calculate_inverse_compression_ratio(model, data, num_activations):
     activation_multiplier = 1 + len(model.weights_list[0].shape)
-    num_parameters = sum([weights.shape[0] for weights in model.weights_list])
+    num_parameters = sum(weights.shape[0] for weights in model.weights_list)
     return (activation_multiplier * num_activations + num_parameters) / (data.shape[-1] * data.shape[-2])
 
 

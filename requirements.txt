@@ -5,6 +5,7 @@ coverage
 isort
 pipreqs
 python-minimizer
+pyupgrade
 
 # main.py requirements
 wfdb==3.4.1
