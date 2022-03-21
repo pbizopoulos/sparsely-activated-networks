@@ -953,7 +953,7 @@ def main():
         df.index.names = [r'$m$']
         styler = df.style
         styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-        styler.to_latex(join(artifacts_dir, 'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
+        styler.to_latex(join(artifacts_dir, f'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
     df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_fashionmnist_supervised_accuracy_list[0], mnist_fashionmnist_supervised_accuracy_list[1]]})
     df.to_csv(join(artifacts_dir, 'keys-values.csv'), index=False, float_format='%.2f')
 
