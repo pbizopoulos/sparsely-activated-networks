@@ -1,5 +1,6 @@
 import glob
 import os
+from os.path import join
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +19,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
 
-tmpdir = os.getenv('TMPDIR')
+artifacts_dir = os.getenv('ARTIFACTSDIR')
 full = os.getenv('FULL')
 plt.rcParams['font.size'] = 20
 plt.rcParams['image.interpolation'] = 'none'
@@ -247,7 +248,7 @@ def save_images_2d(model, sparse_activation_name, data, dataset_name):
     plt.xticks([])
     plt.yticks([])
     plt.imshow(data.cpu().detach().numpy(), cmap='twilight', vmin=-2, vmax=2)
-    plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-signal')
+    plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-signal'))
     plt.close()
     model.eval()
     hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
@@ -262,33 +263,33 @@ def save_images_2d(model, sparse_activation_name, data, dataset_name):
             plt.imshow(weights.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(weights).max(), vmax=2 * abs(weights).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-kernel-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-kernel-{index_weights}'))
             plt.close()
             similarity = F.conv2d(data.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.xticks([])
             plt.yticks([])
             plt.imshow(similarity.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(similarity).max(), vmax=2 * abs(similarity).max())
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-similarity-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-similarity-{index_weights}'))
             plt.close()
             plt.figure()
             plt.imshow(activations.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(activations).max(), vmax=2 * abs(activations).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-activations-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-activations-{index_weights}'))
             plt.close()
             reconstruction = F.conv2d(activations.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.imshow(reconstruction.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(reconstruction).max(), vmax=2 * abs(reconstruction).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstruction-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstruction-{index_weights}'))
             plt.close()
         plt.figure()
         plt.xticks([])
         plt.yticks([])
         plt.imshow(reconstructed[0, 0].cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(reconstructed).max(), vmax=2 * abs(reconstructed).max())
-        plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstructed')
+        plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstructed'))
         plt.close()
 
 
@@ -311,7 +312,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-signal')
+    plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-signal'))
     plt.close()
     model.eval()
     hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
@@ -334,7 +335,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
                 plt.ylabel(sparse_activation_name, fontsize=20)
             if sparse_activation_name == 'relu':
                 plt.title(dataset_name, fontsize=20)
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-kernel-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-kernel-{index_weights}'))
             plt.close()
             similarity = F.conv1d(data.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             _, ax = plt.subplots()
@@ -342,7 +343,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.plot(similarity.cpu().detach().numpy(), 'g')
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-similarity-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-similarity-{index_weights}'))
             plt.close()
             _, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
@@ -352,7 +353,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
             plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
             if p.shape[0] != 0:
                 plt.stem(p.cpu().detach().numpy(), activations[p.cpu().detach().numpy()].cpu().detach().numpy(), linefmt='c', basefmt=' ')
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-activations-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-activations-{index_weights}'))
             plt.close()
             reconstruction = F.conv1d(activations.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             _, ax = plt.subplots()
@@ -376,7 +377,7 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
             plt.plot(pos_signal)
             plt.plot(neg_signal, color='r')
             plt.ylim([data.min(), data.max()])
-            plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstruction-{index_weights}')
+            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstruction-{index_weights}'))
             plt.close()
         _, ax = plt.subplots()
         ax.tick_params(labelbottom=False, labelleft=False)
@@ -385,19 +386,19 @@ def save_images_1d(model, sparse_activation_name, dataset_name, data, xlim_weigh
         plt.plot(data.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(f'{tmpdir}/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstructed')
+        plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstructed'))
         plt.close()
 
 
 class PhysionetDataset(Dataset):
     def __init__(self, training_validation_test, dataset_name):
-        dataset_dir = f'{tmpdir}/{dataset_name}'
+        dataset_dir = join(artifacts_dir, dataset_name)
         if not os.path.exists(dataset_dir):
             record_name = wfdb.get_record_list(dataset_name)[0]
             wfdb.dl_database(dataset_name, dataset_dir, records=[record_name], annotators=None)
-        files = glob.glob(f'{dataset_dir}/*.hea')
+        files = glob.glob(join(dataset_dir, '*.hea'))
         filename = os.path.splitext(os.path.basename(files[0]))[0]
-        records = wfdb.rdrecord(f'{dataset_dir}/{filename}')
+        records = wfdb.rdrecord(join(dataset_dir, filename)')
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if training_validation_test == 'training':
             self.data = data[:6000]
@@ -420,10 +421,10 @@ class UCIepilepsyDataset(Dataset):
     def __init__(self, path, training_validation_test):
         if not os.path.exists(path):
             os.mkdir(path)
-            with open(f'{path}/data.csv', 'wb') as file:
+            with open(join(path, 'data.csv'), 'wb') as file:
                 response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv')
                 file.write(response.content)
-        dataset = pd.read_csv(f'{path}/data.csv')
+        dataset = pd.read_csv(join(path, 'data.csv'))
         dataset['y'].replace(3, 2, inplace=True)
         dataset['y'].replace(4, 3, inplace=True)
         dataset['y'].replace(5, 3, inplace=True)
@@ -654,7 +655,7 @@ def main():
         plt.axvspan(1, 2.5, alpha=0.3, color='gray')
         wedge = patches.Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
         ax_main.add_patch(wedge)
-        plt.savefig(f'{tmpdir}/{dataset_name}')
+        plt.savefig(join(artifacts_dir, dataset_name))
         plt.close()
     header = ['$m$', r'$CR^{-1}$', r'$\tilde{\mathcal{L}}$', r'$\bar\varphi$']
     columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -662,7 +663,7 @@ def main():
     df.index.names = ['Datasets']
     styler = df.style
     styler.format(precision=2, formatter={columns[0]: '{:.0f}', columns[4]: '{:.0f}', columns[8]: '{:.0f}', columns[12]: '{:.0f}', columns[16]: '{:.0f}'})
-    styler.to_latex(f'{tmpdir}/table-flithos-variable-kernel-size.tex', hrules=True, multicol_align='c')
+    styler.to_latex(join(artifacts_dir, 'table-flithos-variable-kernel-size.tex'), hrules=True, multicol_align='c')
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_name_list), num_epochs_physionet))
     p1 = [0, 0, 0, 0, 0]
@@ -683,7 +684,7 @@ def main():
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{tmpdir}/mean-flithos-validation-epochs')
+    plt.savefig(join(artifacts_dir, 'mean-flithos-validation-epochs'))
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = [0, 0, 0, 0, 0]
@@ -702,7 +703,7 @@ def main():
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(f'{tmpdir}/mean-flithos-variable-kernel-size-list')
+    plt.savefig(join(artifacts_dir, 'mean-flithos-variable-kernel-size-list'))
     plt.close()
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
     fig_legend = plt.figure()
@@ -717,7 +718,7 @@ def main():
         line2d_list.append(Line2D([0], [0], marker='o', color='w', label=sparse_activation_name, markerfacecolor=sparse_activation_color))
     legend_elements = [patch_non_sparse_model_description, patch_worse_cr_than_original_data, patch_worse_l_than_constant_prediction, patch_varphi_less_than_one, line2d_list[0], line2d_list[1], line2d_list[2], line2d_list[3], line2d_list[4]]
     fig_legend.legend(handles=legend_elements, fontsize=22, loc='upper center')
-    plt.savefig(f'{tmpdir}/legend')
+    plt.savefig(join(artifacts_dir, 'legend'))
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     for_density_plot = for_density_plot.reshape(for_density_plot.shape[0], -1, 2)
@@ -738,12 +739,12 @@ def main():
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(True)
-    plt.savefig(f'{tmpdir}/crrl-density-plot')
+    plt.savefig(join(artifacts_dir, 'crrl-density-plot'))
     plt.close()
     print('UCI baseline, Supervised CNN classification')
     batch_size = 64
     lr = 0.01
-    uci_download_path = f'{tmpdir}/UCI-epilepsy'
+    uci_download_path = join(artifacts_dir, 'UCI-epilepsy')
     training_dataset = UCIepilepsyDataset(uci_download_path, 'training')
     training_dataloader = DataLoader(dataset=training_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
     validation_dataset = UCIepilepsyDataset(uci_download_path, 'validation')
@@ -845,7 +846,7 @@ def main():
     df.index.names = [r'$m$']
     styler = df.style
     styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-    styler.to_latex(f'{tmpdir}/table-uci-epilepsy-supervised.tex', hrules=True, multicol_align='c')
+    styler.to_latex(join(artifacts_dir, 'table-uci-epilepsy-supervised.tex'), hrules=True, multicol_align='c')
     dataset_name_list = ['MNIST', 'FashionMNIST']
     dataset_list = [MNIST, FashionMNIST]
     mnist_fashionmnist_supervised_accuracy_list = [0, 0]
@@ -853,10 +854,10 @@ def main():
         print(f'{dataset_name} baseline, Supervised FNN classification')
         batch_size = 64
         lr = 0.01
-        training_validation_dataset = dataset(tmpdir, download=True, train=True, transform=ToTensor())
+        training_validation_dataset = dataset(artifacts_dir, download=True, train=True, transform=ToTensor())
         training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
         validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range), batch_size=batch_size)
-        test_dataset = dataset(tmpdir, train=False, transform=ToTensor())
+        test_dataset = dataset(artifacts_dir, train=False, transform=ToTensor())
         test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         best_accuracy = 0
         supervised_model = FNN(training_validation_dataset.data[0], len(training_validation_dataset.classes)).to(device)
@@ -902,10 +903,10 @@ def main():
         batch_size = 64
         lr = 0.01
         supervised_latex_table = []
-        training_validation_dataset = dataset(tmpdir, download=True, train=True, transform=ToTensor())
+        training_validation_dataset = dataset(artifacts_dir, download=True, train=True, transform=ToTensor())
         training_dataloader = DataLoader(training_validation_dataset, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
         validation_dataloader = DataLoader(training_validation_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range))
-        test_dataset = dataset(tmpdir, train=False, transform=ToTensor())
+        test_dataset = dataset(artifacts_dir, train=False, transform=ToTensor())
         test_dataloader = DataLoader(test_dataset, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         for index_kernel_size_list, kernel_size_list in enumerate(kernel_size_list_list):
             print(f'index_kernel_size_list: {index_kernel_size_list}')
@@ -952,9 +953,9 @@ def main():
         df.index.names = [r'$m$']
         styler = df.style
         styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-        styler.to_latex(f'{tmpdir}/table-{dataset_name.lower()}-supervised.tex', hrules=True, multicol_align='c')
+        styler.to_latex(join(artifacts_dir, 'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
     df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [uci_epilepsy_supervised_accuracy, mnist_fashionmnist_supervised_accuracy_list[0], mnist_fashionmnist_supervised_accuracy_list[1]]})
-    df.to_csv(f'{tmpdir}/keys-values.csv', index=False, float_format='%.2f')
+    df.to_csv(join(artifacts_dir, 'keys-values.csv'), index=False, float_format='%.2f')
 
 
 if __name__ == '__main__':
