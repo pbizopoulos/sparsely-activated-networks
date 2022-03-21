@@ -398,7 +398,7 @@ class PhysionetDataset(Dataset):
             wfdb.dl_database(dataset_name, dataset_dir, records=[record_name], annotators=None)
         files = glob.glob(join(dataset_dir, '*.hea'))
         filename = os.path.splitext(os.path.basename(files[0]))[0]
-        records = wfdb.rdrecord(join(dataset_dir, filename)')
+        records = wfdb.rdrecord(join(dataset_dir, filename))
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if training_validation_test == 'training':
             self.data = data[:6000]
