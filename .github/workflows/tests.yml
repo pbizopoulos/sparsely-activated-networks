@@ -10,7 +10,6 @@ jobs:
         run: |
           make check -C python/
           make check
-          make check -f Makefile.html
       - name: Test binary reproducibility
         run: |
           make -C python/ && make && cp bin/ms.pdf bin/ms-first-run.pdf
