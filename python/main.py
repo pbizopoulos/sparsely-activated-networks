@@ -129,8 +129,8 @@ class PhysionetDataset(Dataset):
         out /= out.std()
         return (out, 0)
 
-    def __init__(self, artifacts_dir, dataset_name, training_validation_test):
-        dataset_dir = join(artifacts_dir, dataset_name)
+    def __init__(self, dataset_name, training_validation_test):
+        dataset_dir = join('bin', dataset_name)
         if not os.path.exists(dataset_dir):
             record_name = wfdb.get_record_list(dataset_name)[0]
             wfdb.dl_database(dataset_name, dataset_dir, records=[record_name], annotators=None)
@@ -341,7 +341,6 @@ def extrema_pool_indices_2d(input_, kernel_size):
 
 
 def main():
-    artifacts_dir = environ['ARTIFACTS_DIR']
     full = environ['FULL']
     plt.rcParams['font.size'] = 20
     plt.rcParams['image.interpolation'] = 'none'
@@ -388,11 +387,11 @@ def main():
     gaussian_kde_input_array = np.zeros((len(sparse_activation_list), len(dataset_name_list), len(kernel_size_list_list), 2))
     for (dataset_name_index, (dataset_name, xlim_weight)) in enumerate(zip(dataset_name_list, xlim_weight_list)):
         results_physionet_row_list = []
-        dataset_training = PhysionetDataset(artifacts_dir, dataset_name, 'training')
+        dataset_training = PhysionetDataset(dataset_name, 'training')
         dataloader_training = DataLoader(dataset=dataset_training, batch_size=batch_size, shuffle=True)
-        dataset_validation = PhysionetDataset(artifacts_dir, dataset_name, 'validation')
+        dataset_validation = PhysionetDataset(dataset_name, 'validation')
         dataloader_validation = DataLoader(dataset=dataset_validation)
-        dataset_test = PhysionetDataset(artifacts_dir, dataset_name, 'test')
+        dataset_test = PhysionetDataset(dataset_name, 'test')
         dataloader_test = DataLoader(dataset=dataset_test)
         (fig, ax_main) = plt.subplots(constrained_layout=True, figsize=(6, 6))
         for (sparse_activation_index, (sparse_activation, sparse_activation_color, sparse_activation_name)) in enumerate(zip(sparse_activation_list, sparse_activation_color_list, sparse_activation_name_list)):
@@ -410,7 +409,7 @@ def main():
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
                 for epoch in range(epochs_physionet_num):
-                    train_model_unsupervised(model, optimizer, dataloader_training)
+                    train_model_unsupervised(dataloader_training, model, optimizer)
                     (flithos_epoch, *_) = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model)
                     flithos_all_validation_array[sparse_activation_index, dataset_name_index, kernel_size_list_index, epoch] = flithos_epoch.mean()
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
@@ -428,7 +427,7 @@ def main():
                     flithos_mean_best = flithos_mean_array[sparse_activation_index, dataset_name_index, kernel_size_list_index]
                     model_best = model_epoch_best
             results_physionet_row_list.extend([kernel_size_best_array[sparse_activation_index, dataset_name_index], inverse_compression_ratio_best.mean(), reconstruction_loss_best.mean(), flithos_mean_best])
-            save_images_1d(artifacts_dir, dataset_test[0][0][0], dataset_name, model_best, sparse_activation_name.lower().replace(' ', '-'), xlim_weight)
+            save_images_1d(dataset_test[0][0][0], dataset_name, model_best, sparse_activation_name.lower().replace(' ', '-'), xlim_weight)
             ax_main.arrow(reconstruction_loss_best.mean(), inverse_compression_ratio_best.mean(), 1.83 - reconstruction_loss_best.mean(), 2.25 - 0.5 * sparse_activation_index - inverse_compression_ratio_best.mean())
             fig.add_axes([0.75, 0.81 - 0.165 * sparse_activation_index, 0.1, 0.1], facecolor='y')
             plt.plot(model_best.weights_list[0].flip(0).cpu().detach().numpy().T, c=sparse_activation_color)
@@ -448,7 +447,7 @@ def main():
         plt.axvspan(1, 2.5, alpha=0.3, color='gray')
         wedge = Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
         ax_main.add_patch(wedge)
-        plt.savefig(join(artifacts_dir, dataset_name))
+        plt.savefig(join('bin', dataset_name))
         plt.close()
     header = ['$m$', '$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$']
     columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -456,7 +455,7 @@ def main():
     df.index.names = ['Datasets']
     styler = df.style
     styler.format(precision=2, formatter={columns[0]: '{:.0f}', columns[4]: '{:.0f}', columns[8]: '{:.0f}', columns[12]: '{:.0f}', columns[16]: '{:.0f}'})
-    styler.to_latex(join(artifacts_dir, 'table-flithos-variable-kernel-size.tex'), hrules=True, multicol_align='c')
+    styler.to_latex(join('bin', 'table-flithos-variable-kernel-size.tex'), hrules=True, multicol_align='c')
     (fig, ax) = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_name_list), epochs_physionet_num))
     p1 = [0, 0, 0, 0, 0]
@@ -477,7 +476,7 @@ def main():
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(join(artifacts_dir, 'mean-flithos-validation-epochs'))
+    plt.savefig(join('bin', 'mean-flithos-validation-epochs'))
     plt.close()
     (fig, ax) = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = [0, 0, 0, 0, 0]
@@ -496,7 +495,7 @@ def main():
     plt.ylim([0, 2.5])
     plt.grid(True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(join(artifacts_dir, 'mean-flithos-variable-kernel-size-list'))
+    plt.savefig(join('bin', 'mean-flithos-variable-kernel-size-list'))
     plt.close()
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
     fig_legend = plt.figure()
@@ -511,7 +510,7 @@ def main():
         line2d_list.append(Line2D([0], [0], marker='o', color='w', label=sparse_activation_name, markerfacecolor=sparse_activation_color))
     legend_handle_list = [non_sparse_model_description_patch, worse_cr_than_original_data_patch, worse_l_than_constant_prediction_patch, varphi_less_than_one_patch, line2d_list[0], line2d_list[1], line2d_list[2], line2d_list[3], line2d_list[4]]
     fig_legend.legend(handles=legend_handle_list, fontsize=22, loc='upper center')
-    plt.savefig(join(artifacts_dir, 'legend'))
+    plt.savefig(join('bin', 'legend'))
     plt.close()
     (fig, ax) = plt.subplots(constrained_layout=True, figsize=(6, 6))
     gaussian_kde_input_array = gaussian_kde_input_array.reshape(gaussian_kde_input_array.shape[0], -1, 2)
@@ -532,11 +531,11 @@ def main():
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(True)
-    plt.savefig(join(artifacts_dir, 'crrl-density-plot'))
+    plt.savefig(join('bin', 'crrl-density-plot'))
     plt.close()
     batch_size = 64
     lr = 0.01
-    uci_epilepsy_dir = join(artifacts_dir, 'UCI-epilepsy')
+    uci_epilepsy_dir = join('bin', 'UCI-epilepsy')
     dataset_training = UCIepilepsyDataset(uci_epilepsy_dir, 'training')
     dataloader_training = DataLoader(dataset=dataset_training, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
     dataset_validation = UCIepilepsyDataset(uci_epilepsy_dir, 'validation')
@@ -608,7 +607,7 @@ def main():
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             flithos_epoch_mean_best = float('inf')
             for epoch in range(epochs_num):
-                train_model_unsupervised(model, optimizer, dataloader_training)
+                train_model_unsupervised(dataloader_training, model, optimizer)
                 (flithos_epoch, *_) = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model)
                 if flithos_epoch.mean() < flithos_epoch_mean_best:
                     model_epoch_best = model
@@ -619,7 +618,7 @@ def main():
             model_supervised = CNN(len(dataset_training.classes.unique())).to(device).to(device)
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
             for epoch in range(epochs_num):
-                train_model_supervised(model_supervised, model_epoch_best, optimizer, dataloader_training)
+                train_model_supervised(dataloader_training, model_supervised, model_epoch_best, optimizer)
                 (flithos_epoch, *_) = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model_epoch_best)
                 if flithos_epoch.mean() < flithos_epoch_mean_best:
                     model_supervised_best = model_supervised
@@ -628,7 +627,7 @@ def main():
             (flithos, inverse_compression_ratio, reconstruction_loss, accuracy) = validate_or_test_model_supervised(dataloader_test, hook_handle_list, model_supervised_best, model_best)
             results_supervised_row_list.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - accuracy_uci_epilepsy])
             if kernel_size_list[0] == 10:
-                save_images_1d(artifacts_dir, dataset_test[0][0][0], dataset_name, model_best, sparse_activation_name.lower().replace(' ', '-'), kernel_size_list[0])
+                save_images_1d(dataset_test[0][0][0], dataset_name, model_best, sparse_activation_name.lower().replace(' ', '-'), kernel_size_list[0])
         results_supervised_row_list_list.append(results_supervised_row_list)
     header = ['$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$', 'A\\textsubscript{$\\pm$\\%}']
     columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -636,17 +635,17 @@ def main():
     df.index.names = ['$m$']
     styler = df.style
     styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-    styler.to_latex(join(artifacts_dir, 'table-uci-epilepsy-supervised.tex'), hrules=True, multicol_align='c')
+    styler.to_latex(join('bin', 'table-uci-epilepsy-supervised.tex'), hrules=True, multicol_align='c')
     dataset_name_list = ['MNIST', 'FashionMNIST']
     dataset_list = [MNIST, FashionMNIST]
     accuracy_mnist_fashionmnist_supervised_list = [0, 0]
     for (dataset_name_index, (dataset_name, dataset, kernel_size_mnist_fashionmnist_range, mnist_fashionmnist_training_range, mnist_fashionmnist_validation_range, mnist_fashionmnist_test_range)) in enumerate(zip(dataset_name_list, dataset_list, kernel_size_mnist_fashionmnist_range_list, mnist_fashionmnist_training_range_list, mnist_fashionmnist_validation_range_list, mnist_fashionmnist_test_range_list)):
         batch_size = 64
         lr = 0.01
-        dataset_training_validation = dataset(artifacts_dir, download=True, train=True, transform=ToTensor())
+        dataset_training_validation = dataset('bin', download=True, train=True, transform=ToTensor())
         dataloader_training = DataLoader(dataset_training_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
         dataloader_validation = DataLoader(dataset_training_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range), batch_size=batch_size)
-        dataset_test = dataset(artifacts_dir, train=False, transform=ToTensor())
+        dataset_test = dataset('bin', train=False, transform=ToTensor())
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         accuracy_best = 0
         model_supervised = FNN(len(dataset_training_validation.classes), dataset_training_validation.data[0]).to(device)
@@ -691,10 +690,10 @@ def main():
         batch_size = 64
         lr = 0.01
         results_supervised_row_list_list = []
-        dataset_training_validation = dataset(artifacts_dir, download=True, train=True, transform=ToTensor())
+        dataset_training_validation = dataset('bin', download=True, train=True, transform=ToTensor())
         dataloader_training = DataLoader(dataset_training_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
         dataloader_validation = DataLoader(dataset_training_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range))
-        dataset_test = dataset(artifacts_dir, train=False, transform=ToTensor())
+        dataset_test = dataset('bin', train=False, transform=ToTensor())
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         for (kernel_size_list_index, kernel_size_list) in enumerate(kernel_size_list_list):
             results_supervised_row_list = []
@@ -712,7 +711,7 @@ def main():
                 hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
                 flithos_epoch_mean_best = float('inf')
                 for epoch in range(epochs_num):
-                    train_model_unsupervised(model, optimizer, dataloader_training)
+                    train_model_unsupervised(dataloader_training, model, optimizer)
                     (flithos_epoch, *_) = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model)
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
                         model_epoch_best = model
@@ -723,7 +722,7 @@ def main():
                 model_supervised = FNN(len(dataset_training_validation.classes), dataset_training_validation.data[0]).to(device)
                 optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
                 for epoch in range(epochs_num):
-                    train_model_supervised(model_supervised, model_epoch_best, optimizer, dataloader_training)
+                    train_model_supervised(dataloader_training, model_supervised, model_epoch_best, optimizer)
                     (flithos_epoch, *_) = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model_epoch_best)
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
                         model_supervised_best = model_supervised
@@ -732,7 +731,7 @@ def main():
                 (flithos, inverse_compression_ratio, reconstruction_loss, accuracy) = validate_or_test_model_supervised(dataloader_test, hook_handle_list, model_supervised_best, model_best)
                 results_supervised_row_list.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - accuracy_mnist_fashionmnist_supervised_list[dataset_name_index]])
                 if kernel_size_list[0] == 4:
-                    save_images_2d(artifacts_dir, dataset_test[0][0][0], dataset_name, model_best, sparse_activation_name.lower().replace(' ', '-'))
+                    save_images_2d(dataset_test[0][0][0], dataset_name, model_best, sparse_activation_name.lower().replace(' ', '-'))
             results_supervised_row_list_list.append(results_supervised_row_list)
         header = ['$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$', 'A\\textsubscript{$\\pm$\\%}']
         columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
@@ -740,12 +739,12 @@ def main():
         df.index.names = ['$m$']
         styler = df.style
         styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-        styler.to_latex(join(artifacts_dir, f'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
+        styler.to_latex(join('bin', f'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
     df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [accuracy_uci_epilepsy, accuracy_mnist_fashionmnist_supervised_list[0], accuracy_mnist_fashionmnist_supervised_list[1]]})
-    df.to_csv(join(artifacts_dir, 'keys-values.csv'), index=False, float_format='%.2f')
+    df.to_csv(join('bin', 'keys-values.csv'), index=False, float_format='%.2f')
 
 
-def save_images_1d(artifacts_dir, data, dataset_name, model, sparse_activation_name, xlim_weight):
+def save_images_1d(data, dataset_name, model, sparse_activation_name, xlim_weight):
     model = model.to('cpu')
     (_, ax) = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
@@ -753,7 +752,7 @@ def save_images_1d(artifacts_dir, data, dataset_name, model, sparse_activation_n
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-signal'))
+    plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-signal'))
     plt.close()
     hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
     model.eval()
@@ -776,7 +775,7 @@ def save_images_1d(artifacts_dir, data, dataset_name, model, sparse_activation_n
                 plt.ylabel(sparse_activation_name, fontsize=20)
             if sparse_activation_name == 'relu':
                 plt.title(dataset_name, fontsize=20)
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-kernel-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-kernel-{weights_index}'))
             plt.close()
             similarity = functional.conv1d(data.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             (_, ax) = plt.subplots()
@@ -784,7 +783,7 @@ def save_images_1d(artifacts_dir, data, dataset_name, model, sparse_activation_n
             plt.grid(True)
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.plot(similarity.cpu().detach().numpy(), 'g')
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-similarity-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-similarity-{weights_index}'))
             plt.close()
             (_, ax) = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
@@ -794,7 +793,7 @@ def save_images_1d(artifacts_dir, data, dataset_name, model, sparse_activation_n
             plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
             if peaks.shape[0] != 0:
                 plt.stem(peaks.cpu().detach().numpy(), activations[peaks.cpu().detach().numpy()].cpu().detach().numpy(), linefmt='c', basefmt=' ')
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-activations-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-activations-{weights_index}'))
             plt.close()
             reconstruction = functional.conv1d(activations.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             (_, ax) = plt.subplots()
@@ -818,7 +817,7 @@ def save_images_1d(artifacts_dir, data, dataset_name, model, sparse_activation_n
             plt.plot(pos_signal)
             plt.plot(neg_signal, color='r')
             plt.ylim([data.min(), data.max()])
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstruction-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstruction-{weights_index}'))
             plt.close()
         (_, ax) = plt.subplots()
         ax.tick_params(labelbottom=False, labelleft=False)
@@ -827,17 +826,17 @@ def save_images_1d(artifacts_dir, data, dataset_name, model, sparse_activation_n
         plt.plot(data.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstructed'))
+        plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_list)}-reconstructed'))
         plt.close()
 
 
-def save_images_2d(artifacts_dir, data, dataset_name, model, sparse_activation_name):
+def save_images_2d(data, dataset_name, model, sparse_activation_name):
     model = model.to('cpu')
     plt.figure()
     plt.xticks([])
     plt.yticks([])
     plt.imshow(data.cpu().detach().numpy(), cmap='twilight', vmin=-2, vmax=2)
-    plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-signal'))
+    plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-signal'))
     plt.close()
     hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
     model.eval()
@@ -852,33 +851,33 @@ def save_images_2d(artifacts_dir, data, dataset_name, model, sparse_activation_n
             plt.imshow(weights.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(weights).max(), vmax=2 * abs(weights).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-kernel-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-kernel-{weights_index}'))
             plt.close()
             similarity = functional.conv2d(data.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.xticks([])
             plt.yticks([])
             plt.imshow(similarity.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(similarity).max(), vmax=2 * abs(similarity).max())
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-similarity-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-similarity-{weights_index}'))
             plt.close()
             plt.figure()
             plt.imshow(activations.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(activations).max(), vmax=2 * abs(activations).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-activations-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-activations-{weights_index}'))
             plt.close()
             reconstruction = functional.conv2d(activations.unsqueeze(0).unsqueeze(0), weights.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.imshow(reconstruction.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(reconstruction).max(), vmax=2 * abs(reconstruction).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstruction-{weights_index}'))
+            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstruction-{weights_index}'))
             plt.close()
         plt.figure()
         plt.xticks([])
         plt.yticks([])
         plt.imshow(reconstructed[0, 0].cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(reconstructed).max(), vmax=2 * abs(reconstructed).max())
-        plt.savefig(join(artifacts_dir, f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstructed'))
+        plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_list)}-reconstructed'))
         plt.close()
 
 
@@ -895,7 +894,7 @@ def topk_absolutes_2d(input_, topk):
     return extrema_primary.scatter(-1, extrema_indices, x_flattened.gather(-1, extrema_indices)).view(input_.shape)
 
 
-def train_model_supervised(model_supervised, model_unsupervised, optimizer, dataloader_training):
+def train_model_supervised(dataloader_training, model_supervised, model_unsupervised, optimizer):
     device = next(model_supervised.parameters()).device
     model_supervised.train()
     for (data, target) in dataloader_training:
@@ -909,7 +908,7 @@ def train_model_supervised(model_supervised, model_unsupervised, optimizer, data
         optimizer.step()
 
 
-def train_model_unsupervised(model, optimizer, dataloader_training):
+def train_model_unsupervised(dataloader_training, model, optimizer):
     device = next(model.parameters()).device
     model.train()
     for (data, _) in dataloader_training:
