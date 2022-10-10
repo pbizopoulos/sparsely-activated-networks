@@ -341,7 +341,6 @@ def extrema_pool_indices_2d(input_, kernel_size):
 
 
 def main():
-    full = environ['FULL']
     plt.rcParams['font.size'] = 20
     plt.rcParams['image.interpolation'] = 'none'
     plt.rcParams['savefig.bbox'] = 'tight'
@@ -355,7 +354,7 @@ def main():
     mnist_fashionmnist_training_range_list = [range(50000), range(50000)]
     mnist_fashionmnist_validation_range_list = [range(50000, 60000), range(50000, 60000)]
     mnist_fashionmnist_test_range_list = [range(10000), range(10000)]
-    if not full:
+    if environ['debug']:
         epochs_physionet_num = 3
         epochs_num = 2
         kernel_size_physionet_range = range(1, 10)
