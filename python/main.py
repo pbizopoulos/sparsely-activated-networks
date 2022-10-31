@@ -354,7 +354,7 @@ def main():
     mnist_fashionmnist_training_range_list = [range(50000), range(50000)]
     mnist_fashionmnist_validation_range_list = [range(50000, 60000), range(50000, 60000)]
     mnist_fashionmnist_test_range_list = [range(10000), range(10000)]
-    if environ['debug'] == '1':
+    if environ['DEBUG'] == '1':
         epochs_physionet_num = 3
         epochs_num = 2
         kernel_size_physionet_range = range(1, 10)
