@@ -11,7 +11,6 @@ NVIDIA Container Toolkit (Optional)
 # Preparation
 git clone https://github.com/pbizopoulos/sparsely-activated-networks
 cd sparsely-activated-networks/
-sudo systemctl start docker
 
 # Usage
 make help -C python/		# Show help for python.
