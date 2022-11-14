@@ -8,10 +8,7 @@ Make
 Docker (>= 19.03 for NVIDIA Container Toolkit)
 NVIDIA Container Toolkit (Optional)
 
-# Preparation
+# Build
 git clone https://github.com/pbizopoulos/sparsely-activated-networks
 cd sparsely-activated-networks/
-
-# Usage
-make help -C python/		# Show help for python.
-make help			# Show help for tex.
+cd python/ && make DEBUG=0 && cd .. && make DEBUG=0
