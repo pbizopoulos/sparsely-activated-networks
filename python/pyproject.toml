@@ -1,6 +1,6 @@
 [project]
-name = "None"
-version = "0"
+name = "UNKNOWN"
+version = "0.0.0"
 dependencies = [
 	"Jinja2==3.1.2",
 	"wfdb==4.0.0",
