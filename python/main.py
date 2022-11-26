@@ -12,6 +12,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import FashionMNIST, MNIST
 from torchvision.transforms import ToTensor
 import glob
+import hashlib
 import numpy as np
 import os
 import pandas as pd
@@ -741,6 +742,9 @@ def main():
         styler.to_latex(join('bin', f'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
     df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [accuracy_uci_epilepsy, accuracy_mnist_fashionmnist_supervised_list[0], accuracy_mnist_fashionmnist_supervised_list[1]]})
     df.to_csv(join('bin', 'keys-values.csv'), index=False, float_format='%.2f')
+    if environ['DEBUG'] == '1':
+        with open(join('bin', 'table-flithos-variable-kernel-size.tex'), 'rb') as file:
+            assert hashlib.sha256(file.read()).hexdigest() == 'bd97f548aae735c7c7e5fa797f1a94dd83dda055dc3eac5566ff03b40c0aac27'
 
 
 def save_images_1d(data, dataset_name, model, sparse_activation_name, xlim_weight):
