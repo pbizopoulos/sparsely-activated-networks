@@ -1,6 +1,7 @@
 # Sparsely Activated Networks
 https://arxiv.org/abs/1907.06592
 https://ieeexplore.ieee.org/abstract/document/9072295/
+https://pbizopoulos.github.io/sparsely-acticated-networks/
 
 # Requirements
 POSIX mandatory utilities
@@ -11,5 +12,6 @@ NVIDIA Container Toolkit (Optional)
 # Check code and build
 git clone https://github.com/pbizopoulos/sparsely-activated-networks
 cd sparsely-activated-networks/
+cd docs/ && make check all && cd ..
 cd python/ && make check all && cd ..
 make check all

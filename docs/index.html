@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+		<meta content="width=device-width, initial-scale=1" name="viewport">
+		<title>Action as Information</title>
+		<link href="data:," rel="icon">
+		<link href="style.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css" crossorigin="anonymous">
+		<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+		<script defer src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js" crossorigin="anonymous"></script>
+		<script defer src="https://cdn.jsdelivr.net/npm/katex@latest/dist/contrib/auto-render.min.js" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+		<script defer src="https://d3js.org/d3.v7.min.js"></script>
+		<script defer src="sanConvEncoder.js"></script>
+		<script defer src="sanResize.js"></script>
+		<script defer src="noisyOneMotif.js"></script>
+		<script defer src="script.js"></script>
+	</head>
+
+	<body>
+		<nav>
+			<a href="https://github.com/pbizopoulos/sparsely-activated-networks">Source code</a> | <a href="https://pbizopoulos.github.io">Home page</a> / <b>Sparsely activated networks</b>
+		</nav>
+		<ul>
+			<li>
+				<svg class="annotation-svg fill-white" width="14" height="14">
+					<rect width="14" height="14" />
+				</svg>
+				<span>SAN architecture with data flow</span>
+			</li>
+			<li>
+				<svg class="annotation-svg fill-gainsboro" width="14" height="14">
+					<rect width="14" height="14" />
+				</svg>
+				<span>parametric input control panel</span>
+			</li>
+			<li>
+				<svg class="annotation-svg fill-silver" width="14" height="14">
+					<rect width="14" height="14" />
+				</svg>
+				<span>parametric SAN control panel</span>
+			</li>
+			<li>
+				<svg class="annotation-svg fill-darkgray" width="14" height="14">
+					<rect width="14" height="14" />
+				</svg>
+				<span>start and reference control panel</span>
+			</li>
+		</ul>
+		<div class="grid-container" id="grid-container-div">
+			<div class="border-solid grid-item visibility-hidden" id="input-control-1-div">
+				<div> <span>\(n\) = </span><span id="size-text"></span> <input id="size-input-range" max="100" min="2" type="range"> </div>
+				<div>
+					<div id="velocity-text"></div> <input id="velocity-input-range" max="20" min="0" type="range">
+				</div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="input-control-2-div">
+				<div> <input id="channel-use-input-checkbox" type="checkbox"> <svg height="14" id="input-channel-motif-colored-box-svg" width="14">
+						<rect height="14" width="14" />
+					</svg>
+					<select id="input-channel-index-select"></select>
+				</div>
+				<div>
+					<span>type: </span>
+					<select id="input-channel-motif-type-select"></select>
+				</div>
+				<div>
+					<div id="channel-motif-size-text"></div> <input type="range" id="channel-motif-size-input-range" min="1" max="100">
+				</div>
+				<div>
+					<div id="channel-amplitude-base-text"></div> <input id="channel-amplitude-base-input-range" max="1" min="-1" step="0.1" type="range">
+				</div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="input-control-3-div">
+				<div>
+					<div id="channel-amplitude-max-text"></div> <input type="range" id="channel-amplitude-max-input-range" min="-1" step="0.1" max="1">
+				</div>
+				<div>
+					<div id="channel-distance-min-text"></div> <input id="channel-distance-min-input-range" max="100" min="0" type="range">
+				</div>
+				<div>
+					<div id="channel-distance-max-text"></div> <input id="channel-distance-max-input-range" max="100" min="0" type="range">
+				</div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="input-control-4-div">
+				<div> <label> dynamic noise:<input id="noise-initialize-input-checkbox" type="checkbox"> </label> </div>
+				<div> <span>noise: </span><select id="input-noise-type-select"></select> </div>
+				<div>
+					<div id="noise-sigma-text"></div> <input id="noise-sigma-input-range" max="1" min="0" step="0.1" type="range">
+				</div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="input-control-5-div">
+				<div>
+					<div>resize function: </div> <select id="input-resize-function-select"></select>
+				</div>
+				<div>
+					<div id="resize-multiplier-text"></div> <input id="resize-multiplier-input-range" max="1" min="0.1" step="0.1" type="range">
+				</div>
+				<div>
+					<div id="quantization-states-num-text"></div> <input id="quantization-states-num-input-range" max="100" min="1" type="range">
+				</div>
+				<div> <label> standardize:<input id="standardize-input-checkbox" type="checkbox"> </label> </div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="neuron-control-1-div">
+				<div>
+					<input id="neuron-use-input-checkbox" type="checkbox">
+					<svg height="14" id="neuron-colored-box-svg" width="14">
+						<rect height="14" width="14" />
+					</svg>
+					<select id="neuron-index-select"></select>
+				</div>
+				<div>
+					<span>init: </span>
+					<select id="kernel-initialization-select"></select>
+				</div>
+				<div>
+					<div id="kernel-size-text"></div>
+					<input id="kernel-size-input-range" min="1" type="range">
+				</div>
+				<div>
+					<div id="kernel-amplitude-text"></div>
+					<input id="kernel-amplitude-input-range" max="1" min="-1" step="0.1" type="range">
+				</div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="neuron-control-2-div">
+				<div>
+					<div>resize function: </div> <select id="kernel-resize-function-select"></select>
+				</div>
+				<div>
+					<div id="kernel-resize-multiplier-text"></div> <input id="kernel-resize-multiplier-input-range" max="100" min="0.1" step="0.1" type="range">
+				</div>
+			</div>
+			<div class="border-solid grid-item" id="input-div"></div>
+			<div class="grid-item" id="horizontal-line-1-div"></div>
+			<div class="grid-item" id="horizontal-line-2-div"></div>
+			<div class="grid-item" id="conv-encoder-div"></div>
+			<div class="border-solid grid-item" id="similarities-div"></div>
+			<div class="border-solid grid-item visibility-hidden" id="neuron-control-3-div">
+				<div> <label> ConvEncoder:<input id="conv-encoder-use-input-checkbox" type="checkbox"> </label> </div>
+				<div>
+					<div id="kernel-stride-text"></div> <input id="kernel-stride-input-range" min="1" type="range">
+				</div>
+				<div>
+					<div>resize function: </div> <select id="stride-resize-function-select"></select>
+				</div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="loss-control-div">
+				<div> <span>optimizer: </span><select id="optimizer-select"></select> </div>
+				<div> <span>loss: </span><select id="loss-function-select"></select> </div>
+				<div>
+					<div id="learning-rate-text"></div> <input id="learning-rate-exponent-input-range" max="1" min="-3" step="0.1" type="range">
+				</div>
+			</div>
+			<div class="grid-item" id="loss-div"></div>
+			<div class="border-solid grid-item" id="ndnl-div"></div>
+			<div class="grid-item" id="help-div"></div>
+			<div class="border-solid grid-item" id="kernel-div"></div>
+			<div class="grid-item" id="activation-function-div"></div>
+			<div class="border-solid grid-item" id="activation-function-control-div">
+				<div>
+					<div id="activation-amplitude-min-text"></div> <input id="activation-amplitude-min-input-range" max="1" min="0" step="0.1" type="range">
+				</div>
+				<div> <span>\(\phi\): </span><select id="activation-function-select"></select> </div>
+				<div>
+					<div id="activation-distance-min-text"></div> <input id="activation-distance-min-input-range" type="range" min="0">
+				</div>
+				<div> <label class="visibility-hidden" id="activation-regulates-label"> regulates:<input type="checkbox" id="activation-regulates-input-checkbox"> </label> </div>
+				<div> <label class="visibility-hidden" id="activation-regulated-label"> regulated:<input id="activation-regulated-input-checkbox" type="checkbox"> </label> </div>
+			</div>
+			<div class="border-solid grid-item" id="action-div">
+				<div> <span>\(\big\| \hat{x} \big\|\) = </span><span id="input-reconstruction-energy-text"></span> </div>
+				<div> <span>\(\big\| x - \hat{x} \big\|\) = </span><span id="input-reconstruction-loss-text"></span> </div>
+				<div> <span>\(\big\| d_{0 \rightarrow \hat{x}} \big\|\) = </span><span id="description-length-text"></span> </div>
+				<div> <span>\(\big\| d_{\hat{x} \rightarrow x} \big\|\) = </span><span id="loss-description-length-text"></span> </div>
+				<div> <span>\(\mathcal{S}\) = </span><span id="action-text"></span> </div>
+			</div>
+			<div class="border-solid grid-item" id="reconstruction-div"></div>
+			<div class="grid-item" id="sum-div"></div>
+			<div class="border-solid grid-item" id="kernel-reconstruction-div"></div>
+			<div class="grid-item" id="conv-decoder-div"></div>
+			<div class="border-solid grid-item" id="activations-div"></div>
+			<div class="border-solid grid-item" id="start-pause-reset-control-div">
+				<div> <button id="start-pause-button" type="button">start</button> <button id="stop-button" type="button">stop</button> </div>
+				<div>
+					<div>example: </div> <select id="example-select"></select>
+				</div>
+				<div>
+					<div id="epoch-text"></div>
+				</div>
+				<div>
+					<div id="time-per-epoch-text"></div>
+				</div>
+				<div> <label> advanced:<input type="checkbox" id="advanced-input-checkbox"> </label> </div>
+			</div>
+			<div class="border-solid grid-item visibility-hidden" id="reference-control-div">
+				<div> <select id="reference-function-select"></select> </div>
+				<div> <span>\(\big\| \hat{x} \big\|\) = </span><span id="reference-zero-reconstruction-loss-text"></span> </div>
+				<div> <span>\(\big\| x - \hat{x} \big\|\) = </span><span id="reference-reconstruction-loss-text"></span> </div>
+				<div> <span>\(\big\| d_{0 \rightarrow \hat{x}} \big\|\) = </span><span id="reference-description-length-text"></span> </div>
+				<div> <span>\(\big\| d_{\hat{x} \rightarrow x} \big\|\) = </span><span id="reference-loss-description-length-text"></span> </div>
+				<div> <span>\(\mathcal{S}\) = </span><span id="reference-action-text"></span> </div>
+			</div>
+		</div>
+	</body>
+
+</html>

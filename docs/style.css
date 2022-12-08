@@ -1,0 +1,73 @@
+#action-div,
+#activation-function-control-div,
+#loss-control-div,
+#neuron-control-1-div,
+#neuron-control-2-div,
+#neuron-control-3-div {
+	background-color: silver;
+}
+
+#input-control-1-div,
+#input-control-2-div,
+#input-control-3-div,
+#input-control-4-div,
+#input-control-5-div {
+	background-color: gainsboro;
+}
+
+#reference-control-div,
+#start-pause-reset-control-div {
+	background-color: darkgray;
+}
+
+.grid-container {
+	width: 1050px;
+	height: 600px;
+	text-align: center;
+	line-height: 1.1;
+}
+
+.grid-item {
+	width: 150px;
+	height: 150px;
+	float: left;
+	box-sizing: border-box;
+}
+
+.circle-operation {
+	stroke: black;
+	fill: white;
+}
+
+.annotation-svg {
+	stroke: black;
+}
+
+.border-solid {
+	border: solid;
+}
+
+.fill-white {
+	fill: white;
+}
+
+.fill-gainsboro {
+	fill: gainsboro;
+}
+
+.fill-silver {
+	fill: silver;
+}
+
+.fill-darkgray {
+	fill: darkgray;
+}
+
+.visibility-hidden {
+	visibility: hidden;
+}
+
+text {
+	text-anchor: middle;
+	dominant-baseline: central;
+}
