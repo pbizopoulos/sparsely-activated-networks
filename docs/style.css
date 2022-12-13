@@ -21,22 +21,22 @@
 }
 
 .grid-container {
-	width: 1050px;
 	height: 600px;
-	text-align: center;
 	line-height: 1.1;
+	text-align: center;
+	width: 1050px;
 }
 
 .grid-item {
-	width: 150px;
-	height: 150px;
-	float: left;
 	box-sizing: border-box;
+	float: left;
+	height: 150px;
+	width: 150px;
 }
 
 .circle-operation {
-	stroke: black;
 	fill: white;
+	stroke: black;
 }
 
 .annotation-svg {
@@ -68,6 +68,6 @@
 }
 
 text {
-	text-anchor: middle;
 	dominant-baseline: central;
+	text-anchor: middle;
 }
