@@ -457,18 +457,18 @@ def main():
     styler.to_latex(join('bin', 'table-flithos-variable-kernel-size.tex'), hrules=True, multicol_align='c')
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_name_list), epochs_physionet_num))
-    p1 = [0, 0, 0, 0, 0]
-    p2 = [0, 0, 0, 0, 0]
-    for index, (sparse_activation, sparse_activation_name, sparse_activation_color, kernel_size_best, flithos_all_validation_element_array) in enumerate(zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, kernel_size_best_array, flithos_all_validation_array)):
+    p1 = []
+    p2 = []
+    for sparse_activation, sparse_activation_name, sparse_activation_color, kernel_size_best, flithos_all_validation_element_array in zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, kernel_size_best_array, flithos_all_validation_array):
         t_range = range(1, flithos_all_validation_element_array.shape[-1] + 1)
         for index_, (c_, k_) in enumerate(zip(flithos_all_validation_element_array, kernel_size_best)):
             var[index_] = c_[k_ - 1]
         mu = var.mean(axis=0)
         sigma = var.std(axis=0)
         ax.fill_between(t_range, mu + sigma, mu - sigma, facecolor=sparse_activation_color, alpha=0.3)
-        p1[index] = ax.plot(t_range, mu, color=sparse_activation_color)
-        p2[index] = ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)
-    ax.legend([(p2[0][0], p1[0][0]), (p2[1][0], p1[1][0]), (p2[2][0], p1[2][0]), (p2[3][0], p1[3][0]), (p2[4][0], p1[4][0])], sparse_activation_name_list, fontsize=12, loc='lower left')
+        p1.append(ax.plot(t_range, mu, color=sparse_activation_color)[0])
+        p2.append(ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)[0])
+    ax.legend([(p2[0], p1[0]), (p2[1], p1[1]), (p2[2], p1[2]), (p2[3], p1[3]), (p2[4], p1[4])], sparse_activation_name_list, fontsize=12, loc='lower left')
     plt.xlabel('epochs')
     plt.ylabel('$\\bar\\varphi$')
     plt.autoscale(enable=True, axis='x', tight=True)
@@ -478,16 +478,16 @@ def main():
     plt.savefig(join('bin', 'mean-flithos-validation-epochs'))
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
-    p1 = [0, 0, 0, 0, 0]
-    p2 = [0, 0, 0, 0, 0]
-    for index, (sparse_activation, sparse_activation_name, sparse_activation_color, flithos_mean_element_array) in enumerate(zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, flithos_mean_array)):
+    p1 = []
+    p2 = []
+    for sparse_activation, sparse_activation_name, sparse_activation_color, flithos_mean_element_array in zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, flithos_mean_array):
         t_range = range(1, flithos_mean_element_array.shape[1] + 1)
         mu = flithos_mean_element_array.mean(axis=0)
         sigma = flithos_mean_element_array.std(axis=0)
         ax.fill_between(t_range, mu + sigma, mu - sigma, facecolor=sparse_activation_color, alpha=0.3)
-        p1[index] = ax.plot(t_range, mu, color=sparse_activation_color)
-        p2[index] = ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)
-    ax.legend([(p2[0][0], p1[0][0]), (p2[1][0], p1[1][0]), (p2[2][0], p1[2][0]), (p2[3][0], p1[3][0]), (p2[4][0], p1[4][0])], sparse_activation_name_list, fontsize=12, loc='lower right')
+        p1.append(ax.plot(t_range, mu, color=sparse_activation_color)[0])
+        p2.append(ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)[0])
+    ax.legend([(p2[0], p1[0]), (p2[1], p1[1]), (p2[2], p1[2]), (p2[3], p1[3]), (p2[4], p1[4])], sparse_activation_name_list, fontsize=12, loc='lower right')
     plt.xlabel('$m$')
     plt.ylabel('$\\bar\\varphi$')
     plt.autoscale(enable=True, axis='x', tight=True)
