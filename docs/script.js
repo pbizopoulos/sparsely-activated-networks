@@ -1,15 +1,15 @@
 'use strict';
 (() => {
-	tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0);
 	const motifMaxNum = 3;
 	const neuronMaxNum = 3;
+	tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0);
 	const activationFunctionArray = ['none', 'extrema'];
 	const arrowMargin = 5;
 	const circleRadius = 15;
 	const exampleObject = {
+		noisyOneMotif: noisyOneMotif,
 		sanConvEncoder: sanConvEncoder,
-		sanResize: sanResize,
-		noisyOneMotif: noisyOneMotif
+		sanResize: sanResize
 	};
 	const height = 150;
 	const inputColor = '#1f77b4';
@@ -54,8 +54,8 @@
 	let neuronArray = new Array(neuronMaxNum).fill(null);
 	let neuronCurrentIndex = 0;
 	let optimizerKey = d3.select('#optimizer-select').property('value');
-	let referenceArray = null;
 	let referenceAction = null;
+	let referenceArray = null;
 	let referenceFunction = null;
 	let referenceReconstructionLoss = null;
 	let referenceReupsampledReconstructionLossArray = null;
@@ -351,6 +351,7 @@
 			optimizer.dispose();
 		});
 	}
+
 	const arrowSvg = d3.select('#grid-container-div').append('svg').append('defs').append('marker').attr('id', 'arrow').attr('refX', arrowMargin).attr('refY', arrowMargin).attr('markerWidth', width).attr('markerHeight', height).attr('orient', 'auto');
 	arrowSvg.append('path').attr('d', d3.line()([
 		[0, 0],
