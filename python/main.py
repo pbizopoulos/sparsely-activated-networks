@@ -1,23 +1,24 @@
+import glob
+import os
+from os import environ
+from os.path import join
+
+import numpy as np
+import pandas as pd
+import requests
+import torch
+import wfdb
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Wedge
 from matplotlib.ticker import MaxNLocator
-from os import environ
-from os.path import join
 from scipy.stats import gaussian_kde
 from torch import nn, optim
 from torch.nn import functional
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
-from torchvision.datasets import FashionMNIST, MNIST
+from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
-import glob
-import numpy as np
-import os
-import pandas as pd
-import requests
-import torch
-import wfdb
 
 
 class CNN(nn.Module):
@@ -38,8 +39,7 @@ class CNN(nn.Module):
         out = out.view(out.size(0), -1)
         out = functional.relu(self.fc1(out))
         out = functional.relu(self.fc2(out))
-        out = self.fc3(out)
-        return out
+        return self.fc3(out)
 
 
 class Extrema1D(nn.Module):
@@ -90,8 +90,7 @@ class FNN(nn.Module):
 
     def forward(self, batch_x):
         out = batch_x.view(batch_x.shape[0], -1)
-        out = self.fc(out)
-        return out
+        return self.fc(out)
 
 
 class Hook:
@@ -232,9 +231,9 @@ class UCIepilepsyDataset(Dataset):
                 response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv')
                 file.write(response.content)
         dataset = pd.read_csv(join(path, 'data.csv'))
-        dataset['y'].replace(3, 2, inplace=True)
-        dataset['y'].replace(4, 3, inplace=True)
-        dataset['y'].replace(5, 3, inplace=True)
+        dataset['y'] = dataset['y'].replace(3, 2)
+        dataset['y'] = dataset['y'].replace(4, 3)
+        dataset['y'] = dataset['y'].replace(5, 3)
         data_all = dataset.drop(columns=['Unnamed: 0', 'y'])
         data_max = data_all.max().max()
         data_min = data_all.min().min()
@@ -243,14 +242,14 @@ class UCIepilepsyDataset(Dataset):
         last_training_index = int(data_all.shape[0] * 0.76)
         last_validation_index = int(data_all.shape[0] * 0.88)
         if training_validation_test == 'training':
-            self.data = torch.tensor(data_all.values[:last_training_index, :], dtype=torch.float)
-            self.classes = torch.tensor(classes_all[:last_training_index].values) - 1
+            self.data = torch.tensor(data_all.to_numpy()[:last_training_index, :], dtype=torch.float)
+            self.classes = torch.tensor(classes_all[:last_training_index].to_numpy()) - 1
         elif training_validation_test == 'validation':
-            self.data = torch.tensor(data_all.values[last_training_index:last_validation_index, :], dtype=torch.float)
-            self.classes = torch.tensor(classes_all[last_training_index:last_validation_index].values) - 1
+            self.data = torch.tensor(data_all.to_numpy()[last_training_index:last_validation_index, :], dtype=torch.float)
+            self.classes = torch.tensor(classes_all[last_training_index:last_validation_index].to_numpy()) - 1
         elif training_validation_test == 'test':
-            self.data = torch.tensor(data_all.values[last_validation_index:, :], dtype=torch.float)
-            self.classes = torch.tensor(classes_all[last_validation_index:].values) - 1
+            self.data = torch.tensor(data_all.to_numpy()[last_validation_index:, :], dtype=torch.float)
+            self.classes = torch.tensor(classes_all[last_validation_index:].to_numpy()) - 1
         self.data.unsqueeze_(1)
 
     def __len__(self):
@@ -450,9 +449,9 @@ def main():
         plt.close()
     header = ['$m$', '$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$']
     columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    df = pd.DataFrame(results_physionet_row_list_list, columns=columns, index=dataset_name_list)
-    df.index.names = ['Datasets']
-    styler = df.style
+    results_physionet_df = pd.DataFrame(results_physionet_row_list_list, columns=columns, index=dataset_name_list)
+    results_physionet_df.index.names = ['Datasets']
+    styler = results_physionet_df.style
     styler.format(precision=2, formatter={columns[0]: '{:.0f}', columns[4]: '{:.0f}', columns[8]: '{:.0f}', columns[12]: '{:.0f}', columns[16]: '{:.0f}'})
     styler.to_latex(join('bin', 'table-flithos-variable-kernel-size.tex'), hrules=True, multicol_align='c')
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
@@ -630,9 +629,9 @@ def main():
         results_supervised_row_list_list.append(results_supervised_row_list)
     header = ['$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$', 'A\\textsubscript{$\\pm$\\%}']
     columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-    df = pd.DataFrame(results_supervised_row_list_list, columns=columns, index=kernel_size_uci_epilepsy_range)
-    df.index.names = ['$m$']
-    styler = df.style
+    results_supervised_df = pd.DataFrame(results_supervised_row_list_list, columns=columns, index=kernel_size_uci_epilepsy_range)
+    results_supervised_df.index.names = ['$m$']
+    styler = results_supervised_df.style
     styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
     styler.to_latex(join('bin', 'table-uci-epilepsy-supervised.tex'), hrules=True, multicol_align='c')
     dataset_name_list = ['MNIST', 'FashionMNIST']
@@ -734,13 +733,13 @@ def main():
             results_supervised_row_list_list.append(results_supervised_row_list)
         header = ['$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$', 'A\\textsubscript{$\\pm$\\%}']
         columns = pd.MultiIndex.from_product([sparse_activation_name_list, header])
-        df = pd.DataFrame(results_supervised_row_list_list, columns=columns, index=kernel_size_mnist_fashionmnist_range)
-        df.index.names = ['$m$']
-        styler = df.style
+        results_supervised_df = pd.DataFrame(results_supervised_row_list_list, columns=columns, index=kernel_size_mnist_fashionmnist_range)
+        results_supervised_df.index.names = ['$m$']
+        styler = results_supervised_df.style
         styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
         styler.to_latex(join('bin', f'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
-    df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [accuracy_uci_epilepsy, accuracy_mnist_fashionmnist_supervised_list[0], accuracy_mnist_fashionmnist_supervised_list[1]]})
-    df.to_csv(join('bin', 'keys-values.csv'), index=False, float_format='%.2f')
+    keys_values_df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [accuracy_uci_epilepsy, accuracy_mnist_fashionmnist_supervised_list[0], accuracy_mnist_fashionmnist_supervised_list[1]]})
+    keys_values_df.to_csv(join('bin', 'keys-values.csv'), index=False, float_format='%.2f')
 
 
 def save_images_1d(data, dataset_name, model, sparse_activation_name, xlim_weight):
