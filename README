@@ -4,8 +4,8 @@ https://ieeexplore.ieee.org/abstract/document/9072295/
 https://pbizopoulos.github.io/sparsely-activated-networks/
 
 # Requirements
-POSIX mandatory utilities
-Make
+POSIX shell & utilities
+Git
 Docker (>= 19.03 for NVIDIA Container Toolkit)
 NVIDIA Container Toolkit (Optional)
 

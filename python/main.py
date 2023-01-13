@@ -228,7 +228,7 @@ class UCIepilepsyDataset(Dataset):
         if not os.path.exists(path):
             os.mkdir(path)
             with open(join(path, 'data.csv'), 'wb') as file:
-                response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv')
+                response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', timeout=5)
                 file.write(response.content)
         dataset = pd.read_csv(join(path, 'data.csv'))
         dataset['y'] = dataset['y'].replace(3, 2)
@@ -458,7 +458,7 @@ def main():
     var = np.zeros((len(dataset_name_list), epochs_physionet_num))
     p1 = []
     p2 = []
-    for sparse_activation, sparse_activation_name, sparse_activation_color, kernel_size_best, flithos_all_validation_element_array in zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, kernel_size_best_array, flithos_all_validation_array):
+    for sparse_activation_color, kernel_size_best, flithos_all_validation_element_array in zip(sparse_activation_color_list, kernel_size_best_array, flithos_all_validation_array):
         t_range = range(1, flithos_all_validation_element_array.shape[-1] + 1)
         for index_, (c_, k_) in enumerate(zip(flithos_all_validation_element_array, kernel_size_best)):
             var[index_] = c_[k_ - 1]
@@ -479,7 +479,7 @@ def main():
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = []
     p2 = []
-    for sparse_activation, sparse_activation_name, sparse_activation_color, flithos_mean_element_array in zip(sparse_activation_list, sparse_activation_name_list, sparse_activation_color_list, flithos_mean_array):
+    for sparse_activation_color, flithos_mean_element_array in zip(sparse_activation_color_list, flithos_mean_array):
         t_range = range(1, flithos_mean_element_array.shape[1] + 1)
         mu = flithos_mean_element_array.mean(axis=0)
         sigma = flithos_mean_element_array.std(axis=0)
@@ -543,7 +543,7 @@ def main():
     accuracy_best = 0
     model_supervised = CNN(len(dataset_training.classes.unique())).to(device)
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
-    for epoch in range(epochs_num):
+    for _ in range(epochs_num):
         model_supervised.train()
         for data, target in dataloader_training:
             data = data.to(device)
@@ -590,9 +590,9 @@ def main():
     dataloader_validation = DataLoader(dataset=dataset_validation, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
     dataset_test = UCIepilepsyDataset(uci_epilepsy_dir, 'test')
     dataloader_test = DataLoader(dataset=dataset_test, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
-    for kernel_size_list_index, kernel_size_list in enumerate(kernel_size_list_list):
+    for kernel_size_list in kernel_size_list_list:
         results_supervised_row_list = []
-        for sparse_activation_index, (sparse_activation, sparse_activation_name) in enumerate(zip(sparse_activation_list, sparse_activation_name_list)):
+        for sparse_activation, sparse_activation_name in zip(sparse_activation_list, sparse_activation_name_list):
             if sparse_activation == TopKAbsolutes1D:
                 sparsity_density_list = [int(dataset_test.data.shape[-1] / kernel_size) for kernel_size in kernel_size_list]
             elif sparse_activation == Extrema1D:
@@ -604,7 +604,7 @@ def main():
             optimizer = optim.Adam(model.parameters(), lr=lr)
             hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
             flithos_epoch_mean_best = float('inf')
-            for epoch in range(epochs_num):
+            for _ in range(epochs_num):
                 train_model_unsupervised(dataloader_training, model, optimizer)
                 flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model)
                 if flithos_epoch.mean() < flithos_epoch_mean_best:
@@ -615,7 +615,7 @@ def main():
             flithos_epoch_mean_best = float('inf')
             model_supervised = CNN(len(dataset_training.classes.unique())).to(device).to(device)
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
-            for epoch in range(epochs_num):
+            for _ in range(epochs_num):
                 train_model_supervised(dataloader_training, model_supervised, model_epoch_best, optimizer)
                 flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model_epoch_best)
                 if flithos_epoch.mean() < flithos_epoch_mean_best:
@@ -648,7 +648,7 @@ def main():
         accuracy_best = 0
         model_supervised = FNN(len(dataset_training_validation.classes), dataset_training_validation.data[0]).to(device)
         optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
-        for epoch in range(epochs_num):
+        for _ in range(epochs_num):
             model_supervised.train()
             for data, target in dataloader_training:
                 data = data.to(device)
@@ -693,9 +693,9 @@ def main():
         dataloader_validation = DataLoader(dataset_training_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range))
         dataset_test = dataset('bin', train=False, transform=ToTensor())
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
-        for kernel_size_list_index, kernel_size_list in enumerate(kernel_size_list_list):
+        for kernel_size_list in kernel_size_list_list:
             results_supervised_row_list = []
-            for sparse_activation_index, (sparse_activation, sparse_activation_name) in enumerate(zip(sparse_activation_list, sparse_activation_name_list)):
+            for sparse_activation, sparse_activation_name in zip(sparse_activation_list, sparse_activation_name_list):
                 if sparse_activation == TopKAbsolutes2D:
                     sparsity_density_list = [int(dataset_test.data.shape[-1] / kernel_size) ** 2 for kernel_size in kernel_size_list]
                 elif sparse_activation == Extrema2D:
@@ -708,7 +708,7 @@ def main():
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 hook_handle_list = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activation_list]
                 flithos_epoch_mean_best = float('inf')
-                for epoch in range(epochs_num):
+                for _ in range(epochs_num):
                     train_model_unsupervised(dataloader_training, model, optimizer)
                     flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model)
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
@@ -719,7 +719,7 @@ def main():
                 flithos_epoch_mean_best = float('inf')
                 model_supervised = FNN(len(dataset_training_validation.classes), dataset_training_validation.data[0]).to(device)
                 optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
-                for epoch in range(epochs_num):
+                for _ in range(epochs_num):
                     train_model_supervised(dataloader_training, model_supervised, model_epoch_best, optimizer)
                     flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handle_list, model_epoch_best)
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
