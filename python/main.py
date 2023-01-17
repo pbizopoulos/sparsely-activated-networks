@@ -1,7 +1,7 @@
 import glob
 import os
 from os import environ
-from os.path import join
+from os.path import exists, isfile, join
 
 import numpy as np
 import pandas as pd
@@ -130,7 +130,7 @@ class PhysionetDataset(Dataset):
 
     def __init__(self, dataset_name, training_validation_test):
         dataset_dir = join('bin', dataset_name)
-        if not os.path.exists(dataset_dir):
+        if not exists(dataset_dir):
             record_name = wfdb.get_record_list(dataset_name)[0]
             wfdb.dl_database(dataset_name, dataset_dir, records=[record_name], annotators=None)
         files = glob.glob(join(dataset_dir, '*.hea'))
@@ -224,13 +224,13 @@ class UCIepilepsyDataset(Dataset):
     def __getitem__(self, index):
         return (self.data[index], self.classes[index])
 
-    def __init__(self, path, training_validation_test):
-        if not os.path.exists(path):
-            os.mkdir(path)
-            with open(join(path, 'data.csv'), 'wb') as file:
-                response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', timeout=5)
+    def __init__(self, training_validation_test):
+        data_file_path = join('bin', 'data.csv')
+        if not isfile(data_file_path):
+            with open(data_file_path, 'wb') as file:
+                response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', timeout=60)
                 file.write(response.content)
-        dataset = pd.read_csv(join(path, 'data.csv'))
+        dataset = pd.read_csv(data_file_path)
         dataset['y'] = dataset['y'].replace(3, 2)
         dataset['y'] = dataset['y'].replace(4, 3)
         dataset['y'] = dataset['y'].replace(5, 3)
@@ -533,12 +533,11 @@ def main():
     plt.close()
     batch_size = 64
     lr = 0.01
-    uci_epilepsy_dir = join('bin', 'UCI-epilepsy')
-    dataset_training = UCIepilepsyDataset(uci_epilepsy_dir, 'training')
+    dataset_training = UCIepilepsyDataset('training')
     dataloader_training = DataLoader(dataset=dataset_training, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    dataset_validation = UCIepilepsyDataset(uci_epilepsy_dir, 'validation')
+    dataset_validation = UCIepilepsyDataset('validation')
     dataloader_validation = DataLoader(dataset=dataset_validation, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    dataset_test = UCIepilepsyDataset(uci_epilepsy_dir, 'test')
+    dataset_test = UCIepilepsyDataset('test')
     dataloader_test = DataLoader(dataset=dataset_test, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     accuracy_best = 0
     model_supervised = CNN(len(dataset_training.classes.unique())).to(device)
@@ -584,11 +583,11 @@ def main():
     batch_size = 64
     lr = 0.01
     results_supervised_row_list_list = []
-    dataset_training = UCIepilepsyDataset(uci_epilepsy_dir, 'training')
+    dataset_training = UCIepilepsyDataset('training')
     dataloader_training = DataLoader(dataset=dataset_training, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
-    dataset_validation = UCIepilepsyDataset(uci_epilepsy_dir, 'validation')
+    dataset_validation = UCIepilepsyDataset('validation')
     dataloader_validation = DataLoader(dataset=dataset_validation, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
-    dataset_test = UCIepilepsyDataset(uci_epilepsy_dir, 'test')
+    dataset_test = UCIepilepsyDataset('test')
     dataloader_test = DataLoader(dataset=dataset_test, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     for kernel_size_list in kernel_size_list_list:
         results_supervised_row_list = []
