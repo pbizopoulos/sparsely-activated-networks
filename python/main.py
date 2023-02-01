@@ -258,7 +258,7 @@ class UCIepilepsyDataset(Dataset):
 
 def calculate_inverse_compression_ratio(activations_num, data, model):
     activation_multiplier = 1 + len(model.weights_list[0].shape)
-    parameters_num = sum((weights.shape[0] for weights in model.weights_list))
+    parameters_num = sum(weights.shape[0] for weights in model.weights_list)
     return (activation_multiplier * activations_num + parameters_num) / (data.shape[-1] * data.shape[-2])
 
 
