@@ -131,7 +131,7 @@ class PhysionetDataset(Dataset):
         dataset_path = Path('bin') / dataset_name
         if not dataset_path.exists():
             record_name = wfdb.get_record_list(f'{dataset_name}/1.0.0')[0]
-            wfdb.dl_database(f'{dataset_name}/1.0.0', dataset_path.as_posix(), records=[record_name], annotators=None)
+            wfdb.dl_database(dataset_name, dataset_path.as_posix(), records=[record_name], annotators=None)
         files = glob.glob((dataset_path / '*.hea').as_posix())
         file_name = Path(files[0]).stem
         records = wfdb.rdrecord(dataset_path / file_name)
