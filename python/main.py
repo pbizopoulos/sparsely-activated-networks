@@ -1,7 +1,6 @@
 import glob
-import os
 from os import environ
-from os.path import exists, isfile, join
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -129,13 +128,13 @@ class PhysionetDataset(Dataset):
         return (out, 0)
 
     def __init__(self, dataset_name: str, training_validation_test: str) -> None:
-        dataset_dir = join('bin', dataset_name)
-        if not exists(dataset_dir):
+        dataset_path = Path('bin') / dataset_name
+        if not dataset_path.exists():
             record_name = wfdb.get_record_list(f'{dataset_name}/1.0.0')[0]
-            wfdb.dl_database(f'{dataset_name}/1.0.0', dataset_dir, records=[record_name], annotators=None)
-        files = glob.glob(join(dataset_dir, '*.hea'))
-        file_name = os.path.splitext(os.path.basename(files[0]))[0]
-        records = wfdb.rdrecord(join(dataset_dir, file_name))
+            wfdb.dl_database(f'{dataset_name}/1.0.0', dataset_path, records=[record_name], annotators=None)
+        files = glob.glob((dataset_path / '*.hea').as_posix())
+        file_name = Path(files[0]).stem
+        records = wfdb.rdrecord(dataset_path / file_name)
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if training_validation_test == 'training':
             self.data = data[:6000]
@@ -225,9 +224,9 @@ class UCIepilepsyDataset(Dataset):
         return (self.data[index], self.classes[index])
 
     def __init__(self, training_validation_test: str) -> None:
-        data_file_path = join('bin', 'data.csv')
-        if not isfile(data_file_path):
-            with open(data_file_path, 'wb') as file:
+        data_file_path = Path('bin/data.csv')
+        if not data_file_path.is_file():
+            with data_file_path.open('wb') as file:
                 response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', timeout=60)
                 file.write(response.content)
         dataset = pd.read_csv(data_file_path)
@@ -274,7 +273,7 @@ def extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Ten
     extrema.squeeze_(1)
     for index, (x_, e_) in enumerate(zip(input_, extrema)):
         extrema_indices = torch.nonzero(e_, as_tuple=False)
-        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, True)
+        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
         extrema_indices_sorted = extrema_indices[extrema_indices_indices][:, 0]
         extrema_is_secondary = torch.zeros_like(extrema_indices_indices, dtype=torch.bool)
         for index_, extrema_index in enumerate(extrema_indices_sorted):
@@ -308,7 +307,7 @@ def extrema_2d(input_: torch.Tensor, minimum_extrema_distance: list) -> torch.Te
     extrema.squeeze_(1)
     for index, (x_, e_) in enumerate(zip(input_, extrema)):
         extrema_indices = torch.nonzero(e_, as_tuple=False)
-        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, True)
+        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
         extrema_indices_sorted = extrema_indices[extrema_indices_indices]
         extrema_is_secondary = torch.zeros_like(extrema_indices_indices, dtype=torch.bool)
         for index_, (extrema_index_x, extrema_index_y) in enumerate(extrema_indices_sorted):
@@ -438,14 +437,14 @@ def main() -> None:
         plt.ylim([0, 2.5])
         plt.xlabel('$\\tilde{\\mathcal{L}}$')
         plt.ylabel('$CR^{-1}$')
-        plt.grid(True)
+        plt.grid(visible=True)
         plt.title(dataset_name)
         plt.axhspan(2, 2.5, alpha=0.3, color='r')
         plt.axhspan(1, 2, alpha=0.3, color='orange')
         plt.axvspan(1, 2.5, alpha=0.3, color='gray')
         wedge = Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color='g')
         ax_main.add_patch(wedge)
-        plt.savefig(join('bin', dataset_name))
+        plt.savefig(f'bin/{dataset_name}')
         plt.close()
     header = ['$m$', '$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$']
     columns = pd.MultiIndex.from_product([sparse_activation_names, header])
@@ -453,7 +452,7 @@ def main() -> None:
     results_physionet_df.index.names = ['Datasets']
     styler = results_physionet_df.style
     styler.format(precision=2, formatter={columns[0]: '{:.0f}', columns[4]: '{:.0f}', columns[8]: '{:.0f}', columns[12]: '{:.0f}', columns[16]: '{:.0f}'})
-    styler.to_latex(join('bin', 'table-flithos-variable-kernel-size.tex'), hrules=True, multicol_align='c')
+    styler.to_latex('bin/table-flithos-variable-kernel-size.tex', hrules=True, multicol_align='c')
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     var = np.zeros((len(dataset_names), epochs_physionet_num))
     p1 = []
@@ -472,9 +471,9 @@ def main() -> None:
     plt.ylabel('$\\bar\\varphi$')
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.ylim([0, 2.5])
-    plt.grid(True)
+    plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(join('bin', 'mean-flithos-validation-epochs'))
+    plt.savefig('bin/mean-flithos-validation-epochs')
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = []
@@ -491,9 +490,9 @@ def main() -> None:
     plt.ylabel('$\\bar\\varphi$')
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.ylim([0, 2.5])
-    plt.grid(True)
+    plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(join('bin', 'mean-flithos-variable-kernel-size-list'))
+    plt.savefig('bin/mean-flithos-variable-kernel-size-list')
     plt.close()
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
     fig_legend = plt.figure()
@@ -508,7 +507,7 @@ def main() -> None:
         line2d_list.append(Line2D([0], [0], marker='o', color='w', label=sparse_activation_name, markerfacecolor=sparse_activation_color))
     legend_handle_list = [non_sparse_model_description_patch, worse_cr_than_original_data_patch, worse_l_than_constant_prediction_patch, varphi_less_than_one_patch, line2d_list[0], line2d_list[1], line2d_list[2], line2d_list[3], line2d_list[4]]
     fig_legend.legend(handles=legend_handle_list, fontsize=22, loc='upper center')
-    plt.savefig(join('bin', 'legend'))
+    plt.savefig('bin/legend')
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     gaussian_kde_input_array = gaussian_kde_input_array.reshape(gaussian_kde_input_array.shape[0], -1, 2)
@@ -528,8 +527,8 @@ def main() -> None:
     plt.ylabel('$CR^{-1}$')
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
-    plt.grid(True)
-    plt.savefig(join('bin', 'crrl-density-plot'))
+    plt.grid(visible=True)
+    plt.savefig('bin/crrl-density-plot')
     plt.close()
     batch_size = 64
     lr = 0.01
@@ -610,7 +609,7 @@ def main() -> None:
                     model_epoch_best = san1d_model
                     flithos_epoch_mean_best = flithos_epoch.mean()
             for weights_kernel in san1d_model.weights_kernels:
-                weights_kernel.requires_grad_(False)
+                weights_kernel.requires_grad_(False) # noqa: FBT003
             flithos_epoch_mean_best = float('inf')
             model_supervised = CNN(len(uci_epilepsy_dataset_training.classes.unique())).to(device).to(device)
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
@@ -632,7 +631,7 @@ def main() -> None:
     results_supervised_df.index.names = ['$m$']
     styler = results_supervised_df.style
     styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-    styler.to_latex(join('bin', 'table-uci-epilepsy-supervised.tex'), hrules=True, multicol_align='c')
+    styler.to_latex('bin/table-uci-epilepsy-supervised.tex', hrules=True, multicol_align='c')
     dataset_names = ['MNIST', 'FashionMNIST']
     dataset_list = [MNIST, FashionMNIST]
     accuracies_mnist_fashionmnist_supervised = []
@@ -714,7 +713,7 @@ def main() -> None:
                         san2d_model_epoch_best = san2d_model
                         flithos_epoch_mean_best = flithos_epoch.mean()
                 for weights_kernel in san2d_model.weights_kernels:
-                    weights_kernel.requires_grad_(False)
+                    weights_kernel.requires_grad_(False) # noqa: FBT003
                 flithos_epoch_mean_best = float('inf')
                 fnn_model_supervised = FNN(len(dataset_training_validation.classes), dataset_training_validation.data[0]).to(device)
                 optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
@@ -736,20 +735,20 @@ def main() -> None:
         results_supervised_df.index.names = ['$m$']
         styler = results_supervised_df.style
         styler.format(precision=2, formatter={columns[3]: '{:.1f}', columns[7]: '{:.1f}', columns[11]: '{:.1f}', columns[15]: '{:.1f}', columns[19]: '{:.1f}'})
-        styler.to_latex(join('bin', f'table-{dataset_name.lower()}-supervised.tex'), hrules=True, multicol_align='c')
+        styler.to_latex(f'bin/table-{dataset_name.lower()}-supervised.tex', hrules=True, multicol_align='c')
     keys_values_df = pd.DataFrame({'key': ['uci-epilepsy-supervised-accuracy', 'mnist-supervised-accuracy', 'fashionmnist-supervised-accuracy'], 'value': [accuracy_uci_epilepsy, accuracies_mnist_fashionmnist_supervised[0], accuracies_mnist_fashionmnist_supervised[1]]})
-    keys_values_df.to_csv(join('bin', 'keys-values.csv'), index=False, float_format='%.2f')
+    keys_values_df.to_csv('bin/keys-values.csv', index=False, float_format='%.2f')
 
 
 def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_activation_name: str, xlim_weight: int) -> None:
     model = model.to('cpu')
     _, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
-    plt.grid(True)
+    plt.grid(visible=True)
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal'))
+    plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal')
     plt.close()
     hook_handles = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations]
     model.eval()
@@ -762,9 +761,9 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
         for weights_index, (weights_kernel, activations) in enumerate(zip(model.weights_kernels, activations_stack[0, :, 0])):
             _, ax = plt.subplots(figsize=(2, 2.2))
             ax.tick_params(labelbottom=False, labelleft=False)
-            ax.xaxis.get_offset_text().set_visible(False)
-            ax.yaxis.get_offset_text().set_visible(False)
-            plt.grid(True)
+            ax.xaxis.get_offset_text().set_visible(False) # noqa: FBT003
+            ax.yaxis.get_offset_text().set_visible(False) # noqa: FBT003
+            plt.grid(visible=True)
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.plot(weights_kernel.cpu().detach().numpy(), 'r')
             plt.xlim([0, xlim_weight])
@@ -772,30 +771,30 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
                 plt.ylabel(sparse_activation_name, fontsize=20)
             if sparse_activation_name == 'relu':
                 plt.title(dataset_name, fontsize=20)
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}')
             plt.close()
             similarity = functional.conv1d(data.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             _, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(True)
+            plt.grid(visible=True)
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.plot(similarity.cpu().detach().numpy(), 'g')
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}')
             plt.close()
             _, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(True)
+            plt.grid(visible=True)
             plt.autoscale(enable=True, axis='x', tight=True)
             peaks = torch.nonzero(activations, as_tuple=False)[:, 0]
             plt.plot(similarity.cpu().detach().numpy(), 'g', alpha=0.5)
             if peaks.shape[0] != 0:
                 plt.stem(peaks.cpu().detach().numpy(), activations[peaks.cpu().detach().numpy()].cpu().detach().numpy(), linefmt='c', basefmt=' ')
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}')
             plt.close()
             reconstruction_ = functional.conv1d(activations.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             _, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(True)
+            plt.grid(visible=True)
             plt.autoscale(enable=True, axis='x', tight=True)
             reconstruction = reconstruction_.cpu().detach().numpy()
             lefts = peaks - weights_kernel.shape[0] / 2
@@ -814,16 +813,16 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
             plt.plot(pos_signal)
             plt.plot(neg_signal, color='r')
             plt.ylim([data.min(), data.max()])
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}')
             plt.close()
         _, ax = plt.subplots()
         ax.tick_params(labelbottom=False, labelleft=False)
-        plt.grid(True)
+        plt.grid(visible=True)
         plt.autoscale(enable=True, axis='x', tight=True)
         plt.plot(data.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), 'r')
         plt.ylim([data.min(), data.max()])
-        plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed'))
+        plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed')
         plt.close()
 
 
@@ -833,7 +832,7 @@ def save_images_2d(data: torch.Tensor, dataset_name: str, model: SAN2d, sparse_a
     plt.xticks([])
     plt.yticks([])
     plt.imshow(data.cpu().detach().numpy(), cmap='twilight', vmin=-2, vmax=2)
-    plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal'))
+    plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal')
     plt.close()
     hook_handles = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations]
     model.eval()
@@ -848,33 +847,33 @@ def save_images_2d(data: torch.Tensor, dataset_name: str, model: SAN2d, sparse_a
             plt.imshow(weights_kernel.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(weights_kernel).max(), vmax=2 * abs(weights_kernel).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}')
             plt.close()
             similarity = functional.conv2d(data.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.xticks([])
             plt.yticks([])
             plt.imshow(similarity.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(similarity).max(), vmax=2 * abs(similarity).max())
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}')
             plt.close()
             plt.figure()
             plt.imshow(activations.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(activations).max(), vmax=2 * abs(activations).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}')
             plt.close()
             reconstruction = functional.conv2d(activations.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')[0, 0]
             plt.figure()
             plt.imshow(reconstruction.cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(reconstruction).max(), vmax=2 * abs(reconstruction).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}'))
+            plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}')
             plt.close()
         plt.figure()
         plt.xticks([])
         plt.yticks([])
         plt.imshow(reconstructed[0, 0].cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(reconstructed).max(), vmax=2 * abs(reconstructed).max())
-        plt.savefig(join('bin', f'{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed'))
+        plt.savefig(f'bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed')
         plt.close()
 
 
