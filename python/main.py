@@ -1,6 +1,7 @@
 import glob
 from os import environ
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -38,7 +39,7 @@ class CNN(nn.Module):
         out = out.view(out.size(0), -1)
         out = functional.relu(self.fc1(out))
         out = functional.relu(self.fc2(out))
-        return self.fc3(out)
+        return self.fc3(out) # type: ignore[no-any-return]
 
 
 class Extrema1D(nn.Module):
@@ -53,7 +54,7 @@ class Extrema1D(nn.Module):
 
 class Extrema2D(nn.Module):
 
-    def __init__(self, minimum_extrema_distance: list) -> None:
+    def __init__(self, minimum_extrema_distance: list[int]) -> None:
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
 
@@ -89,7 +90,7 @@ class FNN(nn.Module):
 
     def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
         out = batch_x.view(batch_x.shape[0], -1)
-        return self.fc(out)
+        return self.fc(out) # type: ignore[no-any-return]
 
 
 class Hook:
@@ -120,9 +121,9 @@ class Identity2D(nn.Module):
         return input_
 
 
-class PhysionetDataset(Dataset):
+class PhysionetDataset(Dataset): # type: ignore[type-arg]
 
-    def __getitem__(self, index: int) -> tuple:
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
         out = self.data[index] - self.data[index].mean()
         out /= out.std()
         return (out, 0)
@@ -168,7 +169,7 @@ class Relu2D(nn.Module):
 
 class SAN1d(nn.Module):
 
-    def __init__(self, kernel_sizes: list, sparse_activations: list) -> None:
+    def __init__(self, kernel_sizes: list[int], sparse_activations: list[nn.Module]) -> None:
         super().__init__()
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size)) for kernel_size in kernel_sizes])
@@ -184,7 +185,7 @@ class SAN1d(nn.Module):
 
 class SAN2d(nn.Module):
 
-    def __init__(self, kernel_sizes: list, sparse_activations: list) -> None:
+    def __init__(self, kernel_sizes: list[int], sparse_activations: list[nn.Module]) -> None:
         super().__init__()
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size, kernel_size)) for kernel_size in kernel_sizes])
@@ -218,9 +219,9 @@ class TopKAbsolutes2D(nn.Module):
         return topk_absolutes_2d(input_, self.topk)
 
 
-class UCIepilepsyDataset(Dataset):
+class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
 
-    def __getitem__(self, index: int) -> tuple:
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         return (self.data[index], self.classes[index])
 
     def __init__(self, training_validation_test: str) -> None:
@@ -255,7 +256,7 @@ class UCIepilepsyDataset(Dataset):
         return self.classes.shape[0]
 
 
-def calculate_inverse_compression_ratio(activations_num: np.ndarray, data: torch.Tensor, model: nn.Module) -> np.ndarray:
+def calculate_inverse_compression_ratio(activations_num: np.ndarray, data: torch.Tensor, model: nn.Module) -> np.ndarray: # type: ignore[type-arg]
     activation_multiplier = 1 + len(model.weights_kernels[0].shape) # type: ignore[index]
     parameters_num = sum(weights_kernel.shape[0] for weights_kernel in model.weights_kernels) # type: ignore[union-attr]
     return (activation_multiplier * activations_num + parameters_num) / (data.shape[-1] * data.shape[-2])
@@ -288,7 +289,7 @@ def extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Ten
     return extrema_primary
 
 
-def extrema_2d(input_: torch.Tensor, minimum_extrema_distance: list) -> torch.Tensor:
+def extrema_2d(input_: torch.Tensor, minimum_extrema_distance: list[int]) -> torch.Tensor:
     extrema_primary = torch.zeros_like(input_)
     dx = input_[:, :, :, 1:] - input_[:, :, :, :-1]
     dy = input_[:, :, 1:, :] - input_[:, :, :-1, :]
@@ -539,7 +540,7 @@ def main() -> None:
     uci_epilepsy_dataset_test = UCIepilepsyDataset('test')
     dataloader_test = DataLoader(dataset=uci_epilepsy_dataset_test, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     accuracy_best = 0.0
-    model_supervised = CNN(len(uci_epilepsy_dataset_training.classes.unique())).to(device)
+    model_supervised = CNN(len(uci_epilepsy_dataset_training.classes.unique())).to(device) # type: ignore[no-untyped-call]
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(epochs_num):
         model_supervised.train()
@@ -549,7 +550,7 @@ def main() -> None:
             output = model_supervised(data)
             classification_loss = functional.cross_entropy(output, target)
             optimizer.zero_grad()
-            classification_loss.backward()
+            classification_loss.backward() # type: ignore[no-untyped-call]
             optimizer.step()
         predictions_correct_num = 0
         predictions_num = 0
@@ -611,7 +612,7 @@ def main() -> None:
             for weights_kernel in san1d_model.weights_kernels:
                 weights_kernel.requires_grad_(False) # noqa: FBT003
             flithos_epoch_mean_best = float('inf')
-            model_supervised = CNN(len(uci_epilepsy_dataset_training.classes.unique())).to(device).to(device)
+            model_supervised = CNN(len(uci_epilepsy_dataset_training.classes.unique())).to(device).to(device) # type: ignore[no-untyped-call]
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
             for _ in range(epochs_num):
                 train_model_supervised(dataloader_training, model_supervised, model_epoch_best, optimizer)
@@ -654,7 +655,7 @@ def main() -> None:
                 output = fnn_model_supervised(data)
                 classification_loss = functional.cross_entropy(output, target)
                 optimizer.zero_grad()
-                classification_loss.backward()
+                classification_loss.backward() # type: ignore[no-untyped-call]
                 optimizer.step()
             predictions_correct_num = 0
             predictions_num = 0
@@ -890,7 +891,7 @@ def topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     return extrema_primary.scatter(-1, extrema_indices, x_flattened.gather(-1, extrema_indices)).view(input_.shape)
 
 
-def train_model_supervised(dataloader_training: DataLoader, model_supervised: nn.Module, model_unsupervised: nn.Module, optimizer: optim.Adam) -> None:
+def train_model_supervised(dataloader_training: DataLoader, model_supervised: nn.Module, model_unsupervised: nn.Module, optimizer: optim.Adam) -> None: # type: ignore[type-arg]
     device = next(model_supervised.parameters()).device
     model_supervised.train()
     for data, target in dataloader_training:
@@ -900,11 +901,11 @@ def train_model_supervised(dataloader_training: DataLoader, model_supervised: nn
         output = model_supervised(data_reconstructed)
         classification_loss = functional.cross_entropy(output, target)
         optimizer.zero_grad()
-        classification_loss.backward()
+        classification_loss.backward() # type: ignore[no-untyped-call]
         optimizer.step()
 
 
-def train_model_unsupervised(dataloader_training: DataLoader, model: nn.Module, optimizer: optim.Adam) -> None:
+def train_model_unsupervised(dataloader_training: DataLoader, model: nn.Module, optimizer: optim.Adam) -> None: # type: ignore[type-arg]
     device = next(model.parameters()).device
     model.train()
     for data, _ in dataloader_training:
@@ -912,11 +913,11 @@ def train_model_unsupervised(dataloader_training: DataLoader, model: nn.Module, 
         data_reconstructed = model(data)
         reconstruction_loss = functional.l1_loss(data, data_reconstructed)
         optimizer.zero_grad()
-        reconstruction_loss.backward()
+        reconstruction_loss.backward() # type: ignore[no-untyped-call]
         optimizer.step()
 
 
-def validate_or_test_model_supervised(dataloader: DataLoader, hook_handles: list, model_supervised: nn.Module, model_unsupervised: nn.Module) -> tuple:
+def validate_or_test_model_supervised(dataloader: DataLoader, hook_handles: list[Hook], model_supervised: nn.Module, model_unsupervised: nn.Module) -> tuple: # type: ignore[type-arg]
     device = next(model_supervised.parameters()).device
     predictions_correct_num = 0
     activations_num = np.zeros(len(dataloader))
@@ -941,7 +942,7 @@ def validate_or_test_model_supervised(dataloader: DataLoader, hook_handles: list
     return (flithos, inverse_compression_ratio, reconstruction_loss, 100 * predictions_correct_num / len(dataloader))
 
 
-def validate_or_test_model_unsupervised(dataloader: DataLoader, hook_handles: list, model: nn.Module) -> tuple:
+def validate_or_test_model_unsupervised(dataloader: DataLoader[Any], hook_handles: list[Hook], model: nn.Module) -> tuple: # type: ignore[type-arg]
     device = next(model.parameters()).device
     activations_num = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
