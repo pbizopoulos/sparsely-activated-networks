@@ -23,7 +23,7 @@ from torchvision.transforms import ToTensor
 
 class CNN(nn.Module):
 
-    def __init__(self, classes_num: int) -> None:
+    def __init__(self: 'CNN', classes_num: int) -> None:
         super().__init__()
         self.conv1 = nn.Conv1d(1, 3, 5)
         self.conv2 = nn.Conv1d(3, 16, 5)
@@ -31,7 +31,7 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, classes_num)
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'CNN', input_: torch.Tensor) -> torch.Tensor:
         out = functional.relu(self.conv1(input_))
         out = functional.max_pool1d(out, 2)
         out = functional.relu(self.conv2(out))
@@ -44,91 +44,91 @@ class CNN(nn.Module):
 
 class Extrema1D(nn.Module):
 
-    def __init__(self, minimum_extrema_distance: int) -> None:
+    def __init__(self: 'Extrema1D', minimum_extrema_distance: int) -> None:
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'Extrema1D', input_: torch.Tensor) -> torch.Tensor:
         return extrema_1d(input_, self.minimum_extrema_distance)
 
 
 class Extrema2D(nn.Module):
 
-    def __init__(self, minimum_extrema_distance: list[int]) -> None:
+    def __init__(self: 'Extrema2D', minimum_extrema_distance: list[int]) -> None:
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'Extrema2D', input_: torch.Tensor) -> torch.Tensor:
         return extrema_2d(input_, self.minimum_extrema_distance)
 
 
 class ExtremaPoolIndices1D(nn.Module):
 
-    def __init__(self, pool_size: int) -> None:
+    def __init__(self: 'ExtremaPoolIndices1D', pool_size: int) -> None:
         super().__init__()
         self.pool_size = pool_size
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'ExtremaPoolIndices1D', input_: torch.Tensor) -> torch.Tensor:
         return extrema_pool_indices_1d(input_, self.pool_size)
 
 
 class ExtremaPoolIndices2D(nn.Module):
 
-    def __init__(self, pool_size: int) -> None:
+    def __init__(self: 'ExtremaPoolIndices2D', pool_size: int) -> None:
         super().__init__()
         self.pool_size = pool_size
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'ExtremaPoolIndices2D', input_: torch.Tensor) -> torch.Tensor:
         return extrema_pool_indices_2d(input_, self.pool_size)
 
 
 class FNN(nn.Module):
 
-    def __init__(self, classes_num: int, sample_data: torch.Tensor) -> None:
+    def __init__(self: 'FNN', classes_num: int, sample_data: torch.Tensor) -> None:
         super().__init__()
         self.fc = nn.Linear(sample_data.shape[-1] * sample_data.shape[-2], classes_num)
 
-    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'FNN', batch_x: torch.Tensor) -> torch.Tensor:
         out = batch_x.view(batch_x.shape[0], -1)
         return self.fc(out) # type: ignore[no-any-return]
 
 
 class Hook:
 
-    def __init__(self, module: nn.Module) -> None:
+    def __init__(self: 'Hook', module: nn.Module) -> None:
         self.hook = module.register_forward_hook(self.hook_fn)
 
-    def hook_fn(self, _: None, input_: torch.Tensor, output: torch.Tensor) -> None:
+    def hook_fn(self: 'Hook', _: None, input_: torch.Tensor, output: torch.Tensor) -> None:
         self.input_ = input_
         self.output = output
 
 
 class Identity1D(nn.Module):
 
-    def __init__(self, _: None) -> None:
+    def __init__(self: 'Identity1D', _: None) -> None:
         super().__init__()
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'Identity1D', input_: torch.Tensor) -> torch.Tensor:
         return input_
 
 
 class Identity2D(nn.Module):
 
-    def __init__(self, _: None) -> None:
+    def __init__(self: 'Identity2D', _: None) -> None:
         super().__init__()
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'Identity2D', input_: torch.Tensor) -> torch.Tensor:
         return input_
 
 
 class PhysionetDataset(Dataset): # type: ignore[type-arg]
 
-    def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
+    def __getitem__(self: 'PhysionetDataset', index: int) -> tuple[torch.Tensor, int]:
         out = self.data[index] - self.data[index].mean()
         out /= out.std()
         return (out, 0)
 
-    def __init__(self, dataset_name: str, training_validation_test: str) -> None:
+    def __init__(self: 'PhysionetDataset', dataset_name: str, training_validation_test: str) -> None:
         dataset_path = Path('bin') / dataset_name
         if not dataset_path.exists():
             record_name = wfdb.get_record_list(f'{dataset_name}/1.0.0')[0]
@@ -145,36 +145,36 @@ class PhysionetDataset(Dataset): # type: ignore[type-arg]
             self.data = data[8000:]
         self.data = self.data.reshape((-1, 1, 1000))
 
-    def __len__(self) -> int:
+    def __len__(self: 'PhysionetDataset') -> int:
         return self.data.shape[0]
 
 
 class Relu1D(nn.Module):
 
-    def __init__(self, _: None) -> None:
+    def __init__(self: 'Relu1D', _: None) -> None:
         super().__init__()
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'Relu1D', input_: torch.Tensor) -> torch.Tensor:
         return functional.relu(input_)
 
 
 class Relu2D(nn.Module):
 
-    def __init__(self, _: None) -> None:
+    def __init__(self: 'Relu2D', _: None) -> None:
         super().__init__()
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'Relu2D', input_: torch.Tensor) -> torch.Tensor:
         return functional.relu(input_)
 
 
 class SAN1d(nn.Module):
 
-    def __init__(self, kernel_sizes: list[int], sparse_activations: list[nn.Module]) -> None:
+    def __init__(self: 'SAN1d', kernel_sizes: list[int], sparse_activations: list[nn.Module]) -> None:
         super().__init__()
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size)) for kernel_size in kernel_sizes])
 
-    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'SAN1d', batch_x: torch.Tensor) -> torch.Tensor:
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(self.sparse_activations, self.weights_kernels):
             similarity = functional.conv1d(batch_x, weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')
@@ -185,12 +185,12 @@ class SAN1d(nn.Module):
 
 class SAN2d(nn.Module):
 
-    def __init__(self, kernel_sizes: list[int], sparse_activations: list[nn.Module]) -> None:
+    def __init__(self: 'SAN2d', kernel_sizes: list[int], sparse_activations: list[nn.Module]) -> None:
         super().__init__()
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList([nn.Parameter(0.1 * torch.ones(kernel_size, kernel_size)) for kernel_size in kernel_sizes])
 
-    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'SAN2d', batch_x: torch.Tensor) -> torch.Tensor:
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(self.sparse_activations, self.weights_kernels):
             similarity = functional.conv2d(batch_x, weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')
@@ -201,30 +201,30 @@ class SAN2d(nn.Module):
 
 class TopKAbsolutes1D(nn.Module):
 
-    def __init__(self, topk: int) -> None:
+    def __init__(self: 'TopKAbsolutes1D', topk: int) -> None:
         super().__init__()
         self.topk = topk
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'TopKAbsolutes1D', input_: torch.Tensor) -> torch.Tensor:
         return topk_absolutes_1d(input_, self.topk)
 
 
 class TopKAbsolutes2D(nn.Module):
 
-    def __init__(self, topk: int) -> None:
+    def __init__(self: 'TopKAbsolutes2D', topk: int) -> None:
         super().__init__()
         self.topk = topk
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: 'TopKAbsolutes2D', input_: torch.Tensor) -> torch.Tensor:
         return topk_absolutes_2d(input_, self.topk)
 
 
 class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
 
-    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self: 'UCIepilepsyDataset', index: int) -> tuple[torch.Tensor, torch.Tensor]:
         return (self.data[index], self.classes[index])
 
-    def __init__(self, training_validation_test: str) -> None:
+    def __init__(self: 'UCIepilepsyDataset', training_validation_test: str) -> None:
         data_file_path = Path('bin/data.csv')
         if not data_file_path.is_file():
             with data_file_path.open('wb') as file:
@@ -252,7 +252,7 @@ class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
             self.classes = torch.tensor(classes_all[last_validation_index:].to_numpy()) - 1
         self.data.unsqueeze_(1)
 
-    def __len__(self) -> int:
+    def __len__(self: 'UCIepilepsyDataset') -> int:
         return self.classes.shape[0]
 
 
