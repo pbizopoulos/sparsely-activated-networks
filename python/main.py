@@ -176,7 +176,7 @@ class SAN1d(nn.Module):
 
     def forward(self: 'SAN1d', batch_x: torch.Tensor) -> torch.Tensor:
         reconstructions_sum = torch.zeros_like(batch_x)
-        for sparse_activation, weights_kernel in zip(self.sparse_activations, self.weights_kernels):
+        for sparse_activation, weights_kernel in zip(self.sparse_activations, self.weights_kernels, strict=True):
             similarity = functional.conv1d(batch_x, weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')
             activations = sparse_activation(similarity)
             reconstructions_sum = reconstructions_sum + functional.conv1d(activations, weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')
@@ -192,7 +192,7 @@ class SAN2d(nn.Module):
 
     def forward(self: 'SAN2d', batch_x: torch.Tensor) -> torch.Tensor:
         reconstructions_sum = torch.zeros_like(batch_x)
-        for sparse_activation, weights_kernel in zip(self.sparse_activations, self.weights_kernels):
+        for sparse_activation, weights_kernel in zip(self.sparse_activations, self.weights_kernels, strict=True):
             similarity = functional.conv2d(batch_x, weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')
             activations = sparse_activation(similarity)
             reconstructions_sum = reconstructions_sum + functional.conv2d(activations, weights_kernel.unsqueeze(0).unsqueeze(0), padding='same')
@@ -272,7 +272,7 @@ def extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Ten
     peaks = ~dx_padright_greater & ~dx_padleft_less & ~sign
     extrema = peaks | valleys
     extrema.squeeze_(1)
-    for index, (x_, e_) in enumerate(zip(input_, extrema)):
+    for index, (x_, e_) in enumerate(zip(input_, extrema, strict=True)):
         extrema_indices = torch.nonzero(e_, as_tuple=False)
         extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
         extrema_indices_sorted = extrema_indices[extrema_indices_indices][:, 0]
@@ -306,7 +306,7 @@ def extrema_2d(input_: torch.Tensor, minimum_extrema_distance: list[int]) -> tor
     valleys = valleys_x & valleys_y
     extrema = peaks | valleys
     extrema.squeeze_(1)
-    for index, (x_, e_) in enumerate(zip(input_, extrema)):
+    for index, (x_, e_) in enumerate(zip(input_, extrema, strict=True)):
         extrema_indices = torch.nonzero(e_, as_tuple=False)
         extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
         extrema_indices_sorted = extrema_indices[extrema_indices_indices]
@@ -377,13 +377,13 @@ def main() -> None:
     kernel_sizes_list = [[kernel_size_physionet] for kernel_size_physionet in kernel_size_physionet_range]
     batch_size = 2
     lr = 0.01
-    sparse_activation_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    sparse_activation_colors = plt.rcParams['axes.prop_cycle'].by_key()['color'][:len(sparse_activations)]
     results_physionet_rows = []
     flithos_mean_array = np.zeros((len(sparse_activations), len(dataset_names), len(kernel_sizes_list)))
     flithos_all_validation_array = np.zeros((len(sparse_activations), len(dataset_names), len(kernel_sizes_list), epochs_physionet_num))
     kernel_size_best_array = np.zeros((len(sparse_activations), len(dataset_names)), dtype=int)
     gaussian_kde_input_array = np.zeros((len(sparse_activations), len(dataset_names), len(kernel_sizes_list), 2))
-    for dataset_name_index, (dataset_name, xlim_weight) in enumerate(zip(dataset_names, xlim_weights)):
+    for dataset_name_index, (dataset_name, xlim_weight) in enumerate(zip(dataset_names, xlim_weights, strict=True)):
         results_physionet_row = []
         physionet_dataset_training = PhysionetDataset(dataset_name, 'training')
         dataloader_training = DataLoader(dataset=physionet_dataset_training, batch_size=batch_size, shuffle=True)
@@ -392,7 +392,7 @@ def main() -> None:
         physionet_dataset_test = PhysionetDataset(dataset_name, 'test')
         dataloader_test = DataLoader(dataset=physionet_dataset_test)
         fig, ax_main = plt.subplots(constrained_layout=True, figsize=(6, 6))
-        for sparse_activation_index, (sparse_activation, sparse_activation_color, sparse_activation_name) in enumerate(zip(sparse_activations, sparse_activation_colors, sparse_activation_names)):
+        for sparse_activation_index, (sparse_activation, sparse_activation_color, sparse_activation_name) in enumerate(zip(sparse_activations, sparse_activation_colors, sparse_activation_names, strict=True)):
             flithos_mean_best = float('inf')
             for kernel_size_list_index, kernel_sizes in enumerate(kernel_sizes_list):
                 flithos_epoch_mean_best = float('inf')
@@ -458,9 +458,9 @@ def main() -> None:
     var = np.zeros((len(dataset_names), epochs_physionet_num))
     p1 = []
     p2 = []
-    for sparse_activation_color, kernel_size_best, flithos_all_validation_element_array in zip(sparse_activation_colors, kernel_size_best_array, flithos_all_validation_array):
+    for sparse_activation_color, kernel_size_best, flithos_all_validation_element_array in zip(sparse_activation_colors, kernel_size_best_array, flithos_all_validation_array, strict=True):
         t_range = range(1, flithos_all_validation_element_array.shape[-1] + 1)
-        for index_, (c_, k_) in enumerate(zip(flithos_all_validation_element_array, kernel_size_best)):
+        for index_, (c_, k_) in enumerate(zip(flithos_all_validation_element_array, kernel_size_best, strict=True)):
             var[index_] = c_[k_ - 1]
         mu = var.mean(axis=0)
         sigma = var.std(axis=0)
@@ -479,7 +479,7 @@ def main() -> None:
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = []
     p2 = []
-    for sparse_activation_color, flithos_mean_element_array in zip(sparse_activation_colors, flithos_mean_array):
+    for sparse_activation_color, flithos_mean_element_array in zip(sparse_activation_colors, flithos_mean_array, strict=True):
         t_range = range(1, flithos_mean_element_array.shape[1] + 1)
         mu = flithos_mean_element_array.mean(axis=0)
         sigma = flithos_mean_element_array.std(axis=0)
@@ -504,7 +504,7 @@ def main() -> None:
     worse_l_than_constant_prediction_patch = Patch(color='gray', alpha=0.3, label='worse $\\tilde{\\mathcal{L}}$ than constant prediction')
     varphi_less_than_one_patch = Patch(color='g', alpha=0.3, label='$\\bar\\varphi < 1$')
     line2d_list = []
-    for sparse_activation_name, sparse_activation_color in zip(sparse_activation_names, sparse_activation_colors):
+    for sparse_activation_name, sparse_activation_color in zip(sparse_activation_names, sparse_activation_colors, strict=True):
         line2d_list.append(Line2D([0], [0], marker='o', color='w', label=sparse_activation_name, markerfacecolor=sparse_activation_color))
     legend_handle_list = [non_sparse_model_description_patch, worse_cr_than_original_data_patch, worse_l_than_constant_prediction_patch, varphi_less_than_one_patch, line2d_list[0], line2d_list[1], line2d_list[2], line2d_list[3], line2d_list[4]]
     fig_legend.legend(handles=legend_handle_list, fontsize=22, loc='upper center')
@@ -514,7 +514,7 @@ def main() -> None:
     gaussian_kde_input_array = gaussian_kde_input_array.reshape(gaussian_kde_input_array.shape[0], -1, 2)
     nbins = 200
     yi, xi = np.mgrid[0:2.5:nbins * 1j, 0:2.5:nbins * 1j] # type: ignore[misc]
-    for sparse_activation_color, gaussian_kde_input_element_array in zip(sparse_activation_colors, gaussian_kde_input_array):
+    for sparse_activation_color, gaussian_kde_input_element_array in zip(sparse_activation_colors, gaussian_kde_input_array, strict=True):
         gkde = gaussian_kde(gaussian_kde_input_element_array.T)
         zi = gkde(np.vstack([xi.flatten(), yi.flatten()]))
         plt.contour(zi.reshape(xi.shape), [1, 999], colors=sparse_activation_color, extent=(0, 2.5, 0, 2.5))
@@ -591,7 +591,7 @@ def main() -> None:
     dataloader_test = DataLoader(dataset=uci_epilepsy_dataset_test, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     for kernel_sizes in kernel_sizes_list:
         results_supervised_rows = []
-        for sparse_activation, sparse_activation_name in zip(sparse_activations, sparse_activation_names):
+        for sparse_activation, sparse_activation_name in zip(sparse_activations, sparse_activation_names, strict=True):
             if sparse_activation == TopKAbsolutes1D:
                 sparsity_densities = [int(uci_epilepsy_dataset_test.data.shape[-1] / kernel_size) for kernel_size in kernel_sizes]
             elif sparse_activation == Extrema1D:
@@ -636,7 +636,7 @@ def main() -> None:
     dataset_names = ['MNIST', 'FashionMNIST']
     dataset_list = [MNIST, FashionMNIST]
     accuracies_mnist_fashionmnist_supervised = []
-    for dataset_name_index, (dataset_name, dataset, kernel_size_mnist_fashionmnist_range, mnist_fashionmnist_training_range, mnist_fashionmnist_validation_range, mnist_fashionmnist_test_range) in enumerate(zip(dataset_names, dataset_list, kernel_size_mnist_fashionmnist_ranges, mnist_fashionmnist_training_ranges, mnist_fashionmnist_validation_ranges, mnist_fashionmnist_test_ranges)):
+    for dataset_name_index, (dataset_name, dataset, kernel_size_mnist_fashionmnist_range, mnist_fashionmnist_training_range, mnist_fashionmnist_validation_range, mnist_fashionmnist_test_range) in enumerate(zip(dataset_names, dataset_list, kernel_size_mnist_fashionmnist_ranges, mnist_fashionmnist_training_ranges, mnist_fashionmnist_validation_ranges, mnist_fashionmnist_test_ranges, strict=True)):
         batch_size = 64
         lr = 0.01
         dataset_training_validation = dataset('bin', download=True, train=True, transform=ToTensor())
@@ -694,7 +694,7 @@ def main() -> None:
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         for kernel_sizes in kernel_sizes_list:
             results_supervised_rows = []
-            for sparse_activation, sparse_activation_name in zip(sparse_activations, sparse_activation_names):
+            for sparse_activation, sparse_activation_name in zip(sparse_activations, sparse_activation_names, strict=True):
                 if sparse_activation == TopKAbsolutes2D:
                     sparsity_densities = [int(dataset_test.data.shape[-1] / kernel_size) ** 2 for kernel_size in kernel_sizes]
                 elif sparse_activation == Extrema2D:
@@ -759,7 +759,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
         for hook_handle in hook_handles:
             activations_.append(hook_handle.output)
         activations_stack = torch.stack(activations_, 1)
-        for weights_index, (weights_kernel, activations) in enumerate(zip(model.weights_kernels, activations_stack[0, :, 0])):
+        for weights_index, (weights_kernel, activations) in enumerate(zip(model.weights_kernels, activations_stack[0, :, 0], strict=True)):
             _, ax = plt.subplots(figsize=(2, 2.2))
             ax.tick_params(labelbottom=False, labelleft=False)
             ax.xaxis.get_offset_text().set_visible(False) # noqa: FBT003
@@ -805,7 +805,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
             step = np.zeros_like(reconstruction, dtype=bool)
             lefts[lefts < 0] = 0
             rights[rights > reconstruction.shape[0]] = reconstruction.shape[0]
-            for left, right in zip(lefts, rights):
+            for left, right in zip(lefts, rights, strict=True):
                 step[int(left):int(right)] = True
             pos_signal = reconstruction.copy()
             neg_signal = reconstruction.copy()
@@ -843,7 +843,7 @@ def save_images_2d(data: torch.Tensor, dataset_name: str, model: SAN2d, sparse_a
         for hook_handle in hook_handles:
             activations_.append(hook_handle.output)
         activations_stack = torch.stack(activations_, 1)
-        for weights_index, (weights_kernel, activations) in enumerate(zip(model.weights_kernels, activations_stack[0, :, 0])):
+        for weights_index, (weights_kernel, activations) in enumerate(zip(model.weights_kernels, activations_stack[0, :, 0], strict=True)):
             plt.figure(figsize=(4.8 / 2, 4.8 / 2))
             plt.imshow(weights_kernel.flip(0).flip(1).cpu().detach().numpy(), cmap='twilight', vmin=-2 * abs(weights_kernel).max(), vmax=2 * abs(weights_kernel).max())
             plt.xticks([])
@@ -938,7 +938,7 @@ def validate_or_test_model_supervised(dataloader: DataLoader, hook_handles: list
             prediction = output.argmax(dim=1)
             predictions_correct_num += sum(prediction == target).item()
     inverse_compression_ratio = calculate_inverse_compression_ratio(activations_num, data, model_unsupervised)
-    flithos = np.mean([np.sqrt(icr ** 2 + rl ** 2) for icr, rl in zip(inverse_compression_ratio, reconstruction_loss)])
+    flithos = np.mean([np.sqrt(icr ** 2 + rl ** 2) for icr, rl in zip(inverse_compression_ratio, reconstruction_loss, strict=True)])
     return (flithos, inverse_compression_ratio, reconstruction_loss, 100 * predictions_correct_num / len(dataloader))
 
 
@@ -958,7 +958,7 @@ def validate_or_test_model_unsupervised(dataloader: DataLoader[Any], hook_handle
             reconstruction_loss[index] = functional.l1_loss(data, data_reconstructed) / functional.l1_loss(data, torch.zeros_like(data))
             activations_num[index] = torch.nonzero(activations_stack, as_tuple=False).shape[0]
     inverse_compression_ratio = calculate_inverse_compression_ratio(activations_num, data, model)
-    flithos = np.mean([np.sqrt(icr ** 2 + rl ** 2) for icr, rl in zip(inverse_compression_ratio, reconstruction_loss)])
+    flithos = np.mean([np.sqrt(icr ** 2 + rl ** 2) for icr, rl in zip(inverse_compression_ratio, reconstruction_loss, strict=True)])
     return (flithos, inverse_compression_ratio, reconstruction_loss)
 
 
