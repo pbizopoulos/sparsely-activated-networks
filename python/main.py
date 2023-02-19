@@ -1,9 +1,9 @@
 import glob
 from os import environ
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
+import numpy.typing as npt  # noqa: TCH002
 import pandas as pd
 import requests
 import torch
@@ -19,9 +19,6 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
-
-if TYPE_CHECKING:
-    import numpy.typing as npt
 
 
 class CNN(nn.Module):
