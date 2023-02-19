@@ -42,7 +42,8 @@ class CNN(nn.Module):
         out = out.view(out.size(0), -1)
         out = functional.relu(self.fc1(out))
         out = functional.relu(self.fc2(out))
-        return self.fc3(out) # type: ignore[no-any-return]
+        output: torch.Tensor = self.fc3(out)
+        return output
 
 
 class Extrema1D(nn.Module):
@@ -92,8 +93,9 @@ class FNN(nn.Module):
         self.fc = nn.Linear(sample_data.shape[-1] * sample_data.shape[-2], classes_num)
 
     def forward(self: 'FNN', batch_x: torch.Tensor) -> torch.Tensor:
-        out = batch_x.view(batch_x.shape[0], -1)
-        return self.fc(out) # type: ignore[no-any-return]
+        batch_x = batch_x.view(batch_x.shape[0], -1)
+        output: torch.Tensor = self.fc(batch_x)
+        return output
 
 
 class Hook:
