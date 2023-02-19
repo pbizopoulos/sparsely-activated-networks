@@ -1,7 +1,7 @@
 import glob
 from os import environ
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,9 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
+
+if TYPE_CHECKING:
+    import numpy.typing as npt
 
 
 class CNN(nn.Module):
@@ -256,7 +259,7 @@ class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
         return self.classes.shape[0]
 
 
-def calculate_inverse_compression_ratio(activations_num: np.ndarray, data: torch.Tensor, model: nn.Module) -> np.ndarray: # type: ignore[type-arg]
+def calculate_inverse_compression_ratio(activations_num: npt.NDArray[np.float64], data: torch.Tensor, model: nn.Module) -> npt.NDArray[np.float64]:
     activation_multiplier = 1 + len(model.weights_kernels[0].shape) # type: ignore[index]
     parameters_num = sum(weights_kernel.shape[0] for weights_kernel in model.weights_kernels) # type: ignore[union-attr]
     return (activation_multiplier * activations_num + parameters_num) / (data.shape[-1] * data.shape[-2])
@@ -891,7 +894,7 @@ def topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     return extrema_primary.scatter(-1, extrema_indices, x_flattened.gather(-1, extrema_indices)).view(input_.shape)
 
 
-def train_model_supervised(dataloader_training: DataLoader, model_supervised: nn.Module, model_unsupervised: nn.Module, optimizer: optim.Adam) -> None: # type: ignore[type-arg]
+def train_model_supervised(dataloader_training: DataLoader[int], model_supervised: nn.Module, model_unsupervised: nn.Module, optimizer: optim.Adam) -> None:
     device = next(model_supervised.parameters()).device
     model_supervised.train()
     for data, target in dataloader_training:
@@ -905,7 +908,7 @@ def train_model_supervised(dataloader_training: DataLoader, model_supervised: nn
         optimizer.step()
 
 
-def train_model_unsupervised(dataloader_training: DataLoader, model: nn.Module, optimizer: optim.Adam) -> None: # type: ignore[type-arg]
+def train_model_unsupervised(dataloader_training: DataLoader[int], model: nn.Module, optimizer: optim.Adam) -> None:
     device = next(model.parameters()).device
     model.train()
     for data, _ in dataloader_training:
@@ -917,7 +920,7 @@ def train_model_unsupervised(dataloader_training: DataLoader, model: nn.Module, 
         optimizer.step()
 
 
-def validate_or_test_model_supervised(dataloader: DataLoader, hook_handles: list[Hook], model_supervised: nn.Module, model_unsupervised: nn.Module) -> tuple: # type: ignore[type-arg]
+def validate_or_test_model_supervised(dataloader: DataLoader[int], hook_handles: list[Hook], model_supervised: nn.Module, model_unsupervised: nn.Module) -> tuple: # type: ignore[type-arg]
     device = next(model_supervised.parameters()).device
     predictions_correct_num = 0
     activations_num = np.zeros(len(dataloader))
@@ -942,7 +945,7 @@ def validate_or_test_model_supervised(dataloader: DataLoader, hook_handles: list
     return (flithos, inverse_compression_ratio, reconstruction_loss, 100 * predictions_correct_num / len(dataloader))
 
 
-def validate_or_test_model_unsupervised(dataloader: DataLoader[Any], hook_handles: list[Hook], model: nn.Module) -> tuple: # type: ignore[type-arg]
+def validate_or_test_model_unsupervised(dataloader: DataLoader[int], hook_handles: list[Hook], model: nn.Module) -> tuple: # type: ignore[type-arg]
     device = next(model.parameters()).device
     activations_num = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
