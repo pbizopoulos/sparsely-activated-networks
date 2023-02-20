@@ -365,7 +365,6 @@ def main() -> None:
         mnist_fashionmnist_training_ranges = [range(10), range(10)]
         mnist_fashionmnist_validation_ranges = [range(10, 20), range(10, 20)]
         mnist_fashionmnist_test_ranges = [range(10), range(10)]
-    np.random.seed(0)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
     torch.manual_seed(0)
