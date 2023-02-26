@@ -546,8 +546,8 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
     for _ in range(epochs_num):
         model_supervised.train()
         for data, target in dataloader_training:
-            data = data.to(device)
-            target = target.to(device)
+            data = data.to(device) # noqa: PLW2901
+            target = target.to(device) # noqa: PLW2901
             output = model_supervised(data)
             classification_loss = functional.cross_entropy(output, target)
             optimizer.zero_grad()
@@ -558,8 +558,8 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
         model_supervised.eval()
         with torch.no_grad():
             for data, target in dataloader_validation:
-                data = data.to(device)
-                target = target.to(device)
+                data = data.to(device) # noqa: PLW2901
+                target = target.to(device) # noqa: PLW2901
                 output = model_supervised(data)
                 prediction = output.argmax(dim=1)
                 predictions_correct_num += sum(prediction == target).item()
@@ -571,8 +571,8 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
     model_supervised.eval()
     with torch.no_grad():
         for data, target in dataloader_test:
-            data = data.to(device)
-            target = target.to(device)
+            data = data.to(device) # noqa: PLW2901
+            target = target.to(device) # noqa: PLW2901
             output = model_supervised_best(data)
             prediction = output.argmax(dim=1)
             predictions_correct_num += sum(prediction == target).item()
@@ -651,8 +651,8 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
         for _ in range(epochs_num):
             fnn_model_supervised.train()
             for data, target in dataloader_training:
-                data = data.to(device)
-                target = target.to(device)
+                data = data.to(device) # noqa: PLW2901
+                target = target.to(device) # noqa: PLW2901
                 output = fnn_model_supervised(data)
                 classification_loss = functional.cross_entropy(output, target)
                 optimizer.zero_grad()
@@ -663,8 +663,8 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
             fnn_model_supervised.eval()
             with torch.no_grad():
                 for data, target in dataloader_validation:
-                    data = data.to(device)
-                    target = target.to(device)
+                    data = data.to(device) # noqa: PLW2901
+                    target = target.to(device) # noqa: PLW2901
                     output = fnn_model_supervised(data)
                     prediction = output.argmax(dim=1)
                     predictions_correct_num += sum(prediction == target).item()
@@ -676,8 +676,8 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
         fnn_model_supervised.eval()
         with torch.no_grad():
             for data, target in dataloader_test:
-                data = data.to(device)
-                target = target.to(device)
+                data = data.to(device) # noqa: PLW2901
+                target = target.to(device) # noqa: PLW2901
                 output = fnn_model_supervised_best(data)
                 prediction = output.argmax(dim=1)
                 predictions_correct_num += sum(prediction == target).item()
@@ -896,8 +896,8 @@ def train_model_supervised(dataloader_training: DataLoader[int], model_supervise
     device = next(model_supervised.parameters()).device
     model_supervised.train()
     for data, target in dataloader_training:
-        data = data.to(device)
-        target = target.to(device)
+        data = data.to(device) # noqa: PLW2901
+        target = target.to(device) # noqa: PLW2901
         data_reconstructed = model_unsupervised(data)
         output = model_supervised(data_reconstructed)
         classification_loss = functional.cross_entropy(output, target)
@@ -910,7 +910,7 @@ def train_model_unsupervised(dataloader_training: DataLoader[int], model: nn.Mod
     device = next(model.parameters()).device
     model.train()
     for data, _ in dataloader_training:
-        data = data.to(device)
+        data = data.to(device) # noqa: PLW2901
         data_reconstructed = model(data)
         reconstruction_loss = functional.l1_loss(data, data_reconstructed)
         optimizer.zero_grad()
@@ -926,8 +926,8 @@ def validate_or_test_model_supervised(dataloader: DataLoader[int], hook_handles:
     model_supervised.eval()
     with torch.no_grad():
         for index, (data, target) in enumerate(dataloader):
-            data = data.to(device)
-            target = target.to(device)
+            data = data.to(device) # noqa: PLW2901
+            target = target.to(device) # noqa: PLW2901
             data_reconstructed = model_unsupervised(data)
             activations_ = []
             for hook_handle in hook_handles:
@@ -950,7 +950,7 @@ def validate_or_test_model_unsupervised(dataloader: DataLoader[int], hook_handle
     model.eval()
     with torch.no_grad():
         for index, (data, _) in enumerate(dataloader):
-            data = data.to(device)
+            data = data.to(device) # noqa: PLW2901
             data_reconstructed = model(data)
             activations_ = []
             for hook_handle in hook_handles:
