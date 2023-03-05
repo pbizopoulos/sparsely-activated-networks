@@ -3,7 +3,7 @@ from os import environ
 from pathlib import Path
 
 import numpy as np
-import numpy.typing as npt  # noqa: TCH002
+import numpy.typing as npt
 import pandas as pd
 import requests
 import torch
