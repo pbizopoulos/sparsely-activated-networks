@@ -341,7 +341,7 @@ def extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Ten
     return extrema_primary.scatter(-1, extrema_indices[..., 0, 0], x_flattened.gather(-1, extrema_indices[..., 0, 0])).view(input_.shape)
 
 
-def main() -> None: # noqa: C901,PLR0912,PLR0915
+def main() -> None:
     plt.rcParams['font.size'] = 20
     plt.rcParams['image.interpolation'] = 'none'
     plt.rcParams['savefig.bbox'] = 'tight'
@@ -624,7 +624,7 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
                     flithos_epoch_mean_best = flithos_epoch.mean()
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_model_supervised(dataloader_test, hook_handles, model_supervised_best, model_best)
             results_supervised_rows.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - accuracy_uci_epilepsy])
-            if kernel_sizes[0] == 10: # noqa: PLR2004
+            if kernel_sizes[0] == 10:
                 save_images_1d(uci_epilepsy_dataset_test[0][0][0], dataset_name, model_best, sparse_activation_name.lower().replace(' ', '-'), kernel_sizes[0])
         results_supervised_rows_list.append(results_supervised_rows)
     header = ['$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$', 'A\\textsubscript{$\\pm$\\%}']
@@ -728,7 +728,7 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
                         flithos_epoch_mean_best = flithos_epoch.mean()
                 flithos, inverse_compression_ratio, reconstruction_loss, accuracy = validate_or_test_model_supervised(dataloader_test, hook_handles, fnn_model_supervised_best, san2d_model_best)
                 results_supervised_rows.extend([inverse_compression_ratio.mean(), reconstruction_loss.mean(), flithos.mean(), accuracy - accuracies_mnist_fashionmnist_supervised[dataset_name_index]])
-                if kernel_sizes[0] == 4: # noqa: PLR2004
+                if kernel_sizes[0] == 4:
                     save_images_2d(dataset_test[0][0][0], dataset_name, san2d_model_best, sparse_activation_name.lower().replace(' ', '-'))
             results_supervised_rows_list.append(results_supervised_rows)
         header = ['$CR^{-1}$', '$\\tilde{\\mathcal{L}}$', '$\\bar\\varphi$', 'A\\textsubscript{$\\pm$\\%}']
@@ -742,7 +742,7 @@ def main() -> None: # noqa: C901,PLR0912,PLR0915
     keys_values_df.to_csv('bin/keys-values.csv', index=False, float_format='%.2f')
 
 
-def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_activation_name: str, xlim_weight: int) -> None: # noqa: PLR0915
+def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_activation_name: str, xlim_weight: int) -> None:
     model = model.to('cpu')
     _, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
