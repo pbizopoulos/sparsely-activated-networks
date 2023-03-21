@@ -230,7 +230,7 @@ class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
         data_file_path = Path('bin/data.csv')
         if not data_file_path.is_file():
             with data_file_path.open('wb') as file:
-                response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', timeout=60) # type: ignore[attr-defined]
+                response = requests.get('https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv', timeout=60)
                 file.write(response.content)
         dataset = pd.read_csv(data_file_path)
         dataset['y'] = dataset['y'].replace(3, 2)
