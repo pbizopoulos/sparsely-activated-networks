@@ -261,7 +261,7 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 		\ENSURE{$\alpha$}
 		\STATE{$peaks \leftarrow \left(\frac{d s}{d t}^+ \geq 0\right) \land \left(\frac{d s}{d t}^- < 0\right)$}
 		\STATE{$valleys \leftarrow \left(\frac{d s}{d t}^+ < 0\right) \land \left(\frac{d s}{d t}^- \geq 0\right)$}
-		\\\textit{\scriptsize \# + and - denote one sample padding to the right and left respectively}
+		\\\textit{\scriptsize \# + and - denote one sample padding to the right and left respectively} % chktex 8
 		\STATE{$z \leftarrow peaks \lor valleys$}
 		\STATE{$e \leftarrow z > 0$}
 		\STATE{$e_{ind} \leftarrow sort(z)$}
