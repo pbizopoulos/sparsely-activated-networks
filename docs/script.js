@@ -115,11 +115,11 @@
 	}
 
 	function applyDistanceMin(x, distanceMin) {
-		let areaAllowed = new Array(x.length).fill(0);
+		const areaAllowed = new Array(x.length).fill(0);
 		const sorted = tf.topk(tf.abs(x), x.length);
 		const indicesSorted = sorted.indices.arraySync();
 		const valuesSorted = tf.gather(x, indicesSorted).arraySync();
-		let xWithDistanceMin = tf.buffer([x.length, 1]);
+		const xWithDistanceMin = tf.buffer([x.length, 1]);
 		for (let i = 0; i < indicesSorted.length; i++) {
 			const indexSorted = indicesSorted[i];
 			if (valuesSorted[i] && areaAllowed[indexSorted] === 0) {
@@ -151,8 +151,8 @@
 		tf.dispose(referenceReupsampledReconstructionLossArray);
 		tf.tidy(() => {
 			referenceArray = [tf.keep(tf.zerosLike(input.data))];
-			let referenceDescriptionLengthArray = [0];
-			let referenceReconstructionLossArray = [lossFunctionObject[lossFunctionKey](input.data, tf.zerosLike(input.data)).dataSync()];
+			const referenceDescriptionLengthArray = [0];
+			const referenceReconstructionLossArray = [lossFunctionObject[lossFunctionKey](input.data, tf.zerosLike(input.data)).dataSync()];
 			const step = 20;
 			for (let i = step; i < input.data.size; i += step) {
 				let reference = null;
@@ -325,7 +325,7 @@
 			generateAndProcessReference();
 		}
 		inputReconstructionDescriptionLength = 0;
-		let neuronActivationAreaAllowedArray = [];
+		const neuronActivationAreaAllowedArray = [];
 		tf.tidy(() => {
 			const optimizer = optimizerObject[optimizerKey](10 ** learningRateExponent);
 			let inputReconstruction = null;
