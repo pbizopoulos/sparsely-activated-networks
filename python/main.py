@@ -98,7 +98,7 @@ class FNN(nn.Module):
 class Hook:
 
     def __init__(self: "Hook", module: nn.Module) -> None:
-        self.hook = module.register_forward_hook(self.hook_fn)
+        self.hook = module.register_forward_hook(self.hook_fn) # type: ignore[arg-type]
 
     def hook_fn(self: "Hook", _: None, input_: torch.Tensor, output: torch.Tensor) -> None:
         self.input_ = input_
