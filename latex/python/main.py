@@ -130,7 +130,7 @@ class PhysionetDataset(Dataset): # type: ignore[type-arg]
         out /= out.std()
         return (out, 0)
 
-    def __init__(self: "PhysionetDataset", dataset_name: str, training_validation_test: str) -> None:
+    def __init__(self: "PhysionetDataset", dataset_name: str, train_validation_test: str) -> None:
         dataset_path = Path("bin") / dataset_name
         if not dataset_path.exists():
             record_name = wfdb.get_record_list(f"{dataset_name}/1.0.0")[0]
@@ -139,11 +139,11 @@ class PhysionetDataset(Dataset): # type: ignore[type-arg]
         file_name = Path(files[0]).stem
         records = wfdb.rdrecord(dataset_path / file_name)
         data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
-        if training_validation_test == "training":
+        if train_validation_test == "train":
             self.data = data[:6000]
-        elif training_validation_test == "validation":
+        elif train_validation_test == "validation":
             self.data = data[6000:8000]
-        elif training_validation_test == "test":
+        elif train_validation_test == "test":
             self.data = data[8000:]
         self.data = self.data.reshape((-1, 1, 1000))
 
@@ -226,7 +226,7 @@ class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
     def __getitem__(self: "UCIepilepsyDataset", index: int) -> tuple[torch.Tensor, torch.Tensor]:
         return (self.data[index], self.classes[index])
 
-    def __init__(self: "UCIepilepsyDataset", training_validation_test: str) -> None:
+    def __init__(self: "UCIepilepsyDataset", train_validation_test: str) -> None:
         data_file_path = Path("bin/data.csv")
         if not data_file_path.is_file():
             with data_file_path.open("wb") as file:
@@ -241,15 +241,15 @@ class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
         data_min = data_all.min().min()
         data_all = 2 * (data_all - data_min) / (data_max - data_min) - 1
         classes_all = dataset["y"]
-        last_training_index = int(data_all.shape[0] * 0.76)
+        last_train_index = int(data_all.shape[0] * 0.76)
         last_validation_index = int(data_all.shape[0] * 0.88)
-        if training_validation_test == "training":
-            self.data = torch.tensor(data_all.to_numpy()[:last_training_index, :], dtype=torch.float)
-            self.classes = torch.tensor(classes_all[:last_training_index].to_numpy()) - 1
-        elif training_validation_test == "validation":
-            self.data = torch.tensor(data_all.to_numpy()[last_training_index:last_validation_index, :], dtype=torch.float)
-            self.classes = torch.tensor(classes_all[last_training_index:last_validation_index].to_numpy()) - 1
-        elif training_validation_test == "test":
+        if train_validation_test == "train":
+            self.data = torch.tensor(data_all.to_numpy()[:last_train_index, :], dtype=torch.float)
+            self.classes = torch.tensor(classes_all[:last_train_index].to_numpy()) - 1
+        elif train_validation_test == "validation":
+            self.data = torch.tensor(data_all.to_numpy()[last_train_index:last_validation_index, :], dtype=torch.float)
+            self.classes = torch.tensor(classes_all[last_train_index:last_validation_index].to_numpy()) - 1
+        elif train_validation_test == "test":
             self.data = torch.tensor(data_all.to_numpy()[last_validation_index:, :], dtype=torch.float)
             self.classes = torch.tensor(classes_all[last_validation_index:].to_numpy()) - 1
         self.data.unsqueeze_(1)
@@ -349,20 +349,20 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     epochs_physionet_num = 30
     epochs_num = 5
     kernel_size_physionet_range = range(1, 250)
-    uci_epilepsy_training_range = range(8740)
+    uci_epilepsy_train_range = range(8740)
     uci_epilepsy_validation_range = range(1380)
     uci_epilepsy_test_range = range(1380)
-    mnist_fashionmnist_training_ranges = [range(50000), range(50000)]
+    mnist_fashionmnist_train_ranges = [range(50000), range(50000)]
     mnist_fashionmnist_validation_ranges = [range(50000, 60000), range(50000, 60000)]
     mnist_fashionmnist_test_ranges = [range(10000), range(10000)]
     if environ["DEBUG"] == "1":
         epochs_physionet_num = 3
         epochs_num = 2
         kernel_size_physionet_range = range(1, 10)
-        uci_epilepsy_training_range = range(10)
+        uci_epilepsy_train_range = range(10)
         uci_epilepsy_validation_range = range(10)
         uci_epilepsy_test_range = range(10)
-        mnist_fashionmnist_training_ranges = [range(10), range(10)]
+        mnist_fashionmnist_train_ranges = [range(10), range(10)]
         mnist_fashionmnist_validation_ranges = [range(10, 20), range(10, 20)]
         mnist_fashionmnist_test_ranges = [range(10), range(10)]
     torch.backends.cudnn.benchmark = False
@@ -386,8 +386,8 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     gaussian_kde_input_array = np.zeros((len(sparse_activations), len(dataset_names), len(kernel_sizes_list), 2))
     for dataset_name_index, (dataset_name, xlim_weight) in enumerate(zip(dataset_names, xlim_weights, strict=True)):
         results_physionet_row = []
-        physionet_dataset_training = PhysionetDataset(dataset_name, "training")
-        dataloader_training = DataLoader(dataset=physionet_dataset_training, batch_size=batch_size, shuffle=True)
+        physionet_dataset_train = PhysionetDataset(dataset_name, "train")
+        dataloader_train = DataLoader(dataset=physionet_dataset_train, batch_size=batch_size, shuffle=True)
         physionet_dataset_validation = PhysionetDataset(dataset_name, "validation")
         dataloader_validation = DataLoader(dataset=physionet_dataset_validation)
         physionet_dataset_test = PhysionetDataset(dataset_name, "test")
@@ -408,7 +408,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
                 optimizer = optim.Adam(san1d_model.parameters(), lr=lr)
                 hook_handles = [Hook(sparse_activation_) for sparse_activation_ in san1d_model.sparse_activations]
                 for epoch in range(epochs_physionet_num):
-                    train_model_unsupervised(dataloader_training, san1d_model, optimizer)
+                    train_model_unsupervised(dataloader_train, san1d_model, optimizer)
                     flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handles, san1d_model)
                     flithos_all_validation_array[sparse_activation_index, dataset_name_index, kernel_size_list_index, epoch] = flithos_epoch.mean()
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
@@ -534,18 +534,18 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     plt.close()
     batch_size = 64
     lr = 0.01
-    uci_epilepsy_dataset_training = UCIepilepsyDataset("training")
-    dataloader_training = DataLoader(dataset=uci_epilepsy_dataset_training, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
+    uci_epilepsy_dataset_train = UCIepilepsyDataset("train")
+    dataloader_train = DataLoader(dataset=uci_epilepsy_dataset_train, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_train_range))
     uci_epilepsy_dataset_validation = UCIepilepsyDataset("validation")
     dataloader_validation = DataLoader(dataset=uci_epilepsy_dataset_validation, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
     uci_epilepsy_dataset_test = UCIepilepsyDataset("test")
     dataloader_test = DataLoader(dataset=uci_epilepsy_dataset_test, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_test_range))
     accuracy_best = 0.0
-    model_supervised = CNN(len(uci_epilepsy_dataset_training.classes.unique())).to(device) # type: ignore[no-untyped-call]
+    model_supervised = CNN(len(uci_epilepsy_dataset_train.classes.unique())).to(device) # type: ignore[no-untyped-call]
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(epochs_num):
         model_supervised.train()
-        for data, target in dataloader_training:
+        for data, target in dataloader_train:
             data = data.to(device) # noqa: PLW2901
             target = target.to(device) # noqa: PLW2901
             output = model_supervised(data)
@@ -584,8 +584,8 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     batch_size = 64
     lr = 0.01
     results_supervised_rows_list = []
-    uci_epilepsy_dataset_training = UCIepilepsyDataset("training")
-    dataloader_training = DataLoader(dataset=uci_epilepsy_dataset_training, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_training_range))
+    uci_epilepsy_dataset_train = UCIepilepsyDataset("train")
+    dataloader_train = DataLoader(dataset=uci_epilepsy_dataset_train, batch_size=batch_size, sampler=SubsetRandomSampler(uci_epilepsy_train_range))
     uci_epilepsy_dataset_validation = UCIepilepsyDataset("validation")
     dataloader_validation = DataLoader(dataset=uci_epilepsy_dataset_validation, sampler=SubsetRandomSampler(uci_epilepsy_validation_range))
     uci_epilepsy_dataset_test = UCIepilepsyDataset("test")
@@ -605,7 +605,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
             hook_handles = [Hook(sparse_activation_) for sparse_activation_ in san1d_model.sparse_activations]
             flithos_epoch_mean_best = float("inf")
             for _ in range(epochs_num):
-                train_model_unsupervised(dataloader_training, san1d_model, optimizer)
+                train_model_unsupervised(dataloader_train, san1d_model, optimizer)
                 flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handles, san1d_model)
                 if flithos_epoch.mean() < flithos_epoch_mean_best:
                     model_epoch_best = san1d_model
@@ -613,10 +613,10 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
             for weights_kernel in san1d_model.weights_kernels:
                 weights_kernel.requires_grad_(False) # noqa: FBT003
             flithos_epoch_mean_best = float("inf")
-            model_supervised = CNN(len(uci_epilepsy_dataset_training.classes.unique())).to(device).to(device) # type: ignore[no-untyped-call]
+            model_supervised = CNN(len(uci_epilepsy_dataset_train.classes.unique())).to(device).to(device) # type: ignore[no-untyped-call]
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
             for _ in range(epochs_num):
-                train_model_supervised(dataloader_training, model_supervised, model_epoch_best, optimizer)
+                train_model_supervised(dataloader_train, model_supervised, model_epoch_best, optimizer)
                 flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handles, model_epoch_best)
                 if flithos_epoch.mean() < flithos_epoch_mean_best:
                     model_supervised_best = model_supervised
@@ -637,20 +637,20 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     dataset_names = ["MNIST", "FashionMNIST"]
     dataset_list = [MNIST, FashionMNIST]
     accuracies_mnist_fashionmnist_supervised = []
-    for dataset_name_index, (dataset_name, dataset, kernel_size_mnist_fashionmnist_range, mnist_fashionmnist_training_range, mnist_fashionmnist_validation_range, mnist_fashionmnist_test_range) in enumerate(zip(dataset_names, dataset_list, kernel_size_mnist_fashionmnist_ranges, mnist_fashionmnist_training_ranges, mnist_fashionmnist_validation_ranges, mnist_fashionmnist_test_ranges, strict=True)):
+    for dataset_name_index, (dataset_name, dataset, kernel_size_mnist_fashionmnist_range, mnist_fashionmnist_train_range, mnist_fashionmnist_validation_range, mnist_fashionmnist_test_range) in enumerate(zip(dataset_names, dataset_list, kernel_size_mnist_fashionmnist_ranges, mnist_fashionmnist_train_ranges, mnist_fashionmnist_validation_ranges, mnist_fashionmnist_test_ranges, strict=True)):
         batch_size = 64
         lr = 0.01
-        dataset_training_validation = dataset("bin", download=True, train=True, transform=ToTensor())
-        dataloader_training = DataLoader(dataset_training_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
-        dataloader_validation = DataLoader(dataset_training_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range), batch_size=batch_size)
+        dataset_train_validation = dataset("bin", download=True, train=True, transform=ToTensor())
+        dataloader_train = DataLoader(dataset_train_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_train_range))
+        dataloader_validation = DataLoader(dataset_train_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range), batch_size=batch_size)
         dataset_test = dataset("bin", train=False, transform=ToTensor())
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         accuracy_best = 0
-        fnn_model_supervised = FNN(len(dataset_training_validation.classes), dataset_training_validation.data[0]).to(device)
+        fnn_model_supervised = FNN(len(dataset_train_validation.classes), dataset_train_validation.data[0]).to(device)
         optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
         for _ in range(epochs_num):
             fnn_model_supervised.train()
-            for data, target in dataloader_training:
+            for data, target in dataloader_train:
                 data = data.to(device) # noqa: PLW2901
                 target = target.to(device) # noqa: PLW2901
                 output = fnn_model_supervised(data)
@@ -688,9 +688,9 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
         batch_size = 64
         lr = 0.01
         results_supervised_rows_list = []
-        dataset_training_validation = dataset("bin", download=True, train=True, transform=ToTensor())
-        dataloader_training = DataLoader(dataset_training_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_training_range))
-        dataloader_validation = DataLoader(dataset_training_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range))
+        dataset_train_validation = dataset("bin", download=True, train=True, transform=ToTensor())
+        dataloader_train = DataLoader(dataset_train_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_train_range))
+        dataloader_validation = DataLoader(dataset_train_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range))
         dataset_test = dataset("bin", train=False, transform=ToTensor())
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         for kernel_sizes in kernel_sizes_list:
@@ -709,7 +709,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
                 hook_handles = [Hook(sparse_activation_) for sparse_activation_ in san2d_model.sparse_activations]
                 flithos_epoch_mean_best = float("inf")
                 for _ in range(epochs_num):
-                    train_model_unsupervised(dataloader_training, san2d_model, optimizer)
+                    train_model_unsupervised(dataloader_train, san2d_model, optimizer)
                     flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handles, san2d_model)
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
                         san2d_model_epoch_best = san2d_model
@@ -717,10 +717,10 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
                 for weights_kernel in san2d_model.weights_kernels:
                     weights_kernel.requires_grad_(False) # noqa: FBT003
                 flithos_epoch_mean_best = float("inf")
-                fnn_model_supervised = FNN(len(dataset_training_validation.classes), dataset_training_validation.data[0]).to(device)
+                fnn_model_supervised = FNN(len(dataset_train_validation.classes), dataset_train_validation.data[0]).to(device)
                 optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
                 for _ in range(epochs_num):
-                    train_model_supervised(dataloader_training, fnn_model_supervised, san2d_model_epoch_best, optimizer)
+                    train_model_supervised(dataloader_train, fnn_model_supervised, san2d_model_epoch_best, optimizer)
                     flithos_epoch, *_ = validate_or_test_model_unsupervised(dataloader_validation, hook_handles, san2d_model_epoch_best)
                     if flithos_epoch.mean() < flithos_epoch_mean_best:
                         fnn_model_supervised_best = fnn_model_supervised
@@ -892,10 +892,10 @@ def topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     return extrema_primary.scatter(-1, extrema_indices, x_flattened.gather(-1, extrema_indices)).view(input_.shape)
 
 
-def train_model_supervised(dataloader_training: DataLoader[int], model_supervised: nn.Module, model_unsupervised: nn.Module, optimizer: optim.Adam) -> None:
+def train_model_supervised(dataloader_train: DataLoader[int], model_supervised: nn.Module, model_unsupervised: nn.Module, optimizer: optim.Adam) -> None:
     device = next(model_supervised.parameters()).device
     model_supervised.train()
-    for data, target in dataloader_training:
+    for data, target in dataloader_train:
         data = data.to(device) # noqa: PLW2901
         target = target.to(device) # noqa: PLW2901
         data_reconstructed = model_unsupervised(data)
@@ -906,10 +906,10 @@ def train_model_supervised(dataloader_training: DataLoader[int], model_supervise
         optimizer.step()
 
 
-def train_model_unsupervised(dataloader_training: DataLoader[int], model: nn.Module, optimizer: optim.Adam) -> None:
+def train_model_unsupervised(dataloader_train: DataLoader[int], model: nn.Module, optimizer: optim.Adam) -> None:
     device = next(model.parameters()).device
     model.train()
-    for data, _ in dataloader_training:
+    for data, _ in dataloader_train:
         data = data.to(device) # noqa: PLW2901
         data_reconstructed = model(data)
         reconstruction_loss = functional.l1_loss(data, data_reconstructed)
