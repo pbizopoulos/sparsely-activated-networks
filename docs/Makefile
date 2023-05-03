@@ -18,7 +18,7 @@ clean:
 	printf '*\n!package.json\n' > $@
 
 .gitignore:
-	printf '.env\nbin/\n' > $@
+	printf '.env\nbin/\ntmp/\n' > $@
 
 Dockerfile:
 	printf 'FROM node\nWORKDIR /usr/src/app\nRUN apt-get update && apt-get install -y jq\nCOPY package.json /usr/src/\nRUN npm install --omit=dev --prefix /usr/src\nRUN npm install --global $$(jq --raw-output ".devDependencies | to_entries[] | \\"\(.key)@\(.value)\\"" /usr/src/package.json)\n' > $@

@@ -15,7 +15,7 @@ clean:
 	printf '*\n' > $@
 
 .gitignore:
-	printf 'bin/\n' > $@
+	printf 'bin/\ntmp/\n' > $@
 
 Dockerfile:
 	printf 'FROM texlive/texlive\nRUN apt-get update && apt-get install -y python3-pip\nRUN python3 -m pip install --break-system-packages rebiber\n' > $@

@@ -131,7 +131,7 @@ class PhysionetDataset(Dataset): # type: ignore[type-arg]
         return (out, 0)
 
     def __init__(self: "PhysionetDataset", dataset_name: str, train_validation_test: str) -> None:
-        dataset_path = Path("bin") / dataset_name
+        dataset_path = Path("data") / dataset_name
         if not dataset_path.exists():
             record_name = wfdb.get_record_list(f"{dataset_name}/1.0.0")[0]
             wfdb.dl_database(dataset_name, dataset_path.as_posix(), records=[record_name], annotators=None)
@@ -227,7 +227,7 @@ class UCIepilepsyDataset(Dataset): # type: ignore[type-arg]
         return (self.data[index], self.classes[index])
 
     def __init__(self: "UCIepilepsyDataset", train_validation_test: str) -> None:
-        data_file_path = Path("bin/data.csv")
+        data_file_path = Path("data/data.csv")
         if not data_file_path.is_file():
             with data_file_path.open("wb") as file:
                 response = requests.get("https://web.archive.org/web/20200318000445/http://archive.ics.uci.edu/ml/machine-learning-databases/00388/data.csv", timeout=60)
@@ -342,6 +342,12 @@ def extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Ten
 
 
 def main() -> None: # noqa: C901, PLR0912, PLR0915
+    bin_file_path = Path("bin")
+    if not bin_file_path.exists():
+        bin_file_path.mkdir(parents=True)
+    data_file_path = Path("data")
+    if not data_file_path.exists():
+        data_file_path.mkdir(parents=True)
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
@@ -640,10 +646,10 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     for dataset_name_index, (dataset_name, dataset, kernel_size_mnist_fashionmnist_range, mnist_fashionmnist_train_range, mnist_fashionmnist_validation_range, mnist_fashionmnist_test_range) in enumerate(zip(dataset_names, dataset_list, kernel_size_mnist_fashionmnist_ranges, mnist_fashionmnist_train_ranges, mnist_fashionmnist_validation_ranges, mnist_fashionmnist_test_ranges, strict=True)):
         batch_size = 64
         lr = 0.01
-        dataset_train_validation = dataset("bin", download=True, train=True, transform=ToTensor())
+        dataset_train_validation = dataset("data", download=True, train=True, transform=ToTensor())
         dataloader_train = DataLoader(dataset_train_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_train_range))
         dataloader_validation = DataLoader(dataset_train_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range), batch_size=batch_size)
-        dataset_test = dataset("bin", train=False, transform=ToTensor())
+        dataset_test = dataset("data", train=False, transform=ToTensor())
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         accuracy_best = 0
         fnn_model_supervised = FNN(len(dataset_train_validation.classes), dataset_train_validation.data[0]).to(device)
@@ -688,10 +694,10 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
         batch_size = 64
         lr = 0.01
         results_supervised_rows_list = []
-        dataset_train_validation = dataset("bin", download=True, train=True, transform=ToTensor())
+        dataset_train_validation = dataset("data", download=True, train=True, transform=ToTensor())
         dataloader_train = DataLoader(dataset_train_validation, batch_size=batch_size, sampler=SubsetRandomSampler(mnist_fashionmnist_train_range))
         dataloader_validation = DataLoader(dataset_train_validation, sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range))
-        dataset_test = dataset("bin", train=False, transform=ToTensor())
+        dataset_test = dataset("data", train=False, transform=ToTensor())
         dataloader_test = DataLoader(dataset_test, sampler=SubsetRandomSampler(mnist_fashionmnist_test_range))
         for kernel_sizes in kernel_sizes_list:
             results_supervised_rows = []
