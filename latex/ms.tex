@@ -73,18 +73,18 @@ Recently, in $k$-Sparse Autoencoders~\cite{makhzani2013k} the authors used an ac
 
 \begin{figure*}[!t]
 	\centering
-	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-identity-1d-2-activations-0.pdf}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-relu-1d-2-activations-0.pdf}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-top-k-absolutes-1d-2-activations-0.pdf}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-extrema-pool-indices-1d-2-activations-0.pdf}}
-	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-extrema-1d-2-activations-0.pdf}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-identity-1d-2-activations-0.png}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-relu-1d-2-activations-0.png}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-top-k-absolutes-1d-2-activations-0.png}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-extrema-pool-indices-1d-2-activations-0.png}}
+	\subfloat{\includegraphics[width=0.2\textwidth]{python/bin/UCI-epilepsy-extrema-1d-2-activations-0.png}}
 	\\
 	\setcounter{subfigure}{0}
-	\subfloat[Identity]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-identity-2d-2-activations-1.pdf}\label{subfig:identity}}
-	\subfloat[ReLU]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-relu-2d-2-activations-0.pdf}\label{subfig:relu}}
-	\subfloat[top-k absolutes]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-top-k-absolutes-2d-2-activations-0.pdf}\label{subfig:topkabsolutes}}
-	\subfloat[Extrema-Pool indices]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-extrema-pool-indices-2d-2-activations-0.pdf}\label{subfig:extremapoolindices}}
-	\subfloat[Extrema]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-extrema-2d-2-activations-0.pdf}\label{subfig:extrema}}
+	\subfloat[Identity]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-identity-2d-2-activations-1.png}\label{subfig:identity}}
+	\subfloat[ReLU]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-relu-2d-2-activations-0.png}\label{subfig:relu}}
+	\subfloat[top-k absolutes]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-top-k-absolutes-2d-2-activations-0.png}\label{subfig:topkabsolutes}}
+	\subfloat[Extrema-Pool indices]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-extrema-pool-indices-2d-2-activations-0.png}\label{subfig:extremapoolindices}}
+	\subfloat[Extrema]{\includegraphics[width=0.2\textwidth]{python/bin/MNIST-extrema-2d-2-activations-0.png}\label{subfig:extrema}}
 	\caption{Visualization of the activation maps of five activation functions (Identity, ReLU, top-k absolutes, Extrema-Pool indices and Extrema) for 1D and 2D input in the top and bottom row respectively.
 	The 1D input to the activation functions is denoted with the continuous transparent green line using an example from the UCI dataset.
 	The output of each activation function is denoted with the cyan stem lines with blue markers.
@@ -292,35 +292,35 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 \begin{figure*}[!t]
 	\subfloat[1D SAN]{\begin{tikzpicture}[]
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=-0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-signal.pdf}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-signal.png}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstructed.pdf}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstructed.png}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstruction-0.pdf}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstruction-0.png}};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
 			\node[] at (4, -3){$\bm{r}^{(0)}$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-activations-0.pdf}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-activations-0.png}};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
 			\node[] at (4, -6.3){$\bm{\alpha}^{(0)}$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-similarity-0.pdf}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-similarity-0.png}};
 			\node[] at (0.1, -6.3){$\bm{s}^{(0)}$};
-			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/UCI-epilepsy-extrema-1d-2-kernel-0.pdf}};
+			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/UCI-epilepsy-extrema-1d-2-kernel-0.png}};
 			\node[] at (2, -4.7){\tiny $\bm{w}^{(0)}$};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0,xscale=-1, transform shape]
-			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-signal.pdf}};
+			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-signal.png}};
 			\node[] at (0.1, 0.5){$\bm{x}$};
 			\node[draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstructed.pdf}};
+			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstructed.png}};
 			\node[] at (4, 0.5){$\hat{\bm{x}}$};
 			\node[draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstruction-0.pdf}};
+			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstruction-0.png}};
 			\node[draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-activations-0.pdf}};
+			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-activations-0.png}};
 			\node[draw, left=0.55cm of extrema, circle, inner sep=2pt] (phi){$\phi$};
-			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-similarity-0.pdf}};
-			\node[opacity=0, left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/UCI-epilepsy-extrema-1d-2-kernel-0.pdf}};
+			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-similarity-0.png}};
+			\node[opacity=0, left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/UCI-epilepsy-extrema-1d-2-kernel-0.png}};
 			\node[draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 			\draw[->](input) -- node{} (conv1);
 			\draw[->](conv1) -- node{} (similarity);
@@ -336,19 +336,19 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 			\draw[->](reconstructed) -- node{} (loss);
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-signal.pdf}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-signal.png}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstructed.pdf}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstructed.png}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstruction-1.pdf}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-reconstruction-1.png}};
 			\node[] at (4, -3){$\bm{r}^{(1)}$};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-activations-1.pdf}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-activations-1.png}};
 			\node[] at (4, -6.3){$\bm{\alpha}^{(1)}$};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-similarity-1.pdf}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/UCI-epilepsy-extrema-1d-2-similarity-1.png}};
 			\node[] at (0.1, -6.3){$\bm{s}^{(1)}$};
-			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/UCI-epilepsy-extrema-1d-2-kernel-1.pdf}};
+			\node[left=1.5cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/UCI-epilepsy-extrema-1d-2-kernel-1.png}};
 			\node[] at (2, -4.7){\tiny $\bm{w}^{(1)}$};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
@@ -362,29 +362,29 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 	\qquad
 	\subfloat[2D SAN]{\begin{tikzpicture}[]
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=-0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-signal.pdf}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-signal.png}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstructed.pdf}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstructed.png}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstruction-0.pdf}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstruction-0.png}};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-activations-0.pdf}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-activations-0.png}};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-similarity-0.pdf}};
-			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/MNIST-extrema-2d-2-kernel-0.pdf}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-similarity-0.png}};
+			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/MNIST-extrema-2d-2-kernel-0.png}};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0,xscale=-1, transform shape]
-			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-signal.pdf}};
+			\node[] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-signal.png}};
 			\node[draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstructed.pdf}};
+			\node[right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstructed.png}};
 			\node[draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstruction-0.pdf}};
+			\node[opacity=0, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstruction-0.png}};
 			\node[draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-activations-0.pdf}};
+			\node[opacity=0, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-activations-0.png}};
 			\node[draw, left=0.55cm of extrema, circle, inner sep=2pt] (phi){$\phi$};
-			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-similarity-0.pdf}};
-			\node[opacity=0, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/MNIST-extrema-2d-2-kernel-0.pdf}};
+			\node[opacity=0, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-similarity-0.png}};
+			\node[opacity=0, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/MNIST-extrema-2d-2-kernel-0.png}};
 			\node[draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 			\draw[->](input) -- node{} (conv1);
 			\draw[->](conv1) -- node{} (similarity);
@@ -400,16 +400,16 @@ Specifically for Extrema activation function we introduce a `border tolerance' p
 			\draw[->](reconstructed) -- node{} (loss);
 		\end{scope}
 		\begin{scope}[tdplot_main_coords, canvas is yz plane at x=0.5,xscale=-1, transform shape]
-			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-signal.pdf}};
+			\node[opacity=0] at (0, 0)(input){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-signal.png}};
 			\node[opacity=0, draw, right=0.5cm of input, circle] (loss){$\mathcal{L}$};
-			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstructed.pdf}};
+			\node[opacity=0, right=0.5cm of loss] (reconstructed){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstructed.png}};
 			\node[opacity=0, draw, below=0.5cm of reconstructed, circle] (plus){$+$};
-			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstruction-1.pdf}};
+			\node[opacity=0.8, below=0.5cm of plus] (reconstruction){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-reconstruction-1.png}};
 			\node[opacity=0, draw, below=0.5cm of reconstruction, circle] (conv2){$\ast$};
-			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-activations-1.pdf}};
+			\node[opacity=0.8, below=0.5cm of conv2] (extrema){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-activations-1.png}};
 			\node[opacity=0, draw, left=0.55cm of extrema, circle] (phi){$\phi$};
-			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-similarity-1.pdf}};
-			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/MNIST-extrema-2d-2-kernel-1.pdf}};
+			\node[opacity=0.8, left=0.55cm of phi] (similarity){\includegraphics[scale=\figscale]{python/bin/MNIST-extrema-2d-2-similarity-1.png}};
+			\node[opacity=0.8, left=1.2cm of conv2] (kernel){\includegraphics[scale=0.1]{python/bin/MNIST-extrema-2d-2-kernel-1.png}};
 			\node[opacity=0, draw, above=0.5cm of similarity, circle] (conv1){$\ast$};
 		\end{scope}
 	\end{tikzpicture}
@@ -563,103 +563,103 @@ Trying to solely achieve lower reconstruction error (such as the case for the Id
 Comparing the differences of $\bar\varphi$ between the Identity, the ReLU and the rest sparse activation functions in Fig.~\ref{fig:flithos}\subref{subfig:flithos_m} we notice that the latter produce a minimum region in which we observe interpretable kernels.
 
 \begin{figure*}[!t]
-	\includegraphics[width=0.245\textwidth]{python/bin/apnea-ecg.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/bidmc.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/bpssrat.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/cebsdb.pdf}
+	\includegraphics[width=0.245\textwidth]{python/bin/apnea-ecg.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/bidmc.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/bpssrat.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/cebsdb.png}
 	\\
-	\includegraphics[width=0.245\textwidth]{python/bin/ctu-uhb-ctgdb.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/drivedb.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/emgdb.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/mitdb.pdf}
+	\includegraphics[width=0.245\textwidth]{python/bin/ctu-uhb-ctgdb.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/drivedb.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/emgdb.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/mitdb.png}
 	\\
-	\includegraphics[width=0.245\textwidth]{python/bin/noneeg.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/prcp.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/shhpsgdb.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/slpdb.pdf}
+	\includegraphics[width=0.245\textwidth]{python/bin/noneeg.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/prcp.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/shhpsgdb.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/slpdb.png}
 	\\
-	\includegraphics[width=0.245\textwidth]{python/bin/sufhsdb.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/voiced.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/wrist.pdf}
-	\includegraphics[width=0.245\textwidth]{python/bin/legend.pdf}
+	\includegraphics[width=0.245\textwidth]{python/bin/sufhsdb.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/voiced.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/wrist.png}
+	\includegraphics[width=0.245\textwidth]{python/bin/legend.png}
 	\caption{Inverse compression ratio ($CR^{-1}$) vs.\ normalized reconstruction loss ($\tilde{\mathcal{L}}$) for the $15$ datasets of Physionet for various kernel sizes.
 	The five inner plots with the yellow background on the right of each subplot, depict the corresponding kernel for the kernel size that achieved the best $\bar\varphi$.}\label{fig:crrl}
 \end{figure*}
 
 \begin{figure*}[!t]
 	\centering
-	\subfloat[Density plot $CR^{-1}$ vs. $\tilde{\mathcal{L}}$]{\includegraphics[width=0.32\textwidth]{python/bin/crrl-density-plot.pdf}\label{subfig:crrl_density_plot}}
-	\subfloat[Confidence intervals $\bar\varphi$ vs. $epochs$]{\includegraphics[width=0.32\textwidth]{python/bin/mean-flithos-validation-epochs.pdf}\label{subfig:flithos-epochs}}
-	\subfloat[Confidence intervals $\bar\varphi$ vs. $m$]{\includegraphics[width=0.32\textwidth]{python/bin/mean-flithos-variable-kernel-size-list.pdf}\label{subfig:flithos_m}}
+	\subfloat[Density plot $CR^{-1}$ vs. $\tilde{\mathcal{L}}$]{\includegraphics[width=0.32\textwidth]{python/bin/crrl-density-plot.png}\label{subfig:crrl_density_plot}}
+	\subfloat[Confidence intervals $\bar\varphi$ vs. $epochs$]{\includegraphics[width=0.32\textwidth]{python/bin/mean-flithos-validation-epochs.png}\label{subfig:flithos-epochs}}
+	\subfloat[Confidence intervals $\bar\varphi$ vs. $m$]{\includegraphics[width=0.32\textwidth]{python/bin/mean-flithos-variable-kernel-size-list.png}\label{subfig:flithos_m}}
 	\caption{Aggregated results of the evaluation of the Physionet databases using the $\bar\varphi$ metric.
 	The density plot was created using kernel density estimation with Gaussian kernels and the confidence intervals denote one standard deviation.}\label{fig:flithos}
 \end{figure*}
 
 \begin{figure*}[!t]
 	\centering
-	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/prcp-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/voiced-relu-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/wrist-relu-1d-1-kernel-0.pdf}
+	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/prcp-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/voiced-relu-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/wrist-relu-1d-1-kernel-0.png}
 	\\
-	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/prcp-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/voiced-top-k-absolutes-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/wrist-top-k-absolutes-1d-1-kernel-0.pdf}
+	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/prcp-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/voiced-top-k-absolutes-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/wrist-top-k-absolutes-1d-1-kernel-0.png}
 	\\
-	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/prcp-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/voiced-extrema-pool-indices-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/wrist-extrema-pool-indices-1d-1-kernel-0.pdf}
+	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/prcp-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/voiced-extrema-pool-indices-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/wrist-extrema-pool-indices-1d-1-kernel-0.png}
 	\\
-	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/prcp-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/voiced-extrema-1d-1-kernel-0.pdf}
-	\includegraphics[width=0.06\textwidth]{python/bin/wrist-extrema-1d-1-kernel-0.pdf}
+	\includegraphics[width=0.06\textwidth]{python/bin/apnea-ecg-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bidmc-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/bpssrat-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/cebsdb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/ctu-uhb-ctgdb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/drivedb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/emgdb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/mitdb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/noneeg-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/prcp-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/shhpsgdb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/slpdb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/sufhsdb-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/voiced-extrema-1d-1-kernel-0.png}
+	\includegraphics[width=0.06\textwidth]{python/bin/wrist-extrema-1d-1-kernel-0.png}
 	\caption{Visualization of the learned kernels for each sparse activation function (row) and for each Physionet database (column).
 	}\label{fig:kernelvisualization}
 \end{figure*}

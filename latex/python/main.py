@@ -351,7 +351,6 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
-    plt.rcParams["savefig.format"] = "pdf"
     epochs_physionet_num = 30
     epochs_num = 5
     kernel_size_physionet_range = range(1, 250)
@@ -452,7 +451,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
         plt.axvspan(1, 2.5, alpha=0.3, color="gray")
         wedge = Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color="g")
         ax_main.add_patch(wedge)
-        plt.savefig(f"bin/{dataset_name}")
+        plt.savefig(f"bin/{dataset_name}.png")
         plt.close()
     header = ["$m$", "$CR^{-1}$", "$\\tilde{\\mathcal{L}}$", "$\\bar\\varphi$"]
     columns = pd.MultiIndex.from_product([sparse_activation_names, header])
@@ -481,7 +480,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     plt.ylim([0, 2.5])
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig("bin/mean-flithos-validation-epochs")
+    plt.savefig("bin/mean-flithos-validation-epochs.png")
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = []
@@ -500,7 +499,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     plt.ylim([0, 2.5])
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig("bin/mean-flithos-variable-kernel-size-list")
+    plt.savefig("bin/mean-flithos-variable-kernel-size-list.png")
     plt.close()
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
     fig_legend = plt.figure()
@@ -515,7 +514,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
         line2d_list.append(Line2D([0], [0], marker="o", color="w", label=sparse_activation_name, markerfacecolor=sparse_activation_color))
     legend_handle_list = [non_sparse_model_description_patch, worse_cr_than_original_data_patch, worse_l_than_constant_prediction_patch, varphi_less_than_one_patch, line2d_list[0], line2d_list[1], line2d_list[2], line2d_list[3], line2d_list[4]]
     fig_legend.legend(handles=legend_handle_list, fontsize=22, loc="upper center")
-    plt.savefig("bin/legend")
+    plt.savefig("bin/legend.png")
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     gaussian_kde_input_array = gaussian_kde_input_array.reshape(gaussian_kde_input_array.shape[0], -1, 2)
@@ -536,7 +535,7 @@ def main() -> None: # noqa: C901, PLR0912, PLR0915
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(visible=True)
-    plt.savefig("bin/crrl-density-plot")
+    plt.savefig("bin/crrl-density-plot.png")
     plt.close()
     batch_size = 64
     lr = 0.01
@@ -756,7 +755,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
     plt.autoscale(enable=True, axis="x", tight=True)
     plt.plot(data.cpu().detach().numpy())
     plt.ylim([data.min(), data.max()])
-    plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal")
+    plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png")
     plt.close()
     hook_handles = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations]
     model.eval()
@@ -779,7 +778,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
                 plt.ylabel(sparse_activation_name, fontsize=20)
             if sparse_activation_name == "relu":
                 plt.title(dataset_name, fontsize=20)
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}.png")
             plt.close()
             similarity = functional.conv1d(data.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding="same")[0, 0]
             _, ax = plt.subplots()
@@ -787,7 +786,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
             plt.grid(visible=True)
             plt.autoscale(enable=True, axis="x", tight=True)
             plt.plot(similarity.cpu().detach().numpy(), "g")
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}.png")
             plt.close()
             _, ax = plt.subplots()
             ax.tick_params(labelbottom=False, labelleft=False)
@@ -797,7 +796,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
             plt.plot(similarity.cpu().detach().numpy(), "g", alpha=0.5)
             if peaks.shape[0] != 0:
                 plt.stem(peaks.cpu().detach().numpy(), activations[peaks.cpu().detach().numpy()].cpu().detach().numpy(), linefmt="c", basefmt=" ")
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}.png")
             plt.close()
             reconstruction_ = functional.conv1d(activations.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding="same")[0, 0]
             _, ax = plt.subplots()
@@ -821,7 +820,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
             plt.plot(pos_signal)
             plt.plot(neg_signal, color="r")
             plt.ylim([data.min(), data.max()])
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png")
             plt.close()
         _, ax = plt.subplots()
         ax.tick_params(labelbottom=False, labelleft=False)
@@ -830,7 +829,7 @@ def save_images_1d(data: torch.Tensor, dataset_name: str, model: SAN1d, sparse_a
         plt.plot(data.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
         plt.ylim([data.min(), data.max()])
-        plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed")
+        plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png")
         plt.close()
 
 
@@ -840,7 +839,7 @@ def save_images_2d(data: torch.Tensor, dataset_name: str, model: SAN2d, sparse_a
     plt.xticks([])
     plt.yticks([])
     plt.imshow(data.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
-    plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal")
+    plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png")
     plt.close()
     hook_handles = [Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations]
     model.eval()
@@ -855,33 +854,33 @@ def save_images_2d(data: torch.Tensor, dataset_name: str, model: SAN2d, sparse_a
             plt.imshow(weights_kernel.flip(0).flip(1).cpu().detach().numpy(), cmap="twilight", vmin=-2 * abs(weights_kernel).max(), vmax=2 * abs(weights_kernel).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}.png")
             plt.close()
             similarity = functional.conv2d(data.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding="same")[0, 0]
             plt.figure()
             plt.xticks([])
             plt.yticks([])
             plt.imshow(similarity.cpu().detach().numpy(), cmap="twilight", vmin=-2 * abs(similarity).max(), vmax=2 * abs(similarity).max())
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png")
             plt.close()
             plt.figure()
             plt.imshow(activations.cpu().detach().numpy(), cmap="twilight", vmin=-2 * abs(activations).max(), vmax=2 * abs(activations).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}.png")
             plt.close()
             reconstruction = functional.conv2d(activations.unsqueeze(0).unsqueeze(0), weights_kernel.unsqueeze(0).unsqueeze(0), padding="same")[0, 0]
             plt.figure()
             plt.imshow(reconstruction.cpu().detach().numpy(), cmap="twilight", vmin=-2 * abs(reconstruction).max(), vmax=2 * abs(reconstruction).max())
             plt.xticks([])
             plt.yticks([])
-            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}")
+            plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png")
             plt.close()
         plt.figure()
         plt.xticks([])
         plt.yticks([])
         plt.imshow(reconstructed[0, 0].cpu().detach().numpy(), cmap="twilight", vmin=-2 * abs(reconstructed).max(), vmax=2 * abs(reconstructed).max())
-        plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed")
+        plt.savefig(f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png")
         plt.close()
 
 
