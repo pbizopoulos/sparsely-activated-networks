@@ -12,6 +12,6 @@ NVIDIA Container Toolkit (Optional)
 # Download, check and build
 git clone https://github.com/pbizopoulos/sparsely-activated-networks
 cd sparsely-activated-networks/
-cd docs/ && make mostlyclean clean check all && cd ..
-cd latex/python/ && make mostlyclean clean check all && cd ../..
-cd latex/ && make mostlyclean clean check all && cd ..
+cd docs/ && make clean check all && cd ..
+cd latex/python/ && make clean check all && cd ../..
+cd latex/ && make clean check all && cd ..
