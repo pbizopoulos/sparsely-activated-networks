@@ -4,7 +4,7 @@
 #neuron-control-1-div,
 #neuron-control-2-div,
 #neuron-control-3-div {
-	background-color: silver;
+  background-color: silver;
 }
 
 #input-control-1-div,
@@ -12,62 +12,62 @@
 #input-control-3-div,
 #input-control-4-div,
 #input-control-5-div {
-	background-color: gainsboro;
+  background-color: gainsboro;
 }
 
 #reference-control-div,
 #start-pause-reset-control-div {
-	background-color: darkgray;
+  background-color: darkgray;
 }
 
 .grid-container {
-	height: 600px;
-	line-height: 1.1;
-	text-align: center;
-	width: 1050px;
+  height: 600px;
+  line-height: 1.1;
+  text-align: center;
+  width: 1050px;
 }
 
 .grid-item {
-	box-sizing: border-box;
-	float: left;
-	height: 150px;
-	width: 150px;
+  box-sizing: border-box;
+  float: left;
+  height: 150px;
+  width: 150px;
 }
 
 .circle-operation {
-	fill: white;
-	stroke: black;
+  fill: white;
+  stroke: black;
 }
 
 .annotation-svg {
-	stroke: black;
+  stroke: black;
 }
 
 .border-solid {
-	border: solid;
+  border: solid;
 }
 
 .fill-white {
-	fill: white;
+  fill: white;
 }
 
 .fill-gainsboro {
-	fill: gainsboro;
+  fill: gainsboro;
 }
 
 .fill-silver {
-	fill: silver;
+  fill: silver;
 }
 
 .fill-darkgray {
-	fill: darkgray;
+  fill: darkgray;
 }
 
 .visibility-hidden {
-	visibility: hidden;
+  visibility: hidden;
 }
 
 text {
-	dominant-baseline: central;
-	text-anchor: middle;
+  dominant-baseline: central;
+  text-anchor: middle;
 }
