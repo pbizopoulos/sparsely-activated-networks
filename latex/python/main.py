@@ -270,22 +270,22 @@ class PhysionetDataset(Dataset):  # type: ignore[type-arg]
         files = glob.glob((dataset_path / "*.hea").as_posix())
         file_name = Path(files[0]).stem
         records = wfdb.rdrecord(dataset_path / file_name)
-        data = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
+        signal = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if train_validation_test == "train":
-            self.data = data[:6000]
+            self.signal = signal[:6000]
         elif train_validation_test == "validation":
-            self.data = data[6000:8000]
+            self.signal = signal[6000:8000]
         elif train_validation_test == "test":
-            self.data = data[8000:]
-        self.data = self.data.reshape((-1, 1, 1000))
+            self.signal = signal[8000:]
+        self.signal = self.signal.reshape((-1, 1, 1000))
 
     def __getitem__(self: "PhysionetDataset", index: int) -> tuple[torch.Tensor, int]:
-        out = self.data[index] - self.data[index].mean()
+        out = self.signal[index] - self.signal[index].mean()
         out /= out.std()
         return (out, 0)
 
     def __len__(self: "PhysionetDataset") -> int:
-        return self.data.shape[0]
+        return self.signal.shape[0]
 
 
 class Relu1D(nn.Module):
@@ -437,13 +437,13 @@ class UCIepilepsyDataset(Dataset):  # type: ignore[type-arg]
         last_train_index = int(data_all.shape[0] * 0.76)
         last_validation_index = int(data_all.shape[0] * 0.88)
         if train_validation_test == "train":
-            self.data = torch.tensor(
+            self.signal = torch.tensor(
                 data_all.to_numpy()[:last_train_index, :],
                 dtype=torch.float,
             )
             self.classes = torch.tensor(classes_all[:last_train_index].to_numpy()) - 1
         elif train_validation_test == "validation":
-            self.data = torch.tensor(
+            self.signal = torch.tensor(
                 data_all.to_numpy()[last_train_index:last_validation_index, :],
                 dtype=torch.float,
             )
@@ -454,20 +454,20 @@ class UCIepilepsyDataset(Dataset):  # type: ignore[type-arg]
                 - 1
             )
         elif train_validation_test == "test":
-            self.data = torch.tensor(
+            self.signal = torch.tensor(
                 data_all.to_numpy()[last_validation_index:, :],
                 dtype=torch.float,
             )
             self.classes = (
                 torch.tensor(classes_all[last_validation_index:].to_numpy()) - 1
             )
-        self.data.unsqueeze_(1)
+        self.signal.unsqueeze_(1)
 
     def __getitem__(
         self: "UCIepilepsyDataset",
         index: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        return (self.data[index], self.classes[index])
+        return (self.signal[index], self.classes[index])
 
     def __len__(self: "UCIepilepsyDataset") -> int:
         return self.classes.shape[0]
@@ -486,7 +486,7 @@ def calculate_inverse_compression_ratio(
 
 
 def save_images_1d(  # noqa: PLR0915
-    data: torch.Tensor,
+    signal: torch.Tensor,
     dataset_name: str,
     model: SAN1d,
     sparse_activation_name: str,
@@ -497,8 +497,8 @@ def save_images_1d(  # noqa: PLR0915
     ax.tick_params(labelbottom=False, labelleft=False)
     plt.grid(visible=True)
     plt.autoscale(enable=True, axis="x", tight=True)
-    plt.plot(data.cpu().detach().numpy())
-    plt.ylim([data.min(), data.max()])
+    plt.plot(signal.cpu().detach().numpy())
+    plt.ylim([signal.min(), signal.max()])
     plt.savefig(
         f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",
     )
@@ -508,7 +508,7 @@ def save_images_1d(  # noqa: PLR0915
     ]
     model.eval()
     with torch.no_grad():
-        reconstructed = model(data.unsqueeze(0).unsqueeze(0))
+        reconstructed = model(signal.unsqueeze(0).unsqueeze(0))
         activations_ = []
         for hook_handle in hook_handles:
             activations_.append(hook_handle.output)
@@ -533,7 +533,7 @@ def save_images_1d(  # noqa: PLR0915
             )
             plt.close()
             similarity = functional.conv1d(
-                data.unsqueeze(0).unsqueeze(0),
+                signal.unsqueeze(0).unsqueeze(0),
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )[0, 0]
@@ -588,7 +588,7 @@ def save_images_1d(  # noqa: PLR0915
             neg_signal[~step] = np.nan
             plt.plot(pos_signal)
             plt.plot(neg_signal, color="r")
-            plt.ylim([data.min(), data.max()])
+            plt.ylim([signal.min(), signal.max()])
             plt.savefig(
                 f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
             )
@@ -597,9 +597,9 @@ def save_images_1d(  # noqa: PLR0915
         ax.tick_params(labelbottom=False, labelleft=False)
         plt.grid(visible=True)
         plt.autoscale(enable=True, axis="x", tight=True)
-        plt.plot(data.cpu().detach().numpy(), alpha=0.5)
+        plt.plot(signal.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
-        plt.ylim([data.min(), data.max()])
+        plt.ylim([signal.min(), signal.max()])
         plt.savefig(
             f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",
         )
@@ -607,7 +607,7 @@ def save_images_1d(  # noqa: PLR0915
 
 
 def save_images_2d(
-    data: torch.Tensor,
+    image: torch.Tensor,
     dataset_name: str,
     model: SAN2d,
     sparse_activation_name: str,
@@ -616,7 +616,7 @@ def save_images_2d(
     plt.figure()
     plt.xticks([])
     plt.yticks([])
-    plt.imshow(data.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
+    plt.imshow(image.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
     plt.savefig(
         f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png",
     )
@@ -626,7 +626,7 @@ def save_images_2d(
     ]
     model.eval()
     with torch.no_grad():
-        reconstructed = model(data.unsqueeze(0).unsqueeze(0))
+        reconstructed = model(image.unsqueeze(0).unsqueeze(0))
         activations_ = []
         for hook_handle in hook_handles:
             activations_.append(hook_handle.output)
@@ -648,7 +648,7 @@ def save_images_2d(
             )
             plt.close()
             similarity = functional.conv2d(
-                data.unsqueeze(0).unsqueeze(0),
+                image.unsqueeze(0).unsqueeze(0),
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )[0, 0]
@@ -719,12 +719,12 @@ def train_model_supervised(
 ) -> None:
     device = next(model_supervised.parameters()).device
     model_supervised.train()
-    for data, target in dataloader_train:
+    for data, targets in dataloader_train:
         data = data.to(device)  # noqa: PLW2901
-        target = target.to(device)  # noqa: PLW2901
+        targets = targets.to(device)  # noqa: PLW2901
         data_reconstructed = model_unsupervised(data)
-        output = model_supervised(data_reconstructed)
-        classification_loss = functional.cross_entropy(output, target)
+        outputs = model_supervised(data_reconstructed)
+        classification_loss = functional.cross_entropy(outputs, targets)
         optimizer.zero_grad()
         classification_loss.backward()  # type: ignore[no-untyped-call]
         optimizer.step()
@@ -753,9 +753,9 @@ def validate_or_test_model_supervised(dataloader: DataLoader[int], hook_handles:
     reconstruction_loss = np.zeros(len(dataloader))
     model_supervised.eval()
     with torch.no_grad():
-        for index, (data, target) in enumerate(dataloader):
+        for index, (data, targets) in enumerate(dataloader):
             data = data.to(device)  # noqa: PLW2901
-            target = target.to(device)  # noqa: PLW2901
+            targets = targets.to(device)  # noqa: PLW2901
             data_reconstructed = model_unsupervised(data)
             activations_ = []
             for hook_handle in hook_handles:
@@ -769,9 +769,9 @@ def validate_or_test_model_supervised(dataloader: DataLoader[int], hook_handles:
                 activations_stack,
                 as_tuple=False,
             ).shape[0]
-            output = model_supervised(data_reconstructed)
-            prediction = output.argmax(dim=1)
-            predictions_correct_num += sum(prediction == target).item()
+            outputs = model_supervised(data_reconstructed)
+            prediction = outputs.argmax(dim=1)
+            predictions_correct_num += sum(prediction == targets).item()
     inverse_compression_ratio = calculate_inverse_compression_ratio(
         activations_num,
         data,
@@ -960,7 +960,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 flithos_epoch_mean_best = float("inf")
                 if sparse_activation == TopKAbsolutes1D:
                     sparsity_densities = [
-                        int(physionet_dataset_test.data.shape[-1] / kernel_size)
+                        int(physionet_dataset_test.signal.shape[-1] / kernel_size)
                         for kernel_size in kernel_sizes
                     ]
                 elif sparse_activation == Extrema1D:
@@ -1331,11 +1331,11 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(epochs_num):
         model_supervised.train()
-        for data, target in dataloader_train:
-            data = data.to(device)  # noqa: PLW2901
-            target = target.to(device)  # noqa: PLW2901
-            output = model_supervised(data)
-            classification_loss = functional.cross_entropy(output, target)
+        for signals, targets in dataloader_train:
+            signals = signals.to(device)  # noqa: PLW2901
+            targets = targets.to(device)  # noqa: PLW2901
+            outputs = model_supervised(signals)
+            classification_loss = functional.cross_entropy(outputs, targets)
             optimizer.zero_grad()
             classification_loss.backward()  # type: ignore[no-untyped-call]
             optimizer.step()
@@ -1343,26 +1343,26 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         predictions_num = 0
         model_supervised.eval()
         with torch.no_grad():
-            for data, target in dataloader_validation:
-                data = data.to(device)  # noqa: PLW2901
-                target = target.to(device)  # noqa: PLW2901
-                output = model_supervised(data)
-                prediction = output.argmax(dim=1)
-                predictions_correct_num += sum(prediction == target).item()
-                predictions_num += output.shape[0]
+            for signals, targets in dataloader_validation:
+                signals = signals.to(device)  # noqa: PLW2901
+                targets = targets.to(device)  # noqa: PLW2901
+                outputs = model_supervised(signals)
+                prediction = outputs.argmax(dim=1)
+                predictions_correct_num += sum(prediction == targets).item()
+                predictions_num += outputs.shape[0]
         accuracy = 100 * predictions_correct_num / predictions_num
         if accuracy_best < accuracy:
             model_supervised_best = model_supervised
             accuracy_best = accuracy
     model_supervised.eval()
     with torch.no_grad():
-        for data, target in dataloader_test:
-            data = data.to(device)  # noqa: PLW2901
-            target = target.to(device)  # noqa: PLW2901
-            output = model_supervised_best(data)
-            prediction = output.argmax(dim=1)
-            predictions_correct_num += sum(prediction == target).item()
-            predictions_num += output.shape[0]
+        for signals, targets in dataloader_test:
+            signals = signals.to(device)  # noqa: PLW2901
+            targets = targets.to(device)  # noqa: PLW2901
+            outputs = model_supervised_best(signals)
+            prediction = outputs.argmax(dim=1)
+            predictions_correct_num += sum(prediction == targets).item()
+            predictions_num += outputs.shape[0]
     accuracy_uci_epilepsy = 100 * predictions_correct_num / predictions_num
     dataset_name = "UCI-epilepsy"
     sparse_activations = [
@@ -1404,7 +1404,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         ):
             if sparse_activation == TopKAbsolutes1D:
                 sparsity_densities = [
-                    int(uci_epilepsy_dataset_test.data.shape[-1] / kernel_size)
+                    int(uci_epilepsy_dataset_test.signal.shape[-1] / kernel_size)
                     for kernel_size in kernel_sizes
                 ]
             elif sparse_activation == Extrema1D:
@@ -1566,11 +1566,11 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
         for _ in range(epochs_num):
             fnn_model_supervised.train()
-            for data, target in dataloader_train:
-                data = data.to(device)  # noqa: PLW2901
-                target = target.to(device)  # noqa: PLW2901
-                output = fnn_model_supervised(data)
-                classification_loss = functional.cross_entropy(output, target)
+            for images, targets in dataloader_train:
+                images = images.to(device)  # noqa: PLW2901
+                targets = targets.to(device)  # noqa: PLW2901
+                outputs = fnn_model_supervised(images)
+                classification_loss = functional.cross_entropy(outputs, targets)
                 optimizer.zero_grad()
                 classification_loss.backward()  # type: ignore[no-untyped-call]
                 optimizer.step()
@@ -1578,26 +1578,26 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             predictions_num = 0
             fnn_model_supervised.eval()
             with torch.no_grad():
-                for data, target in dataloader_validation:
-                    data = data.to(device)  # noqa: PLW2901
-                    target = target.to(device)  # noqa: PLW2901
-                    output = fnn_model_supervised(data)
-                    prediction = output.argmax(dim=1)
-                    predictions_correct_num += sum(prediction == target).item()
-                    predictions_num += output.shape[0]
+                for images, targets in dataloader_validation:
+                    images = images.to(device)  # noqa: PLW2901
+                    targets = targets.to(device)  # noqa: PLW2901
+                    outputs = fnn_model_supervised(images)
+                    prediction = outputs.argmax(dim=1)
+                    predictions_correct_num += sum(prediction == targets).item()
+                    predictions_num += outputs.shape[0]
             accuracy = 100 * predictions_correct_num / predictions_num
             if accuracy_best < accuracy:
                 fnn_model_supervised_best = fnn_model_supervised
                 accuracy_best = accuracy
         fnn_model_supervised.eval()
         with torch.no_grad():
-            for data, target in dataloader_test:
-                data = data.to(device)  # noqa: PLW2901
-                target = target.to(device)  # noqa: PLW2901
-                output = fnn_model_supervised_best(data)
-                prediction = output.argmax(dim=1)
-                predictions_correct_num += sum(prediction == target).item()
-                predictions_num += output.shape[0]
+            for images, targets in dataloader_test:
+                images = images.to(device)  # noqa: PLW2901
+                targets = targets.to(device)  # noqa: PLW2901
+                outputs = fnn_model_supervised_best(images)
+                prediction = outputs.argmax(dim=1)
+                predictions_correct_num += sum(prediction == targets).item()
+                predictions_num += outputs.shape[0]
         accuracies_mnist_fashionmnist_supervised.append(
             100 * predictions_correct_num / predictions_num,
         )
