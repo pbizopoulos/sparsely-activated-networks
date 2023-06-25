@@ -258,7 +258,7 @@ class PhysionetDataset(Dataset):  # type: ignore[type-arg]
         dataset_name: str,
         train_validation_test: str,
     ) -> None:
-        dataset_path = Path("data") / dataset_name
+        dataset_path = Path("bin") / dataset_name
         if not dataset_path.exists():
             record_name = wfdb.get_record_list(f"{dataset_name}/1.0.0")[0]
             wfdb.dl_database(
@@ -417,7 +417,7 @@ class TopKAbsolutes2D(nn.Module):
 
 class UCIepilepsyDataset(Dataset):  # type: ignore[type-arg]
     def __init__(self: "UCIepilepsyDataset", train_validation_test: str) -> None:
-        data_file_path = Path("data/data.csv")
+        data_file_path = Path("bin/data.csv")
         if not data_file_path.is_file():
             with data_file_path.open("wb") as file:
                 response = requests.get(
@@ -835,12 +835,6 @@ def validate_or_test_model_unsupervised(dataloader: DataLoader[int], hook_handle
 
 
 def main() -> None:  # noqa: C901, PLR0912, PLR0915
-    bin_file_path = Path("bin")
-    if not bin_file_path.exists():
-        bin_file_path.mkdir(parents=True)
-    data_file_path = Path("data")
-    if not data_file_path.exists():
-        data_file_path.mkdir(parents=True)
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
@@ -1538,7 +1532,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         batch_size = 64
         lr = 0.01
         dataset_train_validation = dataset(
-            "data",
+            "bin",
             download=True,
             train=True,
             transform=ToTensor(),
@@ -1553,7 +1547,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range),
             batch_size=batch_size,
         )
-        dataset_test = dataset("data", train=False, transform=ToTensor())
+        dataset_test = dataset("bin", train=False, transform=ToTensor())
         dataloader_test = DataLoader(
             dataset_test,
             sampler=SubsetRandomSampler(mnist_fashionmnist_test_range),
@@ -1616,7 +1610,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         lr = 0.01
         results_supervised_rows_list = []
         dataset_train_validation = dataset(
-            "data",
+            "bin",
             download=True,
             train=True,
             transform=ToTensor(),
@@ -1630,7 +1624,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             dataset_train_validation,
             sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range),
         )
-        dataset_test = dataset("data", train=False, transform=ToTensor())
+        dataset_test = dataset("bin", train=False, transform=ToTensor())
         dataloader_test = DataLoader(
             dataset_test,
             sampler=SubsetRandomSampler(mnist_fashionmnist_test_range),
