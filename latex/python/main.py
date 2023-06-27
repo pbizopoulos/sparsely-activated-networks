@@ -258,7 +258,7 @@ class PhysionetDataset(Dataset):  # type: ignore[type-arg]
         dataset_name: str,
         train_validation_test: str,
     ) -> None:
-        dataset_path = Path("bin") / dataset_name
+        dataset_path = Path("tmp") / dataset_name
         if not dataset_path.exists():
             record_name = wfdb.get_record_list(f"{dataset_name}/1.0.0")[0]
             wfdb.dl_database(
@@ -417,7 +417,7 @@ class TopKAbsolutes2D(nn.Module):
 
 class UCIepilepsyDataset(Dataset):  # type: ignore[type-arg]
     def __init__(self: "UCIepilepsyDataset", train_validation_test: str) -> None:
-        data_file_path = Path("bin/data.csv")
+        data_file_path = Path("tmp/data.csv")
         if not data_file_path.is_file():
             with data_file_path.open("wb") as file:
                 response = requests.get(
@@ -500,7 +500,7 @@ def save_images_1d(  # noqa: PLR0915
     plt.plot(signal.cpu().detach().numpy())
     plt.ylim([signal.min(), signal.max()])
     plt.savefig(
-        f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",
+        f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",
     )
     plt.close()
     hook_handles = [
@@ -529,7 +529,7 @@ def save_images_1d(  # noqa: PLR0915
             if sparse_activation_name == "relu":
                 plt.title(dataset_name, fontsize=20)
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
             )
             plt.close()
             similarity = functional.conv1d(
@@ -543,7 +543,7 @@ def save_images_1d(  # noqa: PLR0915
             plt.autoscale(enable=True, axis="x", tight=True)
             plt.plot(similarity.cpu().detach().numpy(), "g")
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
             )
             plt.close()
             _, ax = plt.subplots()
@@ -560,7 +560,7 @@ def save_images_1d(  # noqa: PLR0915
                     basefmt=" ",
                 )
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}.png",
             )
             plt.close()
             reconstruction_ = functional.conv1d(
@@ -590,7 +590,7 @@ def save_images_1d(  # noqa: PLR0915
             plt.plot(neg_signal, color="r")
             plt.ylim([signal.min(), signal.max()])
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
             )
             plt.close()
         _, ax = plt.subplots()
@@ -601,7 +601,7 @@ def save_images_1d(  # noqa: PLR0915
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
         plt.ylim([signal.min(), signal.max()])
         plt.savefig(
-            f"bin/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",
+            f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",
         )
         plt.close()
 
@@ -618,7 +618,7 @@ def save_images_2d(
     plt.yticks([])
     plt.imshow(image.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
     plt.savefig(
-        f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png",
+        f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png",
     )
     plt.close()
     hook_handles = [
@@ -644,7 +644,7 @@ def save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
             )
             plt.close()
             similarity = functional.conv2d(
@@ -662,7 +662,7 @@ def save_images_2d(
                 vmax=2 * abs(similarity).max(),
             )
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
             )
             plt.close()
             plt.figure()
@@ -675,7 +675,7 @@ def save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}.png",
             )
             plt.close()
             reconstruction = functional.conv2d(
@@ -693,7 +693,7 @@ def save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
             )
             plt.close()
         plt.figure()
@@ -706,7 +706,7 @@ def save_images_2d(
             vmax=2 * abs(reconstructed).max(),
         )
         plt.savefig(
-            f"bin/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",
+            f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",
         )
         plt.close()
 
@@ -1090,7 +1090,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         plt.axvspan(1, 2.5, alpha=0.3, color="gray")
         wedge = Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color="g")
         ax_main.add_patch(wedge)
-        plt.savefig(f"bin/{dataset_name}.png")
+        plt.savefig(f"tmp/{dataset_name}.png")
         plt.close()
     header = ["$m$", "$CR^{-1}$", "$\\tilde{\\mathcal{L}}$", "$\\bar\\varphi$"]
     columns = pd.MultiIndex.from_product([sparse_activation_names, header])
@@ -1112,7 +1112,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         },
     )
     styler.to_latex(
-        "bin/table-flithos-variable-kernel-size.tex",
+        "tmp/table-flithos-variable-kernel-size.tex",
         hrules=True,
         multicol_align="c",
     )
@@ -1164,7 +1164,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     plt.ylim([0, 2.5])
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig("bin/mean-flithos-validation-epochs.png")
+    plt.savefig("tmp/mean-flithos-validation-epochs.png")
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = []
@@ -1204,7 +1204,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     plt.ylim([0, 2.5])
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig("bin/mean-flithos-variable-kernel-size-list.png")
+    plt.savefig("tmp/mean-flithos-variable-kernel-size-list.png")
     plt.close()
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
     fig_legend = plt.figure()
@@ -1258,7 +1258,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         line2d_list[4],
     ]
     fig_legend.legend(handles=legend_handle_list, fontsize=22, loc="upper center")
-    plt.savefig("bin/legend.png")
+    plt.savefig("tmp/legend.png")
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     gaussian_kde_input_array = gaussian_kde_input_array.reshape(
@@ -1297,7 +1297,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     plt.xlim([0, 2.5])
     plt.ylim([0, 2.5])
     plt.grid(visible=True)
-    plt.savefig("bin/crrl-density-plot.png")
+    plt.savefig("tmp/crrl-density-plot.png")
     plt.close()
     batch_size = 64
     lr = 0.01
@@ -1504,7 +1504,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         },
     )
     styler.to_latex(
-        "bin/table-uci-epilepsy-supervised.tex",
+        "tmp/table-uci-epilepsy-supervised.tex",
         hrules=True,
         multicol_align="c",
     )
@@ -1532,7 +1532,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         batch_size = 64
         lr = 0.01
         dataset_train_validation = dataset(
-            "bin",
+            "tmp",
             download=True,
             train=True,
             transform=ToTensor(),
@@ -1547,7 +1547,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range),
             batch_size=batch_size,
         )
-        dataset_test = dataset("bin", train=False, transform=ToTensor())
+        dataset_test = dataset("tmp", train=False, transform=ToTensor())
         dataloader_test = DataLoader(
             dataset_test,
             sampler=SubsetRandomSampler(mnist_fashionmnist_test_range),
@@ -1610,7 +1610,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         lr = 0.01
         results_supervised_rows_list = []
         dataset_train_validation = dataset(
-            "bin",
+            "tmp",
             download=True,
             train=True,
             transform=ToTensor(),
@@ -1624,7 +1624,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             dataset_train_validation,
             sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range),
         )
-        dataset_test = dataset("bin", train=False, transform=ToTensor())
+        dataset_test = dataset("tmp", train=False, transform=ToTensor())
         dataloader_test = DataLoader(
             dataset_test,
             sampler=SubsetRandomSampler(mnist_fashionmnist_test_range),
@@ -1748,7 +1748,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             },
         )
         styler.to_latex(
-            f"bin/table-{dataset_name.lower()}-supervised.tex",
+            f"tmp/table-{dataset_name.lower()}-supervised.tex",
             hrules=True,
             multicol_align="c",
         )
@@ -1766,7 +1766,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             ],
         },
     )
-    keys_values_df.to_csv("bin/keys-values.csv", index=False, float_format="%.2f")
+    keys_values_df.to_csv("tmp/keys-values.csv", index=False, float_format="%.2f")
 
 
 if __name__ == "__main__":
