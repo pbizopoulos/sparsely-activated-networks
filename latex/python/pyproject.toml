@@ -9,7 +9,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
 	"black==23.3.0",
-	"mypy==1.4.0",
+	"mypy==1.4.1",
 	"ruff==0.0.275",
 	"ssort==0.11.6",
 ]
