@@ -509,9 +509,7 @@ def save_images_1d(  # noqa: PLR0915
     model.eval()
     with torch.no_grad():
         reconstructed = model(signal.unsqueeze(0).unsqueeze(0))
-        activations_ = []
-        for hook_handle in hook_handles:
-            activations_.append(hook_handle.output)
+        activations_ = [hook_handle.output for hook_handle in hook_handles]
         activations_stack = torch.stack(activations_, 1)
         for weights_index, (weights_kernel, activations) in enumerate(
             zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
@@ -627,9 +625,7 @@ def save_images_2d(
     model.eval()
     with torch.no_grad():
         reconstructed = model(image.unsqueeze(0).unsqueeze(0))
-        activations_ = []
-        for hook_handle in hook_handles:
-            activations_.append(hook_handle.output)
+        activations_ = [hook_handle.output for hook_handle in hook_handles]
         activations_stack = torch.stack(activations_, 1)
         for weights_index, (weights_kernel, activations) in enumerate(
             zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
@@ -757,9 +753,7 @@ def validate_or_test_model_supervised(dataloader: DataLoader[int], hook_handles:
             data = data.to(device)  # noqa: PLW2901
             targets = targets.to(device)  # noqa: PLW2901
             data_reconstructed = model_unsupervised(data)
-            activations_ = []
-            for hook_handle in hook_handles:
-                activations_.append(hook_handle.output)
+            activations_ = [hook_handle.output for hook_handle in hook_handles]
             activations_stack = torch.stack(activations_, 1)
             reconstruction_loss[index] = functional.l1_loss(
                 data,
@@ -804,9 +798,7 @@ def validate_or_test_model_unsupervised(dataloader: DataLoader[int], hook_handle
         for index, (data, _) in enumerate(dataloader):
             data = data.to(device)  # noqa: PLW2901
             data_reconstructed = model(data)
-            activations_ = []
-            for hook_handle in hook_handles:
-                activations_.append(hook_handle.output)
+            activations_ = [hook_handle.output for hook_handle in hook_handles]
             activations_stack = torch.stack(activations_, 1)
             reconstruction_loss[index] = functional.l1_loss(
                 data,
@@ -1236,7 +1228,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         sparse_activation_colors,
         strict=True,
     ):
-        line2d_list.append(
+        line2d_list.append(  # noqa: PERF401
             Line2D(
                 [0],
                 [0],
