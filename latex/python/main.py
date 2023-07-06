@@ -1228,7 +1228,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         sparse_activation_colors,
         strict=True,
     ):
-        line2d_list.append(  # noqa: PERF401
+        line2d_list.append(
             Line2D(
                 [0],
                 [0],
