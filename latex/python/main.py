@@ -1,5 +1,4 @@
 import glob
-from os import environ
 from pathlib import Path
 
 import numpy as np
@@ -839,7 +838,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     mnist_fashionmnist_train_ranges = [range(50000), range(50000)]
     mnist_fashionmnist_validation_ranges = [range(50000, 60000), range(50000, 60000)]
     mnist_fashionmnist_test_ranges = [range(10000), range(10000)]
-    if environ["DEBUG"] == "1":
+    if __debug__:
         epochs_physionet_num = 3
         epochs_num = 2
         kernel_size_physionet_range = range(1, 10)
