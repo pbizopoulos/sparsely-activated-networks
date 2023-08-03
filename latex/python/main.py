@@ -1,4 +1,3 @@
-import glob
 from pathlib import Path
 
 import numpy as np
@@ -266,8 +265,7 @@ class PhysionetDataset(Dataset):  # type: ignore[type-arg]
                 records=[record_name],
                 annotators=None,
             )
-        files = glob.glob((dataset_path / "*.hea").as_posix())
-        file_name = Path(files[0]).stem
+        file_name = next(iter(dataset_path.glob("*.hea"))).stem
         records = wfdb.rdrecord(dataset_path / file_name)
         signal = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if train_validation_test == "train":
