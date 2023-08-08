@@ -9,9 +9,16 @@ Git
 Docker
 NVIDIA Container Toolkit (Optional)
 
-# Download, check and build
+# Download
 git clone https://github.com/pbizopoulos/sparsely-activated-networks
 cd sparsely-activated-networks/
+
+# Development
 cd docs/ && make clean check all && cd ..
 cd latex/python/ && make clean check all && cd ../..
 cd latex/ && make clean check all && cd ..
+
+# Staging
+cd latex/python/ && make DEBUG=0 && cd ../..
+cd latex/ && make && cd ..
+cd docs/ && make DEBUG=0
