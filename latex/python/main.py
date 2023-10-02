@@ -653,8 +653,8 @@ def save_images_2d(
             plt.imshow(
                 similarity.cpu().detach().numpy(),
                 cmap="twilight",
-                vmin=-2 * abs(similarity).max(),
-                vmax=2 * abs(similarity).max(),
+                vmin=-2 * abs(similarity).max(),  # type: ignore[arg-type]
+                vmax=2 * abs(similarity).max(),  # type: ignore[arg-type]
             )
             plt.savefig(
                 f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
@@ -682,8 +682,8 @@ def save_images_2d(
             plt.imshow(
                 reconstruction.cpu().detach().numpy(),
                 cmap="twilight",
-                vmin=-2 * abs(reconstruction).max(),
-                vmax=2 * abs(reconstruction).max(),
+                vmin=-2 * abs(reconstruction).max(),  # type: ignore[arg-type]
+                vmax=2 * abs(reconstruction).max(),  # type: ignore[arg-type]
             )
             plt.xticks([])
             plt.yticks([])
@@ -1057,7 +1057,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 - 0.5 * sparse_activation_index
                 - inverse_compression_ratio_best.mean(),
             )
-            fig.add_axes(
+            fig.add_axes(  # type: ignore[call-overload]
                 [0.75, 0.81 - 0.165 * sparse_activation_index, 0.1, 0.1],
                 facecolor="y",
             )
