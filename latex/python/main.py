@@ -477,9 +477,11 @@ def calculate_inverse_compression_ratio(
     data: torch.Tensor,
     model: nn.Module,
 ) -> npt.NDArray[np.float64]:
-    activation_multiplier = 1 + len(model.weights_kernels[0].shape)  # type: ignore[index] # noqa: E501
-    parameters_num = sum(weights_kernel.shape[0] for weights_kernel in model.weights_kernels)  # type: ignore[union-attr] # noqa: E501
-    return (activation_multiplier * activations_num + parameters_num) / (
+    activation_multiplier = 1 + len(model.weights_kernels[0].shape)
+    parameters_num = sum(
+        weights_kernel.shape[0] for weights_kernel in model.weights_kernels
+    )
+    return (activation_multiplier * activations_num + parameters_num) / (  # type: ignore[no-any-return]
         data.shape[-1] * data.shape[-2]
     )
 
@@ -741,7 +743,12 @@ def train_model_unsupervised(
         optimizer.step()
 
 
-def validate_or_test_model_supervised(dataloader: DataLoader[int], hook_handles: list[Hook], model_supervised: nn.Module, model_unsupervised: nn.Module) -> tuple:  # type: ignore[type-arg] # noqa: E501
+def validate_or_test_model_supervised(
+    dataloader: DataLoader[int],
+    hook_handles: list[Hook],
+    model_supervised: nn.Module,
+    model_unsupervised: nn.Module,
+) -> tuple:  # type: ignore[type-arg]
     device = next(model_supervised.parameters()).device
     predictions_correct_num = 0
     activations_num = np.zeros(len(dataloader))
@@ -788,7 +795,11 @@ def validate_or_test_model_supervised(dataloader: DataLoader[int], hook_handles:
     )
 
 
-def validate_or_test_model_unsupervised(dataloader: DataLoader[int], hook_handles: list[Hook], model: nn.Module) -> tuple:  # type: ignore[type-arg] # noqa: E501
+def validate_or_test_model_unsupervised(
+    dataloader: DataLoader[int],
+    hook_handles: list[Hook],
+    model: nn.Module,
+) -> tuple:  # type: ignore[type-arg]
     device = next(model.parameters()).device
     activations_num = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
@@ -1311,7 +1322,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
     )
     accuracy_best = 0.0
-    num_classes = len(uci_epilepsy_dataset_train.classes.unique())  # type: ignore[no-untyped-call] # noqa: E501
+    num_classes = len(uci_epilepsy_dataset_train.classes.unique())  # type: ignore[no-untyped-call]
     model_supervised = CNN(num_classes).to(device)
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(epochs_num):
@@ -1638,7 +1649,10 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                         1,
                         999,
                     ).tolist()
-                    sparsity_densities = [[sparsity_density, sparsity_density] for sparsity_density in sparsity_densities]  # type: ignore[misc] # noqa: E501
+                    sparsity_densities = [
+                        [sparsity_density, sparsity_density]  # type: ignore[misc]
+                        for sparsity_density in sparsity_densities
+                    ]
                 else:
                     sparsity_densities = kernel_sizes
                 sparse_activation_list = [
