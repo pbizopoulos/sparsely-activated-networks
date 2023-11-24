@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from os import getenv
 from pathlib import Path
 
 import numpy as np
@@ -840,16 +841,20 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
-    epochs_physionet_num = 30
-    epochs_num = 5
-    kernel_size_physionet_range = range(1, 250)
-    uci_epilepsy_train_range = range(8740)
-    uci_epilepsy_validation_range = range(1380)
-    uci_epilepsy_test_range = range(1380)
-    mnist_fashionmnist_train_ranges = [range(50000), range(50000)]
-    mnist_fashionmnist_validation_ranges = [range(50000, 60000), range(50000, 60000)]
-    mnist_fashionmnist_test_ranges = [range(10000), range(10000)]
-    if __debug__:
+    if getenv("STAGING"):
+        epochs_physionet_num = 30
+        epochs_num = 5
+        kernel_size_physionet_range = range(1, 250)
+        uci_epilepsy_train_range = range(8740)
+        uci_epilepsy_validation_range = range(1380)
+        uci_epilepsy_test_range = range(1380)
+        mnist_fashionmnist_train_ranges = [range(50000), range(50000)]
+        mnist_fashionmnist_validation_ranges = [
+            range(50000, 60000),
+            range(50000, 60000),
+        ]
+        mnist_fashionmnist_test_ranges = [range(10000), range(10000)]
+    else:
         epochs_physionet_num = 3
         epochs_num = 2
         kernel_size_physionet_range = range(1, 10)
