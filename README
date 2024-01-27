@@ -10,8 +10,8 @@ Docker
 NVIDIA Container Toolkit (Optional)
 
 # Download
-git clone https://github.com/pbizopoulos/sparsely-activated-networks
-cd sparsely-activated-networks/
+git clone https://github.com/pbizopoulos/sparsely-activated-networks $HOME/github.com/pbizopoulos/sparsely-activated-networks
+cd $HOME/github.com/pbizopoulos/sparsely-activated-networks/
 
 # Development
 cd docs/ && make clean check all && cd ..
