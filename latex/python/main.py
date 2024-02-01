@@ -172,7 +172,7 @@ def extrema_pool_indices_1d(input_: torch.Tensor, kernel_size: int) -> torch.Ten
         kernel_size,
         return_indices=True,
     )
-    return extrema_primary.scatter(  # type: ignore[no-any-return]
+    return extrema_primary.scatter(
         -1,
         extrema_indices,
         input_.gather(-1, extrema_indices),
@@ -196,7 +196,7 @@ def extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Ten
         kernel_size,
         return_indices=True,
     )
-    return extrema_primary.scatter(  # type: ignore[no-any-return]
+    return extrema_primary.scatter(
         -1,
         extrema_indices[..., 0, 0],
         x_flattened.gather(-1, extrema_indices[..., 0, 0]),
@@ -285,7 +285,7 @@ class PhysionetDataset(Dataset):  # type: ignore[type-arg]
         return (out, 0)
 
     def __len__(self: PhysionetDataset) -> int:
-        return self.signal.shape[0]  # type: ignore[no-any-return]
+        return self.signal.shape[0]
 
 
 class Relu1D(nn.Module):
@@ -314,7 +314,7 @@ class SAN1d(nn.Module):
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList(
             [
-                nn.Parameter(0.1 * torch.ones(kernel_size))  # type: ignore[arg-type]
+                nn.Parameter(0.1 * torch.ones(kernel_size))
                 for kernel_size in kernel_sizes
             ],
         )
@@ -350,7 +350,7 @@ class SAN2d(nn.Module):
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList(
             [
-                nn.Parameter(0.1 * torch.ones(kernel_size, kernel_size))  # type: ignore[arg-type]
+                nn.Parameter(0.1 * torch.ones(kernel_size, kernel_size))
                 for kernel_size in kernel_sizes
             ],
         )
@@ -379,7 +379,7 @@ class SAN2d(nn.Module):
 def topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     extrema_primary = torch.zeros_like(input_)
     _, extrema_indices = torch.topk(abs(input_), topk)
-    return extrema_primary.scatter(  # type: ignore[no-any-return]
+    return extrema_primary.scatter(
         -1,
         extrema_indices,
         input_.gather(-1, extrema_indices),
@@ -399,7 +399,7 @@ def topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     x_flattened = input_.view(input_.shape[0], -1)
     extrema_primary = torch.zeros_like(x_flattened)
     _, extrema_indices = torch.topk(abs(x_flattened), topk)
-    return extrema_primary.scatter(  # type: ignore[no-any-return]
+    return extrema_primary.scatter(
         -1,
         extrema_indices,
         x_flattened.gather(-1, extrema_indices),
@@ -467,10 +467,10 @@ class UCIepilepsyDataset(Dataset):  # type: ignore[type-arg]
         self: UCIepilepsyDataset,
         index: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        return (self.signal[index], self.classes[index])  # type: ignore[index]
+        return (self.signal[index], self.classes[index])
 
     def __len__(self: UCIepilepsyDataset) -> int:
-        return self.classes.shape[0]  # type: ignore[attr-defined,no-any-return]
+        return self.classes.shape[0]
 
 
 def calculate_inverse_compression_ratio(
@@ -518,8 +518,8 @@ def save_images_1d(  # noqa: PLR0915
         ):
             _, ax = plt.subplots(figsize=(2, 2.2))
             ax.tick_params(labelbottom=False, labelleft=False)
-            ax.xaxis.get_offset_text().set_visible(False)  # noqa: FBT003
-            ax.yaxis.get_offset_text().set_visible(False)  # noqa: FBT003
+            ax.xaxis.get_offset_text().set_visible(False)
+            ax.yaxis.get_offset_text().set_visible(False)
             plt.grid(visible=True)
             plt.autoscale(enable=True, axis="x", tight=True)
             plt.plot(weights_kernel.cpu().detach().numpy(), "r")
@@ -650,14 +650,15 @@ def save_images_2d(
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )[0, 0]
+            vmax = 2 * abs(similarity).max().item()
             plt.figure()
             plt.xticks([])
             plt.yticks([])
             plt.imshow(
                 similarity.cpu().detach().numpy(),
                 cmap="twilight",
-                vmin=-2 * abs(similarity).max(),
-                vmax=2 * abs(similarity).max(),
+                vmin=-vmax,
+                vmax=vmax,
             )
             plt.savefig(
                 f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
@@ -681,12 +682,13 @@ def save_images_2d(
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )[0, 0]
+            vmax = 2 * abs(reconstruction).max().item()
             plt.figure()
             plt.imshow(
                 reconstruction.cpu().detach().numpy(),
                 cmap="twilight",
-                vmin=-2 * abs(reconstruction).max(),
-                vmax=2 * abs(reconstruction).max(),
+                vmin=-vmax,
+                vmax=vmax,
             )
             plt.xticks([])
             plt.yticks([])
@@ -694,14 +696,15 @@ def save_images_2d(
                 f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
             )
             plt.close()
+        vmax = 2 * abs(reconstructed).max().item()
         plt.figure()
         plt.xticks([])
         plt.yticks([])
         plt.imshow(
             reconstructed[0, 0].cpu().detach().numpy(),
             cmap="twilight",
-            vmin=-2 * abs(reconstructed).max(),
-            vmax=2 * abs(reconstructed).max(),
+            vmin=-vmax,
+            vmax=vmax,
         )
         plt.savefig(
             f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",
@@ -1327,7 +1330,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
     )
     accuracy_best = 0.0
-    num_classes = len(uci_epilepsy_dataset_train.classes.unique())  # type: ignore[attr-defined]
+    num_classes = len(uci_epilepsy_dataset_train.classes.unique())  # type: ignore[no-untyped-call]
     model_supervised = CNN(num_classes).to(device)
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(epochs_num):
