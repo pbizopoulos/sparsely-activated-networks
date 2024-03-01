@@ -1155,7 +1155,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             alpha=0.3,
         )
         p1.append(ax.plot(t_range, mu, color=sparse_activation_color)[0])
-        p2.append(ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)[0])
+        p2.append(ax.fill(np.nan, np.nan, sparse_activation_color, alpha=0.3)[0])
     ax.legend(
         [
             (p2[0], p1[0]),
@@ -1195,7 +1195,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             alpha=0.3,
         )
         p1.append(ax.plot(t_range, mu, color=sparse_activation_color)[0])
-        p2.append(ax.fill(np.NaN, np.NaN, sparse_activation_color, alpha=0.3)[0])
+        p2.append(ax.fill(np.nan, np.nan, sparse_activation_color, alpha=0.3)[0])
     ax.legend(
         [
             (p2[0], p1[0]),
