@@ -383,7 +383,9 @@
 		normal: tf.randomNormal,
 		uniform: tf.randomUniform,
 	};
-	const inputSizeMax = parseInt(d3.select("#size-input-range").property("max"));
+	const inputSizeMax = Number.parseInt(
+		d3.select("#size-input-range").property("max"),
+	);
 	const kernelInitializationArray = ["constant", "normal", "uniform"];
 	const lossFunctionObject = {
 		huber: tf.losses.huberLoss,
@@ -418,7 +420,7 @@
 	let inputChannelCurrentIndex = 0;
 	let inputReconstructionDescriptionLength = 0;
 	let interval = null;
-	let learningRateExponent = parseFloat(
+	let learningRateExponent = Number.parseFloat(
 		d3.select("#learning-rate-exponent-input-range").property("value"),
 	);
 	let lossFunctionKey = d3.select("#loss-function-select").property("value");
@@ -1549,7 +1551,7 @@
 		);
 	});
 	d3.select("#activation-amplitude-min-input-range").on("input", (event) => {
-		neuronArray[neuronCurrentIndex].activation.amplitudeMin = parseFloat(
+		neuronArray[neuronCurrentIndex].activation.amplitudeMin = Number.parseFloat(
 			event.currentTarget.value,
 		);
 		d3.select("#activation-amplitude-min-text").html(
@@ -1563,7 +1565,7 @@
 		);
 	});
 	d3.select("#activation-distance-min-input-range").on("input", (event) => {
-		neuronArray[neuronCurrentIndex].activation.distanceMin = parseFloat(
+		neuronArray[neuronCurrentIndex].activation.distanceMin = Number.parseFloat(
 			event.currentTarget.value,
 		);
 		d3.select("#activation-distance-min-text").html(
@@ -1641,9 +1643,8 @@
 		);
 	});
 	d3.select("#channel-amplitude-base-input-range").on("input", (event) => {
-		input.channelArray[inputChannelCurrentIndex].amplitudeBase = parseFloat(
-			event.currentTarget.value,
-		);
+		input.channelArray[inputChannelCurrentIndex].amplitudeBase =
+			Number.parseFloat(event.currentTarget.value);
 		d3.select("#channel-amplitude-base-text").html(
 			`base amp: ${input.channelArray[inputChannelCurrentIndex].amplitudeBase}`,
 		);
@@ -1660,9 +1661,8 @@
 		);
 	});
 	d3.select("#channel-amplitude-max-input-range").on("input", (event) => {
-		input.channelArray[inputChannelCurrentIndex].amplitudeMax = parseFloat(
-			event.currentTarget.value,
-		);
+		input.channelArray[inputChannelCurrentIndex].amplitudeMax =
+			Number.parseFloat(event.currentTarget.value);
 		d3.select("#channel-amplitude-max-text").html(
 			`max amp: ${input.channelArray[inputChannelCurrentIndex].amplitudeMax}`,
 		);
@@ -1676,7 +1676,7 @@
 		d3.select("#help-div").property("innerHTML", "Controls the max amplitude.");
 	});
 	d3.select("#channel-distance-max-input-range").on("input", (event) => {
-		input.channelArray[inputChannelCurrentIndex].distanceMax = parseInt(
+		input.channelArray[inputChannelCurrentIndex].distanceMax = Number.parseInt(
 			event.currentTarget.value,
 		);
 		d3.select("#channel-distance-max-text").html(
@@ -1695,7 +1695,7 @@
 		);
 	});
 	d3.select("#channel-distance-min-input-range").on("input", (event) => {
-		input.channelArray[inputChannelCurrentIndex].distanceMin = parseInt(
+		input.channelArray[inputChannelCurrentIndex].distanceMin = Number.parseInt(
 			event.currentTarget.value,
 		);
 		d3.select("#channel-distance-min-text").html(
@@ -1714,7 +1714,7 @@
 		);
 	});
 	d3.select("#channel-motif-size-input-range").on("input", (event) => {
-		input.channelArray[inputChannelCurrentIndex].motifSize = parseInt(
+		input.channelArray[inputChannelCurrentIndex].motifSize = Number.parseInt(
 			event.currentTarget.value,
 		);
 		d3.select("#channel-motif-size-text").html(
@@ -1967,7 +1967,7 @@
 		.append("option")
 		.text((d) => d);
 	d3.select("#input-channel-index-select").on("change", () => {
-		inputChannelCurrentIndex = parseInt(
+		inputChannelCurrentIndex = Number.parseInt(
 			d3.select("#input-channel-index-select").property("value"),
 		);
 		d3.select("#channel-use-input-checkbox").property(
@@ -2086,7 +2086,7 @@
 		);
 	});
 	d3.select("#kernel-amplitude-input-range").on("input", (event) => {
-		neuronArray[neuronCurrentIndex].kernel.amplitude = parseFloat(
+		neuronArray[neuronCurrentIndex].kernel.amplitude = Number.parseFloat(
 			event.currentTarget.value,
 		);
 		d3.select("#kernel-amplitude-text").html(
@@ -2140,7 +2140,7 @@
 		);
 	});
 	d3.select("#kernel-resize-multiplier-input-range").on("input", (event) => {
-		neuronArray[neuronCurrentIndex].kernel.resizeMultiplier = parseFloat(
+		neuronArray[neuronCurrentIndex].kernel.resizeMultiplier = Number.parseFloat(
 			event.currentTarget.value,
 		);
 		d3.select("#kernel-resize-multiplier-text").html(
@@ -2154,7 +2154,7 @@
 		);
 	});
 	d3.select("#kernel-size-input-range").on("input", (event) => {
-		neuronArray[neuronCurrentIndex].kernel.size = parseInt(
+		neuronArray[neuronCurrentIndex].kernel.size = Number.parseInt(
 			event.currentTarget.value,
 		);
 		d3.select("#kernel-size-text").html(
@@ -2169,7 +2169,7 @@
 		d3.select("#help-div").property("innerHTML", "Controls the kernel resize.");
 	});
 	d3.select("#kernel-stride-input-range").on("input", (event) => {
-		neuronArray[neuronCurrentIndex].kernel.stride = parseInt(
+		neuronArray[neuronCurrentIndex].kernel.stride = Number.parseInt(
 			event.currentTarget.value,
 		);
 		d3.select("#kernel-stride-text").html(
@@ -2180,7 +2180,7 @@
 		d3.select("#help-div").property("innerHTML", "Controls the kernel stride.");
 	});
 	d3.select("#learning-rate-exponent-input-range").on("input", (event) => {
-		learningRateExponent = parseFloat(event.currentTarget.value);
+		learningRateExponent = Number.parseFloat(event.currentTarget.value);
 		d3.select("#learning-rate-text").html(
 			`lr: 10<sup>${learningRateExponent}</sup>`,
 		);
@@ -2215,7 +2215,7 @@
 		.append("option")
 		.text((d) => d);
 	d3.select("#neuron-index-select").on("change", () => {
-		neuronCurrentIndex = parseInt(
+		neuronCurrentIndex = Number.parseInt(
 			d3.select("#neuron-index-select").property("value"),
 		);
 		d3.select("#neuron-use-input-checkbox").property(
@@ -2330,7 +2330,7 @@
 		);
 	});
 	d3.select("#noise-sigma-input-range").on("input", (event) => {
-		input.noiseSigma = parseFloat(event.currentTarget.value);
+		input.noiseSigma = Number.parseFloat(event.currentTarget.value);
 		d3.select("#noise-sigma-text").html(`\u03c3: ${input.noiseSigma}`);
 		processInputChannelsData(false);
 		generateAndProcessReference();
@@ -2354,7 +2354,7 @@
 		d3.select("#help-div").property("innerHTML", "Controls the optimizer.");
 	});
 	d3.select("#quantization-states-num-input-range").on("input", (event) => {
-		input.quantizationStatesNum = parseInt(event.currentTarget.value);
+		input.quantizationStatesNum = Number.parseInt(event.currentTarget.value);
 		d3.select("#quantization-states-num-text").html(
 			`quant states: ${input.quantizationStatesNum}`,
 		);
@@ -2403,7 +2403,7 @@
 		);
 	});
 	d3.select("#resize-multiplier-input-range").on("input", (event) => {
-		input.resizeMultiplier = parseFloat(event.currentTarget.value);
+		input.resizeMultiplier = Number.parseFloat(event.currentTarget.value);
 		d3.select("#resize-multiplier-text").html(
 			`resize x: ${input.resizeMultiplier}`,
 		);
@@ -2417,7 +2417,7 @@
 		);
 	});
 	d3.select("#size-input-range").on("click", (event) => {
-		input.size = parseInt(event.currentTarget.value);
+		input.size = Number.parseInt(event.currentTarget.value);
 		d3.select("#size-text").html(input.size);
 		d3.select("#loss-description-length-text").html(input.size);
 		d3.select("#reference-loss-description-length-text").html(input.size);
@@ -2495,7 +2495,7 @@
 		);
 	});
 	d3.select("#velocity-input-range").on("input", (event) => {
-		input.velocity = parseInt(event.currentTarget.value);
+		input.velocity = Number.parseInt(event.currentTarget.value);
 		d3.select("#velocity-text").html(`velocity: ${input.velocity}`);
 	});
 	d3.select("#velocity-input-range").on("mouseover", () => {
