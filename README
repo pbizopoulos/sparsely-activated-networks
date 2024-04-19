@@ -1,24 +1,25 @@
 # Sparsely activated networks
-https://arxiv.org/abs/1907.06592
-https://ieeexplore.ieee.org/abstract/document/9072295/
-https://pbizopoulos.github.io/sparsely-activated-networks/
+# https://arxiv.org/abs/1907.06592
+# https://ieeexplore.ieee.org/abstract/document/9072295/
+# https://pbizopoulos.github.io/sparsely-activated-networks/
 
 # Requirements
-POSIX Shell & Utilities
-Git
-Docker
-NVIDIA Container Toolkit (Optional)
+# POSIX Shell & Utilities
+# Git
+# Docker
+# NVIDIA Container Toolkit (Optional)
 
 # Download
-git clone https://github.com/pbizopoulos/sparsely-activated-networks $HOME/github.com/pbizopoulos/sparsely-activated-networks
-cd $HOME/github.com/pbizopoulos/sparsely-activated-networks/
+git clone git@github.com:pbizopoulos/sparsely-activated-networks $HOME/github.com/pbizopoulos/sparsely-activated-networks
 
 # Development
+cd $HOME/github.com/pbizopoulos/sparsely-activated-networks/
 cd docs/ && make clean check all && cd ..
 cd latex/python/ && make clean check all && cd ../..
 cd latex/ && make clean check all && cd ..
 
 # Staging
+cd $HOME/github.com/pbizopoulos/sparsely-activated-networks/
 cd latex/python/ && make STAGING=1 && cd ../..
 cd latex/ && make && cd ..
 cd docs/ && make STAGING=1
