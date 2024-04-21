@@ -10,16 +10,16 @@
 # NVIDIA Container Toolkit (Optional)
 
 # Download
-git clone git@github.com:pbizopoulos/sparsely-activated-networks $HOME/github.com/pbizopoulos/sparsely-activated-networks
+git clone git@github.com:pbizopoulos/sparsely-activated-networks ~/github.com/pbizopoulos/sparsely-activated-networks
 
 # Development
-cd $HOME/github.com/pbizopoulos/sparsely-activated-networks/
+cd ~/github.com/pbizopoulos/sparsely-activated-networks/
 cd docs/ && make clean check all && cd ..
 cd latex/python/ && make clean check all && cd ../..
 cd latex/ && make clean check all && cd ..
 
 # Staging
-cd $HOME/github.com/pbizopoulos/sparsely-activated-networks/
+cd ~/github.com/pbizopoulos/sparsely-activated-networks/
 cd latex/python/ && make STAGING=1 && cd ../..
 cd latex/ && make && cd ..
 cd docs/ && make STAGING=1
