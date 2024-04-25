@@ -415,8 +415,8 @@ class TopKAbsolutes2D(nn.Module):
         return topk_absolutes_2d(input_, self.topk)
 
 
-class UCIepilepsyDataset(Dataset):  # type: ignore[type-arg]
-    def __init__(self: UCIepilepsyDataset, train_validation_test: str) -> None:
+class UCIEpilepsyDataset(Dataset):  # type: ignore[type-arg]
+    def __init__(self: UCIEpilepsyDataset, train_validation_test: str) -> None:
         data_file_path = Path("tmp/data.csv")
         if not data_file_path.is_file():
             with data_file_path.open("wb") as file:
@@ -464,12 +464,12 @@ class UCIepilepsyDataset(Dataset):  # type: ignore[type-arg]
         self.signal.unsqueeze_(1)
 
     def __getitem__(
-        self: UCIepilepsyDataset,
+        self: UCIEpilepsyDataset,
         index: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         return (self.signal[index], self.classes[index])
 
-    def __len__(self: UCIepilepsyDataset) -> int:
+    def __len__(self: UCIEpilepsyDataset) -> int:
         return self.classes.shape[0]
 
 
@@ -1311,19 +1311,19 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.close()
     batch_size = 64
     lr = 0.01
-    uci_epilepsy_dataset_train = UCIepilepsyDataset("train")
+    uci_epilepsy_dataset_train = UCIEpilepsyDataset("train")
     dataloader_train = DataLoader(
         dataset=uci_epilepsy_dataset_train,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_train_range),
     )
-    uci_epilepsy_dataset_validation = UCIepilepsyDataset("validation")
+    uci_epilepsy_dataset_validation = UCIEpilepsyDataset("validation")
     dataloader_validation = DataLoader(
         dataset=uci_epilepsy_dataset_validation,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_validation_range),
     )
-    uci_epilepsy_dataset_test = UCIepilepsyDataset("test")
+    uci_epilepsy_dataset_test = UCIEpilepsyDataset("test")
     dataloader_test = DataLoader(
         dataset=uci_epilepsy_dataset_test,
         batch_size=batch_size,
@@ -1383,18 +1383,18 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     batch_size = 64
     lr = 0.01
     results_supervised_rows_list = []
-    uci_epilepsy_dataset_train = UCIepilepsyDataset("train")
+    uci_epilepsy_dataset_train = UCIEpilepsyDataset("train")
     dataloader_train = DataLoader(
         dataset=uci_epilepsy_dataset_train,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_train_range),
     )
-    uci_epilepsy_dataset_validation = UCIepilepsyDataset("validation")
+    uci_epilepsy_dataset_validation = UCIEpilepsyDataset("validation")
     dataloader_validation = DataLoader(
         dataset=uci_epilepsy_dataset_validation,
         sampler=SubsetRandomSampler(uci_epilepsy_validation_range),
     )
-    uci_epilepsy_dataset_test = UCIepilepsyDataset("test")
+    uci_epilepsy_dataset_test = UCIEpilepsyDataset("test")
     dataloader_test = DataLoader(
         dataset=uci_epilepsy_dataset_test,
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
