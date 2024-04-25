@@ -840,7 +840,7 @@ def validate_or_test_model_unsupervised(
     return (flithos, inverse_compression_ratio, reconstruction_loss)
 
 
-def main() -> None:  # noqa: C901, PLR0912, PLR0915
+def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
@@ -1461,16 +1461,13 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                     model_supervised_best = model_supervised
                     model_best = model_epoch_best
                     flithos_epoch_mean_best = flithos_epoch.mean()
-            (
-                flithos,
-                inverse_compression_ratio,
-                reconstruction_loss,
-                accuracy,
-            ) = validate_or_test_model_supervised(
-                dataloader_test,
-                hook_handles,
-                model_supervised_best,
-                model_best,
+            flithos, inverse_compression_ratio, reconstruction_loss, accuracy = (
+                validate_or_test_model_supervised(
+                    dataloader_test,
+                    hook_handles,
+                    model_supervised_best,
+                    model_best,
+                )
             )
             results_supervised_rows.extend(
                 [
@@ -1708,16 +1705,13 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                         fnn_model_supervised_best = fnn_model_supervised
                         san2d_model_best = san2d_model_epoch_best
                         flithos_epoch_mean_best = flithos_epoch.mean()
-                (
-                    flithos,
-                    inverse_compression_ratio,
-                    reconstruction_loss,
-                    accuracy,
-                ) = validate_or_test_model_supervised(
-                    dataloader_test,
-                    hook_handles,
-                    fnn_model_supervised_best,
-                    san2d_model_best,
+                flithos, inverse_compression_ratio, reconstruction_loss, accuracy = (
+                    validate_or_test_model_supervised(
+                        dataloader_test,
+                        hook_handles,
+                        fnn_model_supervised_best,
+                        san2d_model_best,
+                    )
                 )
                 results_supervised_rows.extend(
                     [
