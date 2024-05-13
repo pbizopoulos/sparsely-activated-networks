@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from os import getenv
+import os
 from pathlib import Path
 
 import numpy as np
@@ -844,7 +844,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
-    if getenv("STAGING"):
+    if os.getenv("STAGING"):
         epochs_physionet_num = 30
         epochs_num = 5
         kernel_size_physionet_range = range(1, 250)
