@@ -415,8 +415,8 @@ class TopKAbsolutes2D(nn.Module):
         return topk_absolutes_2d(input_, self.topk)
 
 
-class UCIEpilepsyDataset(Dataset):  # type: ignore[type-arg]
-    def __init__(self: UCIEpilepsyDataset, train_validation_test: str) -> None:
+class UCIEpilepsy(Dataset):  # type: ignore[type-arg]
+    def __init__(self: UCIEpilepsy, train_validation_test: str) -> None:
         data_file_path = Path("tmp/data.csv")
         if not data_file_path.is_file():
             with data_file_path.open("wb") as file:
@@ -464,12 +464,12 @@ class UCIEpilepsyDataset(Dataset):  # type: ignore[type-arg]
         self.signal.unsqueeze_(1)
 
     def __getitem__(
-        self: UCIEpilepsyDataset,
+        self: UCIEpilepsy,
         index: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         return (self.signal[index], self.classes[index])
 
-    def __len__(self: UCIEpilepsyDataset) -> int:
+    def __len__(self: UCIEpilepsy) -> int:
         return self.classes.shape[0]
 
 
@@ -1311,26 +1311,26 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.close()
     batch_size = 64
     lr = 0.01
-    uci_epilepsy_dataset_train = UCIEpilepsyDataset("train")
+    uci_epilepsy_train = UCIEpilepsy("train")
     dataloader_train = DataLoader(
-        dataset=uci_epilepsy_dataset_train,
+        dataset=uci_epilepsy_train,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_train_range),
     )
-    uci_epilepsy_dataset_validation = UCIEpilepsyDataset("validation")
+    uci_epilepsy_validation = UCIEpilepsy("validation")
     dataloader_validation = DataLoader(
-        dataset=uci_epilepsy_dataset_validation,
+        dataset=uci_epilepsy_validation,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_validation_range),
     )
-    uci_epilepsy_dataset_test = UCIEpilepsyDataset("test")
+    uci_epilepsy_test = UCIEpilepsy("test")
     dataloader_test = DataLoader(
-        dataset=uci_epilepsy_dataset_test,
+        dataset=uci_epilepsy_test,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
     )
     accuracy_best = 0.0
-    num_classes = len(uci_epilepsy_dataset_train.classes.unique())  # type: ignore[no-untyped-call]
+    num_classes = len(uci_epilepsy_train.classes.unique())  # type: ignore[no-untyped-call]
     model_supervised = CNN(num_classes).to(device)
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(epochs_num):
@@ -1383,20 +1383,20 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     batch_size = 64
     lr = 0.01
     results_supervised_rows_list = []
-    uci_epilepsy_dataset_train = UCIEpilepsyDataset("train")
+    uci_epilepsy_train = UCIEpilepsy("train")
     dataloader_train = DataLoader(
-        dataset=uci_epilepsy_dataset_train,
+        dataset=uci_epilepsy_train,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_train_range),
     )
-    uci_epilepsy_dataset_validation = UCIEpilepsyDataset("validation")
+    uci_epilepsy_validation = UCIEpilepsy("validation")
     dataloader_validation = DataLoader(
-        dataset=uci_epilepsy_dataset_validation,
+        dataset=uci_epilepsy_validation,
         sampler=SubsetRandomSampler(uci_epilepsy_validation_range),
     )
-    uci_epilepsy_dataset_test = UCIEpilepsyDataset("test")
+    uci_epilepsy_test = UCIEpilepsy("test")
     dataloader_test = DataLoader(
-        dataset=uci_epilepsy_dataset_test,
+        dataset=uci_epilepsy_test,
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
     )
     for kernel_sizes in kernel_sizes_list:
@@ -1408,7 +1408,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         ):
             if sparse_activation == TopKAbsolutes1D:
                 sparsity_densities = [
-                    int(uci_epilepsy_dataset_test.signal.shape[-1] / kernel_size)
+                    int(uci_epilepsy_test.signal.shape[-1] / kernel_size)
                     for kernel_size in kernel_sizes
                 ]
             elif sparse_activation == Extrema1D:
@@ -1479,7 +1479,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             )
             if kernel_sizes[0] == 10:  # noqa: PLR2004
                 save_images_1d(
-                    uci_epilepsy_dataset_test[0][0][0],
+                    uci_epilepsy_test[0][0][0],
                     dataset_name,
                     model_best,
                     sparse_activation_name.lower().replace(" ", "-"),
