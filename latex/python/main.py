@@ -23,13 +23,13 @@ from torchvision.transforms import ToTensor
 
 
 class CNN(nn.Module):
-    def __init__(self: CNN, classes_num: int) -> None:
+    def __init__(self: CNN, num_classes: int) -> None:
         super().__init__()
         self.conv1 = nn.Conv1d(1, 3, 5)
         self.conv2 = nn.Conv1d(3, 16, 5)
         self.fc1 = nn.Linear(656, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, classes_num)
+        self.fc3 = nn.Linear(84, num_classes)
 
     def forward(self: CNN, input_: torch.Tensor) -> torch.Tensor:
         out = functional.relu(self.conv1(input_))
@@ -213,9 +213,9 @@ class ExtremaPoolIndices2D(nn.Module):
 
 
 class FNN(nn.Module):
-    def __init__(self: FNN, classes_num: int, sample_data: torch.Tensor) -> None:
+    def __init__(self: FNN, num_classes: int, sample_data: torch.Tensor) -> None:
         super().__init__()
-        self.fc = nn.Linear(sample_data.shape[-1] * sample_data.shape[-2], classes_num)
+        self.fc = nn.Linear(sample_data.shape[-1] * sample_data.shape[-2], num_classes)
 
     def forward(self: FNN, batch_x: torch.Tensor) -> torch.Tensor:
         batch_x = batch_x.view(batch_x.shape[0], -1)
@@ -474,15 +474,15 @@ class UCIEpilepsy(Dataset):  # type: ignore[type-arg]
 
 
 def calculate_inverse_compression_ratio(
-    activations_num: npt.NDArray[np.float64],
+    num_activations: npt.NDArray[np.float64],
     data: torch.Tensor,
     model: nn.Module,
 ) -> npt.NDArray[np.float64]:
     activation_multiplier = 1 + len(model.weights_kernels[0].shape)
-    parameters_num = sum(
+    num_parameters = sum(
         weights_kernel.shape[0] for weights_kernel in model.weights_kernels
     )
-    return (activation_multiplier * activations_num + parameters_num) / (  # type: ignore[no-any-return]
+    return (activation_multiplier * num_activations + num_parameters) / (  # type: ignore[no-any-return]
         data.shape[-1] * data.shape[-2]
     )
 
@@ -754,8 +754,8 @@ def validate_or_test_model_supervised(
     model_unsupervised: nn.Module,
 ) -> tuple:  # type: ignore[type-arg]
     device = next(model_supervised.parameters()).device
-    predictions_correct_num = 0
-    activations_num = np.zeros(len(dataloader))
+    num_predictions_correct = 0
+    num_activations = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
     model_supervised.eval()
     with torch.no_grad():
@@ -769,15 +769,15 @@ def validate_or_test_model_supervised(
                 data,
                 data_reconstructed,
             ) / functional.l1_loss(data, torch.zeros_like(data))
-            activations_num[index] = torch.nonzero(
+            num_activations[index] = torch.nonzero(
                 activations_stack,
                 as_tuple=False,
             ).shape[0]
             outputs = model_supervised(data_reconstructed)
             prediction = outputs.argmax(dim=1)
-            predictions_correct_num += sum(prediction == targets).item()
+            num_predictions_correct += sum(prediction == targets).item()
     inverse_compression_ratio = calculate_inverse_compression_ratio(
-        activations_num,
+        num_activations,
         data,
         model_unsupervised,
     )
@@ -795,7 +795,7 @@ def validate_or_test_model_supervised(
         flithos,
         inverse_compression_ratio,
         reconstruction_loss,
-        100 * predictions_correct_num / len(dataloader),
+        100 * num_predictions_correct / len(dataloader),
     )
 
 
@@ -805,7 +805,7 @@ def validate_or_test_model_unsupervised(
     model: nn.Module,
 ) -> tuple:  # type: ignore[type-arg]
     device = next(model.parameters()).device
-    activations_num = np.zeros(len(dataloader))
+    num_activations = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
     model.eval()
     with torch.no_grad():
@@ -818,12 +818,12 @@ def validate_or_test_model_unsupervised(
                 data,
                 data_reconstructed,
             ) / functional.l1_loss(data, torch.zeros_like(data))
-            activations_num[index] = torch.nonzero(
+            num_activations[index] = torch.nonzero(
                 activations_stack,
                 as_tuple=False,
             ).shape[0]
     inverse_compression_ratio = calculate_inverse_compression_ratio(
-        activations_num,
+        num_activations,
         data,
         model,
     )
@@ -845,8 +845,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
     if os.getenv("STAGING"):
-        epochs_physionet_num = 30
-        epochs_num = 5
+        num_epochs_physionet = 30
+        num_epochs = 5
         kernel_size_physionet_range = range(1, 250)
         uci_epilepsy_train_range = range(8740)
         uci_epilepsy_validation_range = range(1380)
@@ -858,8 +858,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         ]
         mnist_fashionmnist_test_ranges = [range(10000), range(10000)]
     else:
-        epochs_physionet_num = 3
-        epochs_num = 2
+        num_epochs_physionet = 3
+        num_epochs = 2
         kernel_size_physionet_range = range(1, 10)
         uci_epilepsy_train_range = range(10)
         uci_epilepsy_validation_range = range(10)
@@ -922,7 +922,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             len(sparse_activations),
             len(dataset_names),
             len(kernel_sizes_list),
-            epochs_physionet_num,
+            num_epochs_physionet,
         ),
     )
     kernel_size_best_array = np.zeros(
@@ -985,7 +985,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     Hook(sparse_activation_)
                     for sparse_activation_ in san1d_model.sparse_activations
                 ]
-                for epoch in range(epochs_physionet_num):
+                for epoch in range(num_epochs_physionet):
                     train_model_unsupervised(dataloader_train, san1d_model, optimizer)
                     flithos_epoch, *_ = validate_or_test_model_unsupervised(
                         dataloader_validation,
@@ -1127,7 +1127,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         multicol_align="c",
     )
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
-    var = np.zeros((len(dataset_names), epochs_physionet_num))
+    var = np.zeros((len(dataset_names), num_epochs_physionet))
     p1 = []
     p2 = []
     for (
@@ -1333,7 +1333,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     num_classes = len(uci_epilepsy_train.classes.unique())  # type: ignore[no-untyped-call]
     model_supervised = CNN(num_classes).to(device)
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
-    for _ in range(epochs_num):
+    for _ in range(num_epochs):
         model_supervised.train()
         for signals, targets in dataloader_train:
             signals = signals.to(device)  # noqa: PLW2901
@@ -1343,8 +1343,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             optimizer.zero_grad()
             classification_loss.backward()  # type: ignore[no-untyped-call]
             optimizer.step()
-        predictions_correct_num = 0
-        predictions_num = 0
+        num_predictions_correct = 0
+        num_predictions = 0
         model_supervised.eval()
         with torch.no_grad():
             for signals, targets in dataloader_validation:
@@ -1352,9 +1352,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 targets = targets.to(device)  # noqa: PLW2901
                 outputs = model_supervised(signals)
                 prediction = outputs.argmax(dim=1)
-                predictions_correct_num += sum(prediction == targets).item()
-                predictions_num += outputs.shape[0]
-        accuracy = 100 * predictions_correct_num / predictions_num
+                num_predictions_correct += sum(prediction == targets).item()
+                num_predictions += outputs.shape[0]
+        accuracy = 100 * num_predictions_correct / num_predictions
         if accuracy_best < accuracy:
             model_supervised_best = model_supervised
             accuracy_best = accuracy
@@ -1365,9 +1365,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             targets = targets.to(device)  # noqa: PLW2901
             outputs = model_supervised_best(signals)
             prediction = outputs.argmax(dim=1)
-            predictions_correct_num += sum(prediction == targets).item()
-            predictions_num += outputs.shape[0]
-    accuracy_uci_epilepsy = 100 * predictions_correct_num / predictions_num
+            num_predictions_correct += sum(prediction == targets).item()
+            num_predictions += outputs.shape[0]
+    accuracy_uci_epilepsy = 100 * num_predictions_correct / num_predictions
     dataset_name = "UCI-epilepsy"
     sparse_activations = [
         Identity1D,
@@ -1430,7 +1430,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 for sparse_activation_ in san1d_model.sparse_activations
             ]
             flithos_epoch_mean_best = float("inf")
-            for _ in range(epochs_num):
+            for _ in range(num_epochs):
                 train_model_unsupervised(dataloader_train, san1d_model, optimizer)
                 flithos_epoch, *_ = validate_or_test_model_unsupervised(
                     dataloader_validation,
@@ -1445,7 +1445,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             flithos_epoch_mean_best = float("inf")
             model_supervised = CNN(num_classes).to(device).to(device)
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
-            for _ in range(epochs_num):
+            for _ in range(num_epochs):
                 train_model_supervised(
                     dataloader_train,
                     model_supervised,
@@ -1565,7 +1565,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             dataset_train_validation.data[0],
         ).to(device)
         optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
-        for _ in range(epochs_num):
+        for _ in range(num_epochs):
             fnn_model_supervised.train()
             for images, targets in dataloader_train:
                 images = images.to(device)  # noqa: PLW2901
@@ -1575,8 +1575,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 optimizer.zero_grad()
                 classification_loss.backward()  # type: ignore[no-untyped-call]
                 optimizer.step()
-            predictions_correct_num = 0
-            predictions_num = 0
+            num_predictions_correct = 0
+            num_predictions = 0
             fnn_model_supervised.eval()
             with torch.no_grad():
                 for images, targets in dataloader_validation:
@@ -1584,9 +1584,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     targets = targets.to(device)  # noqa: PLW2901
                     outputs = fnn_model_supervised(images)
                     prediction = outputs.argmax(dim=1)
-                    predictions_correct_num += sum(prediction == targets).item()
-                    predictions_num += outputs.shape[0]
-            accuracy = 100 * predictions_correct_num / predictions_num
+                    num_predictions_correct += sum(prediction == targets).item()
+                    num_predictions += outputs.shape[0]
+            accuracy = 100 * num_predictions_correct / num_predictions
             if accuracy_best < accuracy:
                 fnn_model_supervised_best = fnn_model_supervised
                 accuracy_best = accuracy
@@ -1597,10 +1597,10 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 targets = targets.to(device)  # noqa: PLW2901
                 outputs = fnn_model_supervised_best(images)
                 prediction = outputs.argmax(dim=1)
-                predictions_correct_num += sum(prediction == targets).item()
-                predictions_num += outputs.shape[0]
+                num_predictions_correct += sum(prediction == targets).item()
+                num_predictions += outputs.shape[0]
         accuracies_mnist_fashionmnist_supervised.append(
-            100 * predictions_correct_num / predictions_num,
+            100 * num_predictions_correct / num_predictions,
         )
         sparse_activations = [
             Identity2D,
@@ -1671,7 +1671,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     for sparse_activation_ in san2d_model.sparse_activations
                 ]
                 flithos_epoch_mean_best = float("inf")
-                for _ in range(epochs_num):
+                for _ in range(num_epochs):
                     train_model_unsupervised(dataloader_train, san2d_model, optimizer)
                     flithos_epoch, *_ = validate_or_test_model_unsupervised(
                         dataloader_validation,
@@ -1689,7 +1689,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     dataset_train_validation.data[0],
                 ).to(device)
                 optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
-                for _ in range(epochs_num):
+                for _ in range(num_epochs):
                     train_model_supervised(
                         dataloader_train,
                         fnn_model_supervised,
