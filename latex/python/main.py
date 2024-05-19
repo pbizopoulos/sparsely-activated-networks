@@ -1,3 +1,5 @@
+"""Sparsely activated networks."""
+
 from __future__ import annotations
 
 import os
@@ -22,8 +24,8 @@ from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
 
 
-class CNN(nn.Module):
-    def __init__(self: CNN, num_classes: int) -> None:
+class _CNN(nn.Module):
+    def __init__(self: _CNN, num_classes: int) -> None:
         super().__init__()
         self.conv1 = nn.Conv1d(1, 3, 5)
         self.conv2 = nn.Conv1d(3, 16, 5)
@@ -31,7 +33,7 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, num_classes)
 
-    def forward(self: CNN, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: _CNN, input_: torch.Tensor) -> torch.Tensor:
         out = functional.relu(self.conv1(input_))
         out = functional.max_pool1d(out, 2)
         out = functional.relu(self.conv2(out))
@@ -43,7 +45,7 @@ class CNN(nn.Module):
         return output
 
 
-def extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Tensor:
+def _extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Tensor:
     extrema_primary = torch.zeros_like(input_)
     dx = input_[:, :, 1:] - input_[:, :, :-1]
     dx_padright_greater = functional.pad(dx, [0, 1]) > 0
@@ -80,16 +82,16 @@ def extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Ten
     return extrema_primary
 
 
-class Extrema1D(nn.Module):
-    def __init__(self: Extrema1D, minimum_extrema_distance: int) -> None:
+class _Extrema1D(nn.Module):
+    def __init__(self: _Extrema1D, minimum_extrema_distance: int) -> None:
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
 
-    def forward(self: Extrema1D, input_: torch.Tensor) -> torch.Tensor:
-        return extrema_1d(input_, self.minimum_extrema_distance)
+    def forward(self: _Extrema1D, input_: torch.Tensor) -> torch.Tensor:
+        return _extrema_1d(input_, self.minimum_extrema_distance)
 
 
-def extrema_2d(
+def _extrema_2d(
     input_: torch.Tensor,
     minimum_extrema_distance: list[int],
 ) -> torch.Tensor:
@@ -156,16 +158,16 @@ def extrema_2d(
     return extrema_primary
 
 
-class Extrema2D(nn.Module):
-    def __init__(self: Extrema2D, minimum_extrema_distance: list[int]) -> None:
+class _Extrema2D(nn.Module):
+    def __init__(self: _Extrema2D, minimum_extrema_distance: list[int]) -> None:
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
 
-    def forward(self: Extrema2D, input_: torch.Tensor) -> torch.Tensor:
-        return extrema_2d(input_, self.minimum_extrema_distance)
+    def forward(self: _Extrema2D, input_: torch.Tensor) -> torch.Tensor:
+        return _extrema_2d(input_, self.minimum_extrema_distance)
 
 
-def extrema_pool_indices_1d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
+def _extrema_pool_indices_1d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
     extrema_primary = torch.zeros_like(input_)
     _, extrema_indices = functional.max_pool1d(
         abs(input_),
@@ -179,16 +181,16 @@ def extrema_pool_indices_1d(input_: torch.Tensor, kernel_size: int) -> torch.Ten
     )
 
 
-class ExtremaPoolIndices1D(nn.Module):
-    def __init__(self: ExtremaPoolIndices1D, pool_size: int) -> None:
+class _ExtremaPoolIndices1D(nn.Module):
+    def __init__(self: _ExtremaPoolIndices1D, pool_size: int) -> None:
         super().__init__()
         self.pool_size = pool_size
 
-    def forward(self: ExtremaPoolIndices1D, input_: torch.Tensor) -> torch.Tensor:
-        return extrema_pool_indices_1d(input_, self.pool_size)
+    def forward(self: _ExtremaPoolIndices1D, input_: torch.Tensor) -> torch.Tensor:
+        return _extrema_pool_indices_1d(input_, self.pool_size)
 
 
-def extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
+def _extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
     x_flattened = input_.view(input_.shape[0], -1)
     extrema_primary = torch.zeros_like(x_flattened)
     _, extrema_indices = functional.max_pool2d(
@@ -203,32 +205,32 @@ def extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Ten
     ).view(input_.shape)
 
 
-class ExtremaPoolIndices2D(nn.Module):
-    def __init__(self: ExtremaPoolIndices2D, pool_size: int) -> None:
+class _ExtremaPoolIndices2D(nn.Module):
+    def __init__(self: _ExtremaPoolIndices2D, pool_size: int) -> None:
         super().__init__()
         self.pool_size = pool_size
 
-    def forward(self: ExtremaPoolIndices2D, input_: torch.Tensor) -> torch.Tensor:
-        return extrema_pool_indices_2d(input_, self.pool_size)
+    def forward(self: _ExtremaPoolIndices2D, input_: torch.Tensor) -> torch.Tensor:
+        return _extrema_pool_indices_2d(input_, self.pool_size)
 
 
-class FNN(nn.Module):
-    def __init__(self: FNN, num_classes: int, sample_data: torch.Tensor) -> None:
+class _FNN(nn.Module):
+    def __init__(self: _FNN, num_classes: int, sample_data: torch.Tensor) -> None:
         super().__init__()
         self.fc = nn.Linear(sample_data.shape[-1] * sample_data.shape[-2], num_classes)
 
-    def forward(self: FNN, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(self: _FNN, batch_x: torch.Tensor) -> torch.Tensor:
         batch_x = batch_x.view(batch_x.shape[0], -1)
         output: torch.Tensor = self.fc(batch_x)
         return output
 
 
-class Hook:
-    def __init__(self: Hook, module: nn.Module) -> None:
+class _Hook:
+    def __init__(self: _Hook, module: nn.Module) -> None:
         self.hook = module.register_forward_hook(self.hook_fn)  # type: ignore[arg-type]
 
     def hook_fn(
-        self: Hook,
+        self: _Hook,
         _: None,
         input_: torch.Tensor,
         output: torch.Tensor,
@@ -237,25 +239,25 @@ class Hook:
         self.output = output
 
 
-class Identity1D(nn.Module):
-    def __init__(self: Identity1D, _: None) -> None:
+class _Identity1D(nn.Module):
+    def __init__(self: _Identity1D, _: None) -> None:
         super().__init__()
 
-    def forward(self: Identity1D, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: _Identity1D, input_: torch.Tensor) -> torch.Tensor:
         return input_
 
 
-class Identity2D(nn.Module):
-    def __init__(self: Identity2D, _: None) -> None:
+class _Identity2D(nn.Module):
+    def __init__(self: _Identity2D, _: None) -> None:
         super().__init__()
 
-    def forward(self: Identity2D, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: _Identity2D, input_: torch.Tensor) -> torch.Tensor:
         return input_
 
 
-class PhysionetDataset(Dataset):  # type: ignore[type-arg]
+class _PhysionetDataset(Dataset):  # type: ignore[type-arg]
     def __init__(
-        self: PhysionetDataset,
+        self: _PhysionetDataset,
         dataset_name: str,
         train_validation_test: str,
     ) -> None:
@@ -279,34 +281,34 @@ class PhysionetDataset(Dataset):  # type: ignore[type-arg]
             self.signal = signal[8000:]
         self.signal = self.signal.reshape((-1, 1, 1000))
 
-    def __getitem__(self: PhysionetDataset, index: int) -> tuple[torch.Tensor, int]:
+    def __getitem__(self: _PhysionetDataset, index: int) -> tuple[torch.Tensor, int]:
         out = self.signal[index] - self.signal[index].mean()
         out /= out.std()
         return (out, 0)
 
-    def __len__(self: PhysionetDataset) -> int:
+    def __len__(self: _PhysionetDataset) -> int:
         return self.signal.shape[0]
 
 
-class Relu1D(nn.Module):
-    def __init__(self: Relu1D, _: None) -> None:
+class _Relu1D(nn.Module):
+    def __init__(self: _Relu1D, _: None) -> None:
         super().__init__()
 
-    def forward(self: Relu1D, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: _Relu1D, input_: torch.Tensor) -> torch.Tensor:
         return functional.relu(input_)
 
 
-class Relu2D(nn.Module):
-    def __init__(self: Relu2D, _: None) -> None:
+class _Relu2D(nn.Module):
+    def __init__(self: _Relu2D, _: None) -> None:
         super().__init__()
 
-    def forward(self: Relu2D, input_: torch.Tensor) -> torch.Tensor:
+    def forward(self: _Relu2D, input_: torch.Tensor) -> torch.Tensor:
         return functional.relu(input_)
 
 
-class SAN1d(nn.Module):
+class _SAN1d(nn.Module):
     def __init__(
-        self: SAN1d,
+        self: _SAN1d,
         kernel_sizes: list[int],
         sparse_activations: list[nn.Module],
     ) -> None:
@@ -319,7 +321,7 @@ class SAN1d(nn.Module):
             ],
         )
 
-    def forward(self: SAN1d, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(self: _SAN1d, batch_x: torch.Tensor) -> torch.Tensor:
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(
             self.sparse_activations,
@@ -340,9 +342,9 @@ class SAN1d(nn.Module):
         return reconstructions_sum
 
 
-class SAN2d(nn.Module):
+class _SAN2d(nn.Module):
     def __init__(
-        self: SAN2d,
+        self: _SAN2d,
         kernel_sizes: list[int],
         sparse_activations: list[nn.Module],
     ) -> None:
@@ -355,7 +357,7 @@ class SAN2d(nn.Module):
             ],
         )
 
-    def forward(self: SAN2d, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(self: _SAN2d, batch_x: torch.Tensor) -> torch.Tensor:
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(
             self.sparse_activations,
@@ -376,7 +378,7 @@ class SAN2d(nn.Module):
         return reconstructions_sum
 
 
-def topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
+def _topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     extrema_primary = torch.zeros_like(input_)
     _, extrema_indices = torch.topk(abs(input_), topk)
     return extrema_primary.scatter(
@@ -386,16 +388,16 @@ def topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     )
 
 
-class TopKAbsolutes1D(nn.Module):
-    def __init__(self: TopKAbsolutes1D, topk: int) -> None:
+class _TopKAbsolutes1D(nn.Module):
+    def __init__(self: _TopKAbsolutes1D, topk: int) -> None:
         super().__init__()
         self.topk = topk
 
-    def forward(self: TopKAbsolutes1D, input_: torch.Tensor) -> torch.Tensor:
-        return topk_absolutes_1d(input_, self.topk)
+    def forward(self: _TopKAbsolutes1D, input_: torch.Tensor) -> torch.Tensor:
+        return _topk_absolutes_1d(input_, self.topk)
 
 
-def topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
+def _topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     x_flattened = input_.view(input_.shape[0], -1)
     extrema_primary = torch.zeros_like(x_flattened)
     _, extrema_indices = torch.topk(abs(x_flattened), topk)
@@ -406,17 +408,17 @@ def topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     ).view(input_.shape)
 
 
-class TopKAbsolutes2D(nn.Module):
-    def __init__(self: TopKAbsolutes2D, topk: int) -> None:
+class _TopKAbsolutes2D(nn.Module):
+    def __init__(self: _TopKAbsolutes2D, topk: int) -> None:
         super().__init__()
         self.topk = topk
 
-    def forward(self: TopKAbsolutes2D, input_: torch.Tensor) -> torch.Tensor:
-        return topk_absolutes_2d(input_, self.topk)
+    def forward(self: _TopKAbsolutes2D, input_: torch.Tensor) -> torch.Tensor:
+        return _topk_absolutes_2d(input_, self.topk)
 
 
-class UCIEpilepsy(Dataset):  # type: ignore[type-arg]
-    def __init__(self: UCIEpilepsy, train_validation_test: str) -> None:
+class _UCIEpilepsy(Dataset):  # type: ignore[type-arg]
+    def __init__(self: _UCIEpilepsy, train_validation_test: str) -> None:
         data_file_path = Path("tmp/data.csv")
         if not data_file_path.is_file():
             with data_file_path.open("wb") as file:
@@ -464,16 +466,16 @@ class UCIEpilepsy(Dataset):  # type: ignore[type-arg]
         self.signal.unsqueeze_(1)
 
     def __getitem__(
-        self: UCIEpilepsy,
+        self: _UCIEpilepsy,
         index: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         return (self.signal[index], self.classes[index])
 
-    def __len__(self: UCIEpilepsy) -> int:
+    def __len__(self: _UCIEpilepsy) -> int:
         return self.classes.shape[0]
 
 
-def calculate_inverse_compression_ratio(
+def _calculate_inverse_compression_ratio(
     num_activations: npt.NDArray[np.float64],
     data: torch.Tensor,
     model: nn.Module,
@@ -487,10 +489,10 @@ def calculate_inverse_compression_ratio(
     )
 
 
-def save_images_1d(  # noqa: PLR0915
+def _save_images_1d(  # noqa: PLR0915
     signal: torch.Tensor,
     dataset_name: str,
-    model: SAN1d,
+    model: _SAN1d,
     sparse_activation_name: str,
     xlim_weight: int,
 ) -> None:
@@ -506,7 +508,7 @@ def save_images_1d(  # noqa: PLR0915
     )
     plt.close()
     hook_handles = [
-        Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
+        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
     ]
     model.eval()
     with torch.no_grad():
@@ -606,10 +608,10 @@ def save_images_1d(  # noqa: PLR0915
         plt.close()
 
 
-def save_images_2d(
+def _save_images_2d(
     image: torch.Tensor,
     dataset_name: str,
-    model: SAN2d,
+    model: _SAN2d,
     sparse_activation_name: str,
 ) -> None:
     model = model.to("cpu")
@@ -622,7 +624,7 @@ def save_images_2d(
     )
     plt.close()
     hook_handles = [
-        Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
+        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
     ]
     model.eval()
     with torch.no_grad():
@@ -712,7 +714,7 @@ def save_images_2d(
         plt.close()
 
 
-def train_model_supervised(
+def _train_model_supervised(
     dataloader_train: DataLoader[int],
     model_supervised: nn.Module,
     model_unsupervised: nn.Module,
@@ -731,7 +733,7 @@ def train_model_supervised(
         optimizer.step()
 
 
-def train_model_unsupervised(
+def _train_model_unsupervised(
     dataloader_train: DataLoader[int],
     model: nn.Module,
     optimizer: optim.Adam,
@@ -747,9 +749,9 @@ def train_model_unsupervised(
         optimizer.step()
 
 
-def validate_or_test_model_supervised(
+def _validate_or_test_model_supervised(
     dataloader: DataLoader[int],
-    hook_handles: list[Hook],
+    hook_handles: list[_Hook],
     model_supervised: nn.Module,
     model_unsupervised: nn.Module,
 ) -> tuple:  # type: ignore[type-arg]
@@ -776,7 +778,7 @@ def validate_or_test_model_supervised(
             outputs = model_supervised(data_reconstructed)
             prediction = outputs.argmax(dim=1)
             num_predictions_correct += sum(prediction == targets).item()
-    inverse_compression_ratio = calculate_inverse_compression_ratio(
+    inverse_compression_ratio = _calculate_inverse_compression_ratio(
         num_activations,
         data,
         model_unsupervised,
@@ -799,9 +801,9 @@ def validate_or_test_model_supervised(
     )
 
 
-def validate_or_test_model_unsupervised(
+def _validate_or_test_model_unsupervised(
     dataloader: DataLoader[int],
-    hook_handles: list[Hook],
+    hook_handles: list[_Hook],
     model: nn.Module,
 ) -> tuple:  # type: ignore[type-arg]
     device = next(model.parameters()).device
@@ -822,7 +824,7 @@ def validate_or_test_model_unsupervised(
                 activations_stack,
                 as_tuple=False,
             ).shape[0]
-    inverse_compression_ratio = calculate_inverse_compression_ratio(
+    inverse_compression_ratio = _calculate_inverse_compression_ratio(
         num_activations,
         data,
         model,
@@ -840,7 +842,7 @@ def validate_or_test_model_unsupervised(
     return (flithos, inverse_compression_ratio, reconstruction_loss)
 
 
-def main() -> None:  # noqa: C901,PLR0912,PLR0915
+def _main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
@@ -899,11 +901,11 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     ]
     xlim_weights = [74, 113, 10, 71, 45, 20, 9, 229, 37, 105, 15, 232, 40, 70, 173]
     sparse_activations = [
-        Identity1D,
-        Relu1D,
-        TopKAbsolutes1D,
-        ExtremaPoolIndices1D,
-        Extrema1D,
+        _Identity1D,
+        _Relu1D,
+        _TopKAbsolutes1D,
+        _ExtremaPoolIndices1D,
+        _Extrema1D,
     ]
     kernel_sizes_list = [
         [kernel_size_physionet] for kernel_size_physionet in kernel_size_physionet_range
@@ -936,15 +938,15 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         zip(dataset_names, xlim_weights, strict=True),
     ):
         results_physionet_row = []
-        physionet_dataset_train = PhysionetDataset(dataset_name, "train")
+        physionet_dataset_train = _PhysionetDataset(dataset_name, "train")
         dataloader_train = DataLoader(
             dataset=physionet_dataset_train,
             batch_size=batch_size,
             shuffle=True,
         )
-        physionet_dataset_validation = PhysionetDataset(dataset_name, "validation")
+        physionet_dataset_validation = _PhysionetDataset(dataset_name, "validation")
         dataloader_validation = DataLoader(dataset=physionet_dataset_validation)
-        physionet_dataset_test = PhysionetDataset(dataset_name, "test")
+        physionet_dataset_test = _PhysionetDataset(dataset_name, "test")
         dataloader_test = DataLoader(dataset=physionet_dataset_test)
         fig, ax_main = plt.subplots(constrained_layout=True, figsize=(6, 6))
         for sparse_activation_index, (
@@ -962,12 +964,12 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             flithos_mean_best = float("inf")
             for kernel_size_list_index, kernel_sizes in enumerate(kernel_sizes_list):
                 flithos_epoch_mean_best = float("inf")
-                if sparse_activation == TopKAbsolutes1D:
+                if sparse_activation == _TopKAbsolutes1D:
                     sparsity_densities = [
                         int(physionet_dataset_test.signal.shape[-1] / kernel_size)
                         for kernel_size in kernel_sizes
                     ]
-                elif sparse_activation == Extrema1D:
+                elif sparse_activation == _Extrema1D:
                     sparsity_densities = np.clip(
                         [kernel_size - 3 for kernel_size in kernel_sizes],
                         1,
@@ -979,15 +981,15 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     sparse_activation(sparsity_density)
                     for sparsity_density in sparsity_densities
                 ]
-                san1d_model = SAN1d(kernel_sizes, sparse_activation_list).to(device)
+                san1d_model = _SAN1d(kernel_sizes, sparse_activation_list).to(device)
                 optimizer = optim.Adam(san1d_model.parameters(), lr=lr)
                 hook_handles = [
-                    Hook(sparse_activation_)
+                    _Hook(sparse_activation_)
                     for sparse_activation_ in san1d_model.sparse_activations
                 ]
                 for epoch in range(num_epochs_physionet):
-                    train_model_unsupervised(dataloader_train, san1d_model, optimizer)
-                    flithos_epoch, *_ = validate_or_test_model_unsupervised(
+                    _train_model_unsupervised(dataloader_train, san1d_model, optimizer)
+                    flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                         dataloader_validation,
                         hook_handles,
                         san1d_model,
@@ -1005,7 +1007,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     flithos_epoch_best,
                     inverse_compression_ratio_epoch_best,
                     reconstruction_loss_epoch_best,
-                ) = validate_or_test_model_unsupervised(
+                ) = _validate_or_test_model_unsupervised(
                     dataloader_test,
                     hook_handles,
                     model_epoch_best,
@@ -1061,7 +1063,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     flithos_mean_best,
                 ],
             )
-            save_images_1d(
+            _save_images_1d(
                 physionet_dataset_test[0][0][0],
                 dataset_name,
                 model_best,
@@ -1311,19 +1313,19 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.close()
     batch_size = 64
     lr = 0.01
-    uci_epilepsy_train = UCIEpilepsy("train")
+    uci_epilepsy_train = _UCIEpilepsy("train")
     dataloader_train = DataLoader(
         dataset=uci_epilepsy_train,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_train_range),
     )
-    uci_epilepsy_validation = UCIEpilepsy("validation")
+    uci_epilepsy_validation = _UCIEpilepsy("validation")
     dataloader_validation = DataLoader(
         dataset=uci_epilepsy_validation,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_validation_range),
     )
-    uci_epilepsy_test = UCIEpilepsy("test")
+    uci_epilepsy_test = _UCIEpilepsy("test")
     dataloader_test = DataLoader(
         dataset=uci_epilepsy_test,
         batch_size=batch_size,
@@ -1331,7 +1333,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     )
     accuracy_best = 0.0
     num_classes = len(uci_epilepsy_train.classes.unique())  # type: ignore[no-untyped-call]
-    model_supervised = CNN(num_classes).to(device)
+    model_supervised = _CNN(num_classes).to(device)
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(num_epochs):
         model_supervised.train()
@@ -1370,11 +1372,11 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     accuracy_uci_epilepsy = 100 * num_predictions_correct / num_predictions
     dataset_name = "UCI-epilepsy"
     sparse_activations = [
-        Identity1D,
-        Relu1D,
-        TopKAbsolutes1D,
-        ExtremaPoolIndices1D,
-        Extrema1D,
+        _Identity1D,
+        _Relu1D,
+        _TopKAbsolutes1D,
+        _ExtremaPoolIndices1D,
+        _Extrema1D,
     ]
     kernel_sizes_list = [
         2 * [kernel_size_uci_epilepsy]
@@ -1383,18 +1385,18 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     batch_size = 64
     lr = 0.01
     results_supervised_rows_list = []
-    uci_epilepsy_train = UCIEpilepsy("train")
+    uci_epilepsy_train = _UCIEpilepsy("train")
     dataloader_train = DataLoader(
         dataset=uci_epilepsy_train,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(uci_epilepsy_train_range),
     )
-    uci_epilepsy_validation = UCIEpilepsy("validation")
+    uci_epilepsy_validation = _UCIEpilepsy("validation")
     dataloader_validation = DataLoader(
         dataset=uci_epilepsy_validation,
         sampler=SubsetRandomSampler(uci_epilepsy_validation_range),
     )
-    uci_epilepsy_test = UCIEpilepsy("test")
+    uci_epilepsy_test = _UCIEpilepsy("test")
     dataloader_test = DataLoader(
         dataset=uci_epilepsy_test,
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
@@ -1406,12 +1408,12 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             sparse_activation_names,
             strict=True,
         ):
-            if sparse_activation == TopKAbsolutes1D:
+            if sparse_activation == _TopKAbsolutes1D:
                 sparsity_densities = [
                     int(uci_epilepsy_test.signal.shape[-1] / kernel_size)
                     for kernel_size in kernel_sizes
                 ]
-            elif sparse_activation == Extrema1D:
+            elif sparse_activation == _Extrema1D:
                 sparsity_densities = np.clip(
                     [kernel_size - 2 for kernel_size in kernel_sizes],
                     1,
@@ -1423,16 +1425,16 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 sparse_activation(sparsity_density)
                 for sparsity_density in sparsity_densities
             ]
-            san1d_model = SAN1d(kernel_sizes, sparse_activation_list).to(device)
+            san1d_model = _SAN1d(kernel_sizes, sparse_activation_list).to(device)
             optimizer = optim.Adam(san1d_model.parameters(), lr=lr)
             hook_handles = [
-                Hook(sparse_activation_)
+                _Hook(sparse_activation_)
                 for sparse_activation_ in san1d_model.sparse_activations
             ]
             flithos_epoch_mean_best = float("inf")
             for _ in range(num_epochs):
-                train_model_unsupervised(dataloader_train, san1d_model, optimizer)
-                flithos_epoch, *_ = validate_or_test_model_unsupervised(
+                _train_model_unsupervised(dataloader_train, san1d_model, optimizer)
+                flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                     dataloader_validation,
                     hook_handles,
                     san1d_model,
@@ -1443,16 +1445,16 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             for weights_kernel in san1d_model.weights_kernels:
                 weights_kernel.requires_grad_(False)  # noqa: FBT003
             flithos_epoch_mean_best = float("inf")
-            model_supervised = CNN(num_classes).to(device).to(device)
+            model_supervised = _CNN(num_classes).to(device).to(device)
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
             for _ in range(num_epochs):
-                train_model_supervised(
+                _train_model_supervised(
                     dataloader_train,
                     model_supervised,
                     model_epoch_best,
                     optimizer,
                 )
-                flithos_epoch, *_ = validate_or_test_model_unsupervised(
+                flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                     dataloader_validation,
                     hook_handles,
                     model_epoch_best,
@@ -1462,7 +1464,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     model_best = model_epoch_best
                     flithos_epoch_mean_best = flithos_epoch.mean()
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = (
-                validate_or_test_model_supervised(
+                _validate_or_test_model_supervised(
                     dataloader_test,
                     hook_handles,
                     model_supervised_best,
@@ -1478,7 +1480,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 ],
             )
             if kernel_sizes[0] == 10:  # noqa: PLR2004
-                save_images_1d(
+                _save_images_1d(
                     uci_epilepsy_test[0][0][0],
                     dataset_name,
                     model_best,
@@ -1560,7 +1562,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             sampler=SubsetRandomSampler(mnist_fashionmnist_test_range),
         )
         accuracy_best = 0
-        fnn_model_supervised = FNN(
+        fnn_model_supervised = _FNN(
             len(dataset_train_validation.classes),
             dataset_train_validation.data[0],
         ).to(device)
@@ -1603,11 +1605,11 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             100 * num_predictions_correct / num_predictions,
         )
         sparse_activations = [
-            Identity2D,
-            Relu2D,
-            TopKAbsolutes2D,
-            ExtremaPoolIndices2D,
-            Extrema2D,
+            _Identity2D,
+            _Relu2D,
+            _TopKAbsolutes2D,
+            _ExtremaPoolIndices2D,
+            _Extrema2D,
         ]
         kernel_sizes_list = [
             2 * [kernel_size_mnist_fashionmnist]
@@ -1643,12 +1645,12 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 sparse_activation_names,
                 strict=True,
             ):
-                if sparse_activation == TopKAbsolutes2D:
+                if sparse_activation == _TopKAbsolutes2D:
                     sparsity_densities = [
                         int(dataset_test.data.shape[-1] / kernel_size) ** 2
                         for kernel_size in kernel_sizes
                     ]
-                elif sparse_activation == Extrema2D:
+                elif sparse_activation == _Extrema2D:
                     sparsity_densities = np.clip(
                         [kernel_size - 2 for kernel_size in kernel_sizes],
                         1,
@@ -1664,16 +1666,16 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     sparse_activation(sparsity_density)
                     for sparsity_density in sparsity_densities
                 ]
-                san2d_model = SAN2d(kernel_sizes, sparse_activation_list).to(device)
+                san2d_model = _SAN2d(kernel_sizes, sparse_activation_list).to(device)
                 optimizer = optim.Adam(san2d_model.parameters(), lr=lr)
                 hook_handles = [
-                    Hook(sparse_activation_)
+                    _Hook(sparse_activation_)
                     for sparse_activation_ in san2d_model.sparse_activations
                 ]
                 flithos_epoch_mean_best = float("inf")
                 for _ in range(num_epochs):
-                    train_model_unsupervised(dataloader_train, san2d_model, optimizer)
-                    flithos_epoch, *_ = validate_or_test_model_unsupervised(
+                    _train_model_unsupervised(dataloader_train, san2d_model, optimizer)
+                    flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                         dataloader_validation,
                         hook_handles,
                         san2d_model,
@@ -1684,19 +1686,19 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 for weights_kernel in san2d_model.weights_kernels:
                     weights_kernel.requires_grad_(False)  # noqa: FBT003
                 flithos_epoch_mean_best = float("inf")
-                fnn_model_supervised = FNN(
+                fnn_model_supervised = _FNN(
                     len(dataset_train_validation.classes),
                     dataset_train_validation.data[0],
                 ).to(device)
                 optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
                 for _ in range(num_epochs):
-                    train_model_supervised(
+                    _train_model_supervised(
                         dataloader_train,
                         fnn_model_supervised,
                         san2d_model_epoch_best,
                         optimizer,
                     )
-                    flithos_epoch, *_ = validate_or_test_model_unsupervised(
+                    flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                         dataloader_validation,
                         hook_handles,
                         san2d_model_epoch_best,
@@ -1706,7 +1708,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                         san2d_model_best = san2d_model_epoch_best
                         flithos_epoch_mean_best = flithos_epoch.mean()
                 flithos, inverse_compression_ratio, reconstruction_loss, accuracy = (
-                    validate_or_test_model_supervised(
+                    _validate_or_test_model_supervised(
                         dataloader_test,
                         hook_handles,
                         fnn_model_supervised_best,
@@ -1723,7 +1725,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     ],
                 )
                 if kernel_sizes[0] == 4:  # noqa: PLR2004
-                    save_images_2d(
+                    _save_images_2d(
                         dataset_test[0][0][0],
                         dataset_name,
                         san2d_model_best,
@@ -1777,4 +1779,4 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
 
 
 if __name__ == "__main__":
-    main()
+    _main()
