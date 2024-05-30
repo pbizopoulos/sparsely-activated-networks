@@ -846,7 +846,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
-    if os.getenv("STAGING"):
+    if os.getenv("STAGE"):
         num_epochs_physionet = 30
         num_epochs = 5
         kernel_size_physionet_range = range(1, 250)
