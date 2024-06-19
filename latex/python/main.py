@@ -123,6 +123,11 @@ class _Identity2D(nn.Module):
 
 
 class _PhysionetDataset(Dataset):  # type: ignore[type-arg]
+    def __getitem__(self: _PhysionetDataset, index: int) -> tuple[torch.Tensor, int]:
+        out = self.signal[index] - self.signal[index].mean()
+        out /= out.std()
+        return (out, 0)
+
     def __init__(
         self: _PhysionetDataset,
         dataset_name: str,
@@ -147,11 +152,6 @@ class _PhysionetDataset(Dataset):  # type: ignore[type-arg]
         elif train_validation_test == "test":
             self.signal = signal[8000:]
         self.signal = self.signal.reshape((-1, 1, 1000))
-
-    def __getitem__(self: _PhysionetDataset, index: int) -> tuple[torch.Tensor, int]:
-        out = self.signal[index] - self.signal[index].mean()
-        out /= out.std()
-        return (out, 0)
 
     def __len__(self: _PhysionetDataset) -> int:
         return self.signal.shape[0]
@@ -264,6 +264,12 @@ class _TopKAbsolutes2D(nn.Module):
 
 
 class _UCIEpilepsy(Dataset):  # type: ignore[type-arg]
+    def __getitem__(
+        self: _UCIEpilepsy,
+        index: int,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        return (self.signal[index], self.classes[index])
+
     def __init__(self: _UCIEpilepsy, train_validation_test: str) -> None:
         data_file_path = Path("tmp/data.csv")
         if not data_file_path.is_file():
@@ -310,12 +316,6 @@ class _UCIEpilepsy(Dataset):  # type: ignore[type-arg]
                 torch.tensor(classes_all[last_validation_index:].to_numpy()) - 1
             )
         self.signal.unsqueeze_(1)
-
-    def __getitem__(
-        self: _UCIEpilepsy,
-        index: int,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        return (self.signal[index], self.classes[index])
 
     def __len__(self: _UCIEpilepsy) -> int:
         return self.classes.shape[0]
@@ -466,380 +466,6 @@ def _extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Te
         extrema_indices[..., 0, 0],
         x_flattened.gather(-1, extrema_indices[..., 0, 0]),
     ).view(input_.shape)
-
-
-def _save_images_1d(  # noqa: PLR0915
-    signal: torch.Tensor,
-    dataset_name: str,
-    model: _SAN1d,
-    sparse_activation_name: str,
-    xlim_weight: int,
-) -> None:
-    model = model.to("cpu")
-    _, ax = plt.subplots()
-    ax.tick_params(labelbottom=False, labelleft=False)
-    plt.grid(visible=True)
-    plt.autoscale(enable=True, axis="x", tight=True)
-    plt.plot(signal.cpu().detach().numpy())
-    plt.ylim([signal.min(), signal.max()])
-    plt.savefig(
-        f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",
-    )
-    plt.close()
-    hook_handles = [
-        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
-    ]
-    model.eval()
-    with torch.no_grad():
-        reconstructed = model(signal.unsqueeze(0).unsqueeze(0))
-        activations_ = [hook_handle.output for hook_handle in hook_handles]
-        activations_stack = torch.stack(activations_, 1)
-        for weights_index, (weights_kernel, activations) in enumerate(
-            zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
-        ):
-            _, ax = plt.subplots(figsize=(2, 2.2))
-            ax.tick_params(labelbottom=False, labelleft=False)
-            ax.xaxis.get_offset_text().set_visible(False)
-            ax.yaxis.get_offset_text().set_visible(False)
-            plt.grid(visible=True)
-            plt.autoscale(enable=True, axis="x", tight=True)
-            plt.plot(weights_kernel.cpu().detach().numpy(), "r")
-            plt.xlim([0, xlim_weight])
-            if dataset_name == "apnea-ecg":
-                plt.ylabel(sparse_activation_name, fontsize=20)
-            if sparse_activation_name == "relu":
-                plt.title(dataset_name, fontsize=20)
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
-            )
-            plt.close()
-            similarity = functional.conv1d(
-                signal.unsqueeze(0).unsqueeze(0),
-                weights_kernel.unsqueeze(0).unsqueeze(0),
-                padding="same",
-            )[0, 0]
-            _, ax = plt.subplots()
-            ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(visible=True)
-            plt.autoscale(enable=True, axis="x", tight=True)
-            plt.plot(similarity.cpu().detach().numpy(), "g")
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
-            )
-            plt.close()
-            _, ax = plt.subplots()
-            ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(visible=True)
-            plt.autoscale(enable=True, axis="x", tight=True)
-            peaks = torch.nonzero(activations, as_tuple=False)[:, 0]
-            plt.plot(similarity.cpu().detach().numpy(), "g", alpha=0.5)
-            if peaks.shape[0] != 0:
-                plt.stem(
-                    peaks.cpu().detach().numpy(),
-                    activations[peaks.cpu().detach().numpy()].cpu().detach().numpy(),
-                    linefmt="c",
-                    basefmt=" ",
-                )
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}.png",
-            )
-            plt.close()
-            reconstruction_ = functional.conv1d(
-                activations.unsqueeze(0).unsqueeze(0),
-                weights_kernel.unsqueeze(0).unsqueeze(0),
-                padding="same",
-            )[0, 0]
-            _, ax = plt.subplots()
-            ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(visible=True)
-            plt.autoscale(enable=True, axis="x", tight=True)
-            reconstruction = reconstruction_.cpu().detach().numpy()
-            lefts = peaks - weights_kernel.shape[0] / 2
-            rights = peaks + weights_kernel.shape[0] / 2
-            if weights_kernel.shape[0] % 2 == 1:
-                rights += 1
-            step = np.zeros_like(reconstruction, dtype=bool)
-            lefts[lefts < 0] = 0
-            rights[rights > reconstruction.shape[0]] = reconstruction.shape[0]
-            for left, right in zip(lefts, rights, strict=True):
-                step[int(left) : int(right)] = True
-            pos_signal = reconstruction.copy()
-            neg_signal = reconstruction.copy()
-            pos_signal[step] = np.nan
-            neg_signal[~step] = np.nan
-            plt.plot(pos_signal)
-            plt.plot(neg_signal, color="r")
-            plt.ylim([signal.min(), signal.max()])
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
-            )
-            plt.close()
-        _, ax = plt.subplots()
-        ax.tick_params(labelbottom=False, labelleft=False)
-        plt.grid(visible=True)
-        plt.autoscale(enable=True, axis="x", tight=True)
-        plt.plot(signal.cpu().detach().numpy(), alpha=0.5)
-        plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
-        plt.ylim([signal.min(), signal.max()])
-        plt.savefig(
-            f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",
-        )
-        plt.close()
-
-
-def _save_images_2d(
-    image: torch.Tensor,
-    dataset_name: str,
-    model: _SAN2d,
-    sparse_activation_name: str,
-) -> None:
-    model = model.to("cpu")
-    plt.figure()
-    plt.xticks([])
-    plt.yticks([])
-    plt.imshow(image.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
-    plt.savefig(
-        f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png",
-    )
-    plt.close()
-    hook_handles = [
-        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
-    ]
-    model.eval()
-    with torch.no_grad():
-        reconstructed = model(image.unsqueeze(0).unsqueeze(0))
-        activations_ = [hook_handle.output for hook_handle in hook_handles]
-        activations_stack = torch.stack(activations_, 1)
-        for weights_index, (weights_kernel, activations) in enumerate(
-            zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
-        ):
-            plt.figure(figsize=(4.8 / 2, 4.8 / 2))
-            plt.imshow(
-                weights_kernel.flip(0).flip(1).cpu().detach().numpy(),
-                cmap="twilight",
-                vmin=-2 * abs(weights_kernel).max(),
-                vmax=2 * abs(weights_kernel).max(),
-            )
-            plt.xticks([])
-            plt.yticks([])
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
-            )
-            plt.close()
-            similarity = functional.conv2d(
-                image.unsqueeze(0).unsqueeze(0),
-                weights_kernel.unsqueeze(0).unsqueeze(0),
-                padding="same",
-            )[0, 0]
-            vmax = 2 * abs(similarity).max().item()
-            plt.figure()
-            plt.xticks([])
-            plt.yticks([])
-            plt.imshow(
-                similarity.cpu().detach().numpy(),
-                cmap="twilight",
-                vmin=-vmax,
-                vmax=vmax,
-            )
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
-            )
-            plt.close()
-            plt.figure()
-            plt.imshow(
-                activations.cpu().detach().numpy(),
-                cmap="twilight",
-                vmin=-2 * abs(activations).max(),
-                vmax=2 * abs(activations).max(),
-            )
-            plt.xticks([])
-            plt.yticks([])
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}.png",
-            )
-            plt.close()
-            reconstruction = functional.conv2d(
-                activations.unsqueeze(0).unsqueeze(0),
-                weights_kernel.unsqueeze(0).unsqueeze(0),
-                padding="same",
-            )[0, 0]
-            vmax = 2 * abs(reconstruction).max().item()
-            plt.figure()
-            plt.imshow(
-                reconstruction.cpu().detach().numpy(),
-                cmap="twilight",
-                vmin=-vmax,
-                vmax=vmax,
-            )
-            plt.xticks([])
-            plt.yticks([])
-            plt.savefig(
-                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
-            )
-            plt.close()
-        vmax = 2 * abs(reconstructed).max().item()
-        plt.figure()
-        plt.xticks([])
-        plt.yticks([])
-        plt.imshow(
-            reconstructed[0, 0].cpu().detach().numpy(),
-            cmap="twilight",
-            vmin=-vmax,
-            vmax=vmax,
-        )
-        plt.savefig(
-            f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",
-        )
-        plt.close()
-
-
-def _topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
-    extrema_primary = torch.zeros_like(input_)
-    _, extrema_indices = torch.topk(abs(input_), topk)
-    return extrema_primary.scatter(
-        -1,
-        extrema_indices,
-        input_.gather(-1, extrema_indices),
-    )
-
-
-def _topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
-    x_flattened = input_.view(input_.shape[0], -1)
-    extrema_primary = torch.zeros_like(x_flattened)
-    _, extrema_indices = torch.topk(abs(x_flattened), topk)
-    return extrema_primary.scatter(
-        -1,
-        extrema_indices,
-        x_flattened.gather(-1, extrema_indices),
-    ).view(input_.shape)
-
-
-def _train_model_supervised(
-    dataloader_train: DataLoader[int],
-    model_supervised: nn.Module,
-    model_unsupervised: nn.Module,
-    optimizer: optim.Adam,
-) -> None:
-    device = next(model_supervised.parameters()).device
-    model_supervised.train()
-    for data, targets in dataloader_train:
-        data = data.to(device)  # noqa: PLW2901
-        targets = targets.to(device)  # noqa: PLW2901
-        data_reconstructed = model_unsupervised(data)
-        outputs = model_supervised(data_reconstructed)
-        classification_loss = functional.cross_entropy(outputs, targets)
-        optimizer.zero_grad()
-        classification_loss.backward()  # type: ignore[no-untyped-call]
-        optimizer.step()
-
-
-def _train_model_unsupervised(
-    dataloader_train: DataLoader[int],
-    model: nn.Module,
-    optimizer: optim.Adam,
-) -> None:
-    device = next(model.parameters()).device
-    model.train()
-    for data, _ in dataloader_train:
-        data = data.to(device)  # noqa: PLW2901
-        data_reconstructed = model(data)
-        reconstruction_loss = functional.l1_loss(data, data_reconstructed)
-        optimizer.zero_grad()
-        reconstruction_loss.backward()  # type: ignore[no-untyped-call]
-        optimizer.step()
-
-
-def _validate_or_test_model_supervised(
-    dataloader: DataLoader[int],
-    hook_handles: list[_Hook],
-    model_supervised: nn.Module,
-    model_unsupervised: nn.Module,
-) -> tuple:  # type: ignore[type-arg]
-    device = next(model_supervised.parameters()).device
-    num_predictions_correct = 0
-    num_activations = np.zeros(len(dataloader))
-    reconstruction_loss = np.zeros(len(dataloader))
-    model_supervised.eval()
-    with torch.no_grad():
-        for index, (data, targets) in enumerate(dataloader):
-            data = data.to(device)  # noqa: PLW2901
-            targets = targets.to(device)  # noqa: PLW2901
-            data_reconstructed = model_unsupervised(data)
-            activations_ = [hook_handle.output for hook_handle in hook_handles]
-            activations_stack = torch.stack(activations_, 1)
-            reconstruction_loss[index] = functional.l1_loss(
-                data,
-                data_reconstructed,
-            ) / functional.l1_loss(data, torch.zeros_like(data))
-            num_activations[index] = torch.nonzero(
-                activations_stack,
-                as_tuple=False,
-            ).shape[0]
-            outputs = model_supervised(data_reconstructed)
-            prediction = outputs.argmax(dim=1)
-            num_predictions_correct += sum(prediction == targets).item()
-    inverse_compression_ratio = _calculate_inverse_compression_ratio(
-        num_activations,
-        data,
-        model_unsupervised,
-    )
-    flithos = np.mean(
-        [
-            np.sqrt(icr**2 + rl**2)
-            for icr, rl in zip(
-                inverse_compression_ratio,
-                reconstruction_loss,
-                strict=True,
-            )
-        ],
-    )
-    return (
-        flithos,
-        inverse_compression_ratio,
-        reconstruction_loss,
-        100 * num_predictions_correct / len(dataloader),
-    )
-
-
-def _validate_or_test_model_unsupervised(
-    dataloader: DataLoader[int],
-    hook_handles: list[_Hook],
-    model: nn.Module,
-) -> tuple:  # type: ignore[type-arg]
-    device = next(model.parameters()).device
-    num_activations = np.zeros(len(dataloader))
-    reconstruction_loss = np.zeros(len(dataloader))
-    model.eval()
-    with torch.no_grad():
-        for index, (data, _) in enumerate(dataloader):
-            data = data.to(device)  # noqa: PLW2901
-            data_reconstructed = model(data)
-            activations_ = [hook_handle.output for hook_handle in hook_handles]
-            activations_stack = torch.stack(activations_, 1)
-            reconstruction_loss[index] = functional.l1_loss(
-                data,
-                data_reconstructed,
-            ) / functional.l1_loss(data, torch.zeros_like(data))
-            num_activations[index] = torch.nonzero(
-                activations_stack,
-                as_tuple=False,
-            ).shape[0]
-    inverse_compression_ratio = _calculate_inverse_compression_ratio(
-        num_activations,
-        data,
-        model,
-    )
-    flithos = np.mean(
-        [
-            np.sqrt(icr**2 + rl**2)
-            for icr, rl in zip(
-                inverse_compression_ratio,
-                reconstruction_loss,
-                strict=True,
-            )
-        ],
-    )
-    return (flithos, inverse_compression_ratio, reconstruction_loss)
 
 
 def _main() -> None:  # noqa: C901,PLR0912,PLR0915
@@ -1776,6 +1402,380 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
         },
     )
     keys_values_df.to_csv("tmp/keys-values.csv", index=False, float_format="%.2f")
+
+
+def _save_images_1d(  # noqa: PLR0915
+    signal: torch.Tensor,
+    dataset_name: str,
+    model: _SAN1d,
+    sparse_activation_name: str,
+    xlim_weight: int,
+) -> None:
+    model = model.to("cpu")
+    _, ax = plt.subplots()
+    ax.tick_params(labelbottom=False, labelleft=False)
+    plt.grid(visible=True)
+    plt.autoscale(enable=True, axis="x", tight=True)
+    plt.plot(signal.cpu().detach().numpy())
+    plt.ylim([signal.min(), signal.max()])
+    plt.savefig(
+        f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",
+    )
+    plt.close()
+    hook_handles = [
+        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
+    ]
+    model.eval()
+    with torch.no_grad():
+        reconstructed = model(signal.unsqueeze(0).unsqueeze(0))
+        activations_ = [hook_handle.output for hook_handle in hook_handles]
+        activations_stack = torch.stack(activations_, 1)
+        for weights_index, (weights_kernel, activations) in enumerate(
+            zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
+        ):
+            _, ax = plt.subplots(figsize=(2, 2.2))
+            ax.tick_params(labelbottom=False, labelleft=False)
+            ax.xaxis.get_offset_text().set_visible(False)
+            ax.yaxis.get_offset_text().set_visible(False)
+            plt.grid(visible=True)
+            plt.autoscale(enable=True, axis="x", tight=True)
+            plt.plot(weights_kernel.cpu().detach().numpy(), "r")
+            plt.xlim([0, xlim_weight])
+            if dataset_name == "apnea-ecg":
+                plt.ylabel(sparse_activation_name, fontsize=20)
+            if sparse_activation_name == "relu":
+                plt.title(dataset_name, fontsize=20)
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
+            )
+            plt.close()
+            similarity = functional.conv1d(
+                signal.unsqueeze(0).unsqueeze(0),
+                weights_kernel.unsqueeze(0).unsqueeze(0),
+                padding="same",
+            )[0, 0]
+            _, ax = plt.subplots()
+            ax.tick_params(labelbottom=False, labelleft=False)
+            plt.grid(visible=True)
+            plt.autoscale(enable=True, axis="x", tight=True)
+            plt.plot(similarity.cpu().detach().numpy(), "g")
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
+            )
+            plt.close()
+            _, ax = plt.subplots()
+            ax.tick_params(labelbottom=False, labelleft=False)
+            plt.grid(visible=True)
+            plt.autoscale(enable=True, axis="x", tight=True)
+            peaks = torch.nonzero(activations, as_tuple=False)[:, 0]
+            plt.plot(similarity.cpu().detach().numpy(), "g", alpha=0.5)
+            if peaks.shape[0] != 0:
+                plt.stem(
+                    peaks.cpu().detach().numpy(),
+                    activations[peaks.cpu().detach().numpy()].cpu().detach().numpy(),
+                    linefmt="c",
+                    basefmt=" ",
+                )
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}.png",
+            )
+            plt.close()
+            reconstruction_ = functional.conv1d(
+                activations.unsqueeze(0).unsqueeze(0),
+                weights_kernel.unsqueeze(0).unsqueeze(0),
+                padding="same",
+            )[0, 0]
+            _, ax = plt.subplots()
+            ax.tick_params(labelbottom=False, labelleft=False)
+            plt.grid(visible=True)
+            plt.autoscale(enable=True, axis="x", tight=True)
+            reconstruction = reconstruction_.cpu().detach().numpy()
+            lefts = peaks - weights_kernel.shape[0] / 2
+            rights = peaks + weights_kernel.shape[0] / 2
+            if weights_kernel.shape[0] % 2 == 1:
+                rights += 1
+            step = np.zeros_like(reconstruction, dtype=bool)
+            lefts[lefts < 0] = 0
+            rights[rights > reconstruction.shape[0]] = reconstruction.shape[0]
+            for left, right in zip(lefts, rights, strict=True):
+                step[int(left) : int(right)] = True
+            pos_signal = reconstruction.copy()
+            neg_signal = reconstruction.copy()
+            pos_signal[step] = np.nan
+            neg_signal[~step] = np.nan
+            plt.plot(pos_signal)
+            plt.plot(neg_signal, color="r")
+            plt.ylim([signal.min(), signal.max()])
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
+            )
+            plt.close()
+        _, ax = plt.subplots()
+        ax.tick_params(labelbottom=False, labelleft=False)
+        plt.grid(visible=True)
+        plt.autoscale(enable=True, axis="x", tight=True)
+        plt.plot(signal.cpu().detach().numpy(), alpha=0.5)
+        plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
+        plt.ylim([signal.min(), signal.max()])
+        plt.savefig(
+            f"tmp/{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",
+        )
+        plt.close()
+
+
+def _save_images_2d(
+    image: torch.Tensor,
+    dataset_name: str,
+    model: _SAN2d,
+    sparse_activation_name: str,
+) -> None:
+    model = model.to("cpu")
+    plt.figure()
+    plt.xticks([])
+    plt.yticks([])
+    plt.imshow(image.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
+    plt.savefig(
+        f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png",
+    )
+    plt.close()
+    hook_handles = [
+        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
+    ]
+    model.eval()
+    with torch.no_grad():
+        reconstructed = model(image.unsqueeze(0).unsqueeze(0))
+        activations_ = [hook_handle.output for hook_handle in hook_handles]
+        activations_stack = torch.stack(activations_, 1)
+        for weights_index, (weights_kernel, activations) in enumerate(
+            zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
+        ):
+            plt.figure(figsize=(4.8 / 2, 4.8 / 2))
+            plt.imshow(
+                weights_kernel.flip(0).flip(1).cpu().detach().numpy(),
+                cmap="twilight",
+                vmin=-2 * abs(weights_kernel).max(),
+                vmax=2 * abs(weights_kernel).max(),
+            )
+            plt.xticks([])
+            plt.yticks([])
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}.png",
+            )
+            plt.close()
+            similarity = functional.conv2d(
+                image.unsqueeze(0).unsqueeze(0),
+                weights_kernel.unsqueeze(0).unsqueeze(0),
+                padding="same",
+            )[0, 0]
+            vmax = 2 * abs(similarity).max().item()
+            plt.figure()
+            plt.xticks([])
+            plt.yticks([])
+            plt.imshow(
+                similarity.cpu().detach().numpy(),
+                cmap="twilight",
+                vmin=-vmax,
+                vmax=vmax,
+            )
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",
+            )
+            plt.close()
+            plt.figure()
+            plt.imshow(
+                activations.cpu().detach().numpy(),
+                cmap="twilight",
+                vmin=-2 * abs(activations).max(),
+                vmax=2 * abs(activations).max(),
+            )
+            plt.xticks([])
+            plt.yticks([])
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}.png",
+            )
+            plt.close()
+            reconstruction = functional.conv2d(
+                activations.unsqueeze(0).unsqueeze(0),
+                weights_kernel.unsqueeze(0).unsqueeze(0),
+                padding="same",
+            )[0, 0]
+            vmax = 2 * abs(reconstruction).max().item()
+            plt.figure()
+            plt.imshow(
+                reconstruction.cpu().detach().numpy(),
+                cmap="twilight",
+                vmin=-vmax,
+                vmax=vmax,
+            )
+            plt.xticks([])
+            plt.yticks([])
+            plt.savefig(
+                f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",
+            )
+            plt.close()
+        vmax = 2 * abs(reconstructed).max().item()
+        plt.figure()
+        plt.xticks([])
+        plt.yticks([])
+        plt.imshow(
+            reconstructed[0, 0].cpu().detach().numpy(),
+            cmap="twilight",
+            vmin=-vmax,
+            vmax=vmax,
+        )
+        plt.savefig(
+            f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",
+        )
+        plt.close()
+
+
+def _topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
+    extrema_primary = torch.zeros_like(input_)
+    _, extrema_indices = torch.topk(abs(input_), topk)
+    return extrema_primary.scatter(
+        -1,
+        extrema_indices,
+        input_.gather(-1, extrema_indices),
+    )
+
+
+def _topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
+    x_flattened = input_.view(input_.shape[0], -1)
+    extrema_primary = torch.zeros_like(x_flattened)
+    _, extrema_indices = torch.topk(abs(x_flattened), topk)
+    return extrema_primary.scatter(
+        -1,
+        extrema_indices,
+        x_flattened.gather(-1, extrema_indices),
+    ).view(input_.shape)
+
+
+def _train_model_supervised(
+    dataloader_train: DataLoader[int],
+    model_supervised: nn.Module,
+    model_unsupervised: nn.Module,
+    optimizer: optim.Adam,
+) -> None:
+    device = next(model_supervised.parameters()).device
+    model_supervised.train()
+    for data, targets in dataloader_train:
+        data = data.to(device)  # noqa: PLW2901
+        targets = targets.to(device)  # noqa: PLW2901
+        data_reconstructed = model_unsupervised(data)
+        outputs = model_supervised(data_reconstructed)
+        classification_loss = functional.cross_entropy(outputs, targets)
+        optimizer.zero_grad()
+        classification_loss.backward()  # type: ignore[no-untyped-call]
+        optimizer.step()
+
+
+def _train_model_unsupervised(
+    dataloader_train: DataLoader[int],
+    model: nn.Module,
+    optimizer: optim.Adam,
+) -> None:
+    device = next(model.parameters()).device
+    model.train()
+    for data, _ in dataloader_train:
+        data = data.to(device)  # noqa: PLW2901
+        data_reconstructed = model(data)
+        reconstruction_loss = functional.l1_loss(data, data_reconstructed)
+        optimizer.zero_grad()
+        reconstruction_loss.backward()  # type: ignore[no-untyped-call]
+        optimizer.step()
+
+
+def _validate_or_test_model_supervised(
+    dataloader: DataLoader[int],
+    hook_handles: list[_Hook],
+    model_supervised: nn.Module,
+    model_unsupervised: nn.Module,
+) -> tuple:  # type: ignore[type-arg]
+    device = next(model_supervised.parameters()).device
+    num_predictions_correct = 0
+    num_activations = np.zeros(len(dataloader))
+    reconstruction_loss = np.zeros(len(dataloader))
+    model_supervised.eval()
+    with torch.no_grad():
+        for index, (data, targets) in enumerate(dataloader):
+            data = data.to(device)  # noqa: PLW2901
+            targets = targets.to(device)  # noqa: PLW2901
+            data_reconstructed = model_unsupervised(data)
+            activations_ = [hook_handle.output for hook_handle in hook_handles]
+            activations_stack = torch.stack(activations_, 1)
+            reconstruction_loss[index] = functional.l1_loss(
+                data,
+                data_reconstructed,
+            ) / functional.l1_loss(data, torch.zeros_like(data))
+            num_activations[index] = torch.nonzero(
+                activations_stack,
+                as_tuple=False,
+            ).shape[0]
+            outputs = model_supervised(data_reconstructed)
+            prediction = outputs.argmax(dim=1)
+            num_predictions_correct += sum(prediction == targets).item()
+    inverse_compression_ratio = _calculate_inverse_compression_ratio(
+        num_activations,
+        data,
+        model_unsupervised,
+    )
+    flithos = np.mean(
+        [
+            np.sqrt(icr**2 + rl**2)
+            for icr, rl in zip(
+                inverse_compression_ratio,
+                reconstruction_loss,
+                strict=True,
+            )
+        ],
+    )
+    return (
+        flithos,
+        inverse_compression_ratio,
+        reconstruction_loss,
+        100 * num_predictions_correct / len(dataloader),
+    )
+
+
+def _validate_or_test_model_unsupervised(
+    dataloader: DataLoader[int],
+    hook_handles: list[_Hook],
+    model: nn.Module,
+) -> tuple:  # type: ignore[type-arg]
+    device = next(model.parameters()).device
+    num_activations = np.zeros(len(dataloader))
+    reconstruction_loss = np.zeros(len(dataloader))
+    model.eval()
+    with torch.no_grad():
+        for index, (data, _) in enumerate(dataloader):
+            data = data.to(device)  # noqa: PLW2901
+            data_reconstructed = model(data)
+            activations_ = [hook_handle.output for hook_handle in hook_handles]
+            activations_stack = torch.stack(activations_, 1)
+            reconstruction_loss[index] = functional.l1_loss(
+                data,
+                data_reconstructed,
+            ) / functional.l1_loss(data, torch.zeros_like(data))
+            num_activations[index] = torch.nonzero(
+                activations_stack,
+                as_tuple=False,
+            ).shape[0]
+    inverse_compression_ratio = _calculate_inverse_compression_ratio(
+        num_activations,
+        data,
+        model,
+    )
+    flithos = np.mean(
+        [
+            np.sqrt(icr**2 + rl**2)
+            for icr, rl in zip(
+                inverse_compression_ratio,
+                reconstruction_loss,
+                strict=True,
+            )
+        ],
+    )
+    return (flithos, inverse_compression_ratio, reconstruction_loss)
 
 
 if __name__ == "__main__":
