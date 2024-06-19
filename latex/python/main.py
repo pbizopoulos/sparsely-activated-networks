@@ -45,43 +45,6 @@ class _CNN(nn.Module):
         return output
 
 
-def _extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Tensor:
-    extrema_primary = torch.zeros_like(input_)
-    dx = input_[:, :, 1:] - input_[:, :, :-1]
-    dx_padright_greater = functional.pad(dx, [0, 1]) > 0
-    dx_padleft_less = functional.pad(dx, [1, 0]) <= 0
-    sign = (1 - torch.sign(input_)).bool()
-    valleys = dx_padright_greater & dx_padleft_less & sign
-    peaks = ~dx_padright_greater & ~dx_padleft_less & ~sign
-    extrema = peaks | valleys
-    extrema.squeeze_(1)
-    for index, (x_, e_) in enumerate(zip(input_, extrema, strict=True)):
-        extrema_indices = torch.nonzero(e_, as_tuple=False)
-        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
-        extrema_indices_sorted = extrema_indices[extrema_indices_indices][:, 0]
-        extrema_is_secondary = torch.zeros_like(
-            extrema_indices_indices,
-            dtype=torch.bool,
-        )
-        for index_, extrema_index in enumerate(extrema_indices_sorted):
-            if not extrema_is_secondary[index_]:
-                extrema_indices_r = (
-                    extrema_indices_sorted >= extrema_index - minimum_extrema_distance
-                )
-                extrema_indices_l = (
-                    extrema_indices_sorted <= extrema_index + minimum_extrema_distance
-                )
-                extrema_indices_m = extrema_indices_r & extrema_indices_l
-                extrema_is_secondary = extrema_is_secondary | extrema_indices_m
-                extrema_is_secondary[index_] = False
-        extrema_primary_indices = extrema_indices_sorted[~extrema_is_secondary]
-        extrema_primary[index, :, extrema_primary_indices] = x_[
-            0,
-            extrema_primary_indices,
-        ]
-    return extrema_primary
-
-
 class _Extrema1D(nn.Module):
     def __init__(self: _Extrema1D, minimum_extrema_distance: int) -> None:
         super().__init__()
@@ -89,73 +52,6 @@ class _Extrema1D(nn.Module):
 
     def forward(self: _Extrema1D, input_: torch.Tensor) -> torch.Tensor:
         return _extrema_1d(input_, self.minimum_extrema_distance)
-
-
-def _extrema_2d(
-    input_: torch.Tensor,
-    minimum_extrema_distance: list[int],
-) -> torch.Tensor:
-    extrema_primary = torch.zeros_like(input_)
-    dx = input_[:, :, :, 1:] - input_[:, :, :, :-1]
-    dy = input_[:, :, 1:, :] - input_[:, :, :-1, :]
-    dx_padright_greater = functional.pad(dx, [0, 1, 0, 0]) > 0
-    dx_padleft_less = functional.pad(dx, [1, 0, 0, 0]) <= 0
-    dy_padright_greater = functional.pad(dy, [0, 0, 0, 1]) > 0
-    dy_padleft_less = functional.pad(dy, [0, 0, 1, 0]) <= 0
-    sign = (1 - torch.sign(input_)).bool()
-    valleys_x = dx_padright_greater & dx_padleft_less & sign
-    valleys_y = dy_padright_greater & dy_padleft_less & sign
-    peaks_x = ~dx_padright_greater & ~dx_padleft_less & ~sign
-    peaks_y = ~dy_padright_greater & ~dy_padleft_less & ~sign
-    peaks = peaks_x & peaks_y
-    valleys = valleys_x & valleys_y
-    extrema = peaks | valleys
-    extrema.squeeze_(1)
-    for index, (x_, e_) in enumerate(zip(input_, extrema, strict=True)):
-        extrema_indices = torch.nonzero(e_, as_tuple=False)
-        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
-        extrema_indices_sorted = extrema_indices[extrema_indices_indices]
-        extrema_is_secondary = torch.zeros_like(
-            extrema_indices_indices,
-            dtype=torch.bool,
-        )
-        for index_, (extrema_index_x, extrema_index_y) in enumerate(
-            extrema_indices_sorted,
-        ):
-            if not extrema_is_secondary[index_]:
-                extrema_indices_r = (
-                    extrema_indices_sorted[:, 0]
-                    >= extrema_index_x - minimum_extrema_distance[0]
-                )
-                extrema_indices_l = (
-                    extrema_indices_sorted[:, 0]
-                    <= extrema_index_x + minimum_extrema_distance[0]
-                )
-                extrema_indices_t = (
-                    extrema_indices_sorted[:, 1]
-                    >= extrema_index_y - minimum_extrema_distance[1]
-                )
-                extrema_indices_b = (
-                    extrema_indices_sorted[:, 1]
-                    <= extrema_index_y + minimum_extrema_distance[1]
-                )
-                extrema_indices_m = (
-                    extrema_indices_r
-                    & extrema_indices_l
-                    & extrema_indices_t
-                    & extrema_indices_b
-                )
-                extrema_is_secondary = extrema_is_secondary | extrema_indices_m
-                extrema_is_secondary[index_] = False
-        extrema_primary_indices = extrema_indices_sorted[~extrema_is_secondary]
-        for extrema_primary_index in extrema_primary_indices:
-            extrema_primary[
-                index,
-                :,
-                extrema_primary_index[0],
-                extrema_primary_index[1],
-            ] = x_[0, extrema_primary_index[0], extrema_primary_index[1]]
-    return extrema_primary
 
 
 class _Extrema2D(nn.Module):
@@ -167,20 +63,6 @@ class _Extrema2D(nn.Module):
         return _extrema_2d(input_, self.minimum_extrema_distance)
 
 
-def _extrema_pool_indices_1d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
-    extrema_primary = torch.zeros_like(input_)
-    _, extrema_indices = functional.max_pool1d(
-        abs(input_),
-        kernel_size,
-        return_indices=True,
-    )
-    return extrema_primary.scatter(
-        -1,
-        extrema_indices,
-        input_.gather(-1, extrema_indices),
-    )
-
-
 class _ExtremaPoolIndices1D(nn.Module):
     def __init__(self: _ExtremaPoolIndices1D, pool_size: int) -> None:
         super().__init__()
@@ -188,21 +70,6 @@ class _ExtremaPoolIndices1D(nn.Module):
 
     def forward(self: _ExtremaPoolIndices1D, input_: torch.Tensor) -> torch.Tensor:
         return _extrema_pool_indices_1d(input_, self.pool_size)
-
-
-def _extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
-    x_flattened = input_.view(input_.shape[0], -1)
-    extrema_primary = torch.zeros_like(x_flattened)
-    _, extrema_indices = functional.max_pool2d(
-        abs(input_),
-        kernel_size,
-        return_indices=True,
-    )
-    return extrema_primary.scatter(
-        -1,
-        extrema_indices[..., 0, 0],
-        x_flattened.gather(-1, extrema_indices[..., 0, 0]),
-    ).view(input_.shape)
 
 
 class _ExtremaPoolIndices2D(nn.Module):
@@ -378,16 +245,6 @@ class _SAN2d(nn.Module):
         return reconstructions_sum
 
 
-def _topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
-    extrema_primary = torch.zeros_like(input_)
-    _, extrema_indices = torch.topk(abs(input_), topk)
-    return extrema_primary.scatter(
-        -1,
-        extrema_indices,
-        input_.gather(-1, extrema_indices),
-    )
-
-
 class _TopKAbsolutes1D(nn.Module):
     def __init__(self: _TopKAbsolutes1D, topk: int) -> None:
         super().__init__()
@@ -395,17 +252,6 @@ class _TopKAbsolutes1D(nn.Module):
 
     def forward(self: _TopKAbsolutes1D, input_: torch.Tensor) -> torch.Tensor:
         return _topk_absolutes_1d(input_, self.topk)
-
-
-def _topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
-    x_flattened = input_.view(input_.shape[0], -1)
-    extrema_primary = torch.zeros_like(x_flattened)
-    _, extrema_indices = torch.topk(abs(x_flattened), topk)
-    return extrema_primary.scatter(
-        -1,
-        extrema_indices,
-        x_flattened.gather(-1, extrema_indices),
-    ).view(input_.shape)
 
 
 class _TopKAbsolutes2D(nn.Module):
@@ -487,6 +333,139 @@ def _calculate_inverse_compression_ratio(
     return (activation_multiplier * num_activations + num_parameters) / (  # type: ignore[no-any-return]
         data.shape[-1] * data.shape[-2]
     )
+
+
+def _extrema_1d(input_: torch.Tensor, minimum_extrema_distance: int) -> torch.Tensor:
+    extrema_primary = torch.zeros_like(input_)
+    dx = input_[:, :, 1:] - input_[:, :, :-1]
+    dx_padright_greater = functional.pad(dx, [0, 1]) > 0
+    dx_padleft_less = functional.pad(dx, [1, 0]) <= 0
+    sign = (1 - torch.sign(input_)).bool()
+    valleys = dx_padright_greater & dx_padleft_less & sign
+    peaks = ~dx_padright_greater & ~dx_padleft_less & ~sign
+    extrema = peaks | valleys
+    extrema.squeeze_(1)
+    for index, (x_, e_) in enumerate(zip(input_, extrema, strict=True)):
+        extrema_indices = torch.nonzero(e_, as_tuple=False)
+        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
+        extrema_indices_sorted = extrema_indices[extrema_indices_indices][:, 0]
+        extrema_is_secondary = torch.zeros_like(
+            extrema_indices_indices,
+            dtype=torch.bool,
+        )
+        for index_, extrema_index in enumerate(extrema_indices_sorted):
+            if not extrema_is_secondary[index_]:
+                extrema_indices_r = (
+                    extrema_indices_sorted >= extrema_index - minimum_extrema_distance
+                )
+                extrema_indices_l = (
+                    extrema_indices_sorted <= extrema_index + minimum_extrema_distance
+                )
+                extrema_indices_m = extrema_indices_r & extrema_indices_l
+                extrema_is_secondary = extrema_is_secondary | extrema_indices_m
+                extrema_is_secondary[index_] = False
+        extrema_primary_indices = extrema_indices_sorted[~extrema_is_secondary]
+        extrema_primary[index, :, extrema_primary_indices] = x_[
+            0,
+            extrema_primary_indices,
+        ]
+    return extrema_primary
+
+
+def _extrema_2d(
+    input_: torch.Tensor,
+    minimum_extrema_distance: list[int],
+) -> torch.Tensor:
+    extrema_primary = torch.zeros_like(input_)
+    dx = input_[:, :, :, 1:] - input_[:, :, :, :-1]
+    dy = input_[:, :, 1:, :] - input_[:, :, :-1, :]
+    dx_padright_greater = functional.pad(dx, [0, 1, 0, 0]) > 0
+    dx_padleft_less = functional.pad(dx, [1, 0, 0, 0]) <= 0
+    dy_padright_greater = functional.pad(dy, [0, 0, 0, 1]) > 0
+    dy_padleft_less = functional.pad(dy, [0, 0, 1, 0]) <= 0
+    sign = (1 - torch.sign(input_)).bool()
+    valleys_x = dx_padright_greater & dx_padleft_less & sign
+    valleys_y = dy_padright_greater & dy_padleft_less & sign
+    peaks_x = ~dx_padright_greater & ~dx_padleft_less & ~sign
+    peaks_y = ~dy_padright_greater & ~dy_padleft_less & ~sign
+    peaks = peaks_x & peaks_y
+    valleys = valleys_x & valleys_y
+    extrema = peaks | valleys
+    extrema.squeeze_(1)
+    for index, (x_, e_) in enumerate(zip(input_, extrema, strict=True)):
+        extrema_indices = torch.nonzero(e_, as_tuple=False)
+        extrema_indices_indices = torch.argsort(abs(x_[0, e_]), 0, descending=True)
+        extrema_indices_sorted = extrema_indices[extrema_indices_indices]
+        extrema_is_secondary = torch.zeros_like(
+            extrema_indices_indices,
+            dtype=torch.bool,
+        )
+        for index_, (extrema_index_x, extrema_index_y) in enumerate(
+            extrema_indices_sorted,
+        ):
+            if not extrema_is_secondary[index_]:
+                extrema_indices_r = (
+                    extrema_indices_sorted[:, 0]
+                    >= extrema_index_x - minimum_extrema_distance[0]
+                )
+                extrema_indices_l = (
+                    extrema_indices_sorted[:, 0]
+                    <= extrema_index_x + minimum_extrema_distance[0]
+                )
+                extrema_indices_t = (
+                    extrema_indices_sorted[:, 1]
+                    >= extrema_index_y - minimum_extrema_distance[1]
+                )
+                extrema_indices_b = (
+                    extrema_indices_sorted[:, 1]
+                    <= extrema_index_y + minimum_extrema_distance[1]
+                )
+                extrema_indices_m = (
+                    extrema_indices_r
+                    & extrema_indices_l
+                    & extrema_indices_t
+                    & extrema_indices_b
+                )
+                extrema_is_secondary = extrema_is_secondary | extrema_indices_m
+                extrema_is_secondary[index_] = False
+        extrema_primary_indices = extrema_indices_sorted[~extrema_is_secondary]
+        for extrema_primary_index in extrema_primary_indices:
+            extrema_primary[
+                index,
+                :,
+                extrema_primary_index[0],
+                extrema_primary_index[1],
+            ] = x_[0, extrema_primary_index[0], extrema_primary_index[1]]
+    return extrema_primary
+
+
+def _extrema_pool_indices_1d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
+    extrema_primary = torch.zeros_like(input_)
+    _, extrema_indices = functional.max_pool1d(
+        abs(input_),
+        kernel_size,
+        return_indices=True,
+    )
+    return extrema_primary.scatter(
+        -1,
+        extrema_indices,
+        input_.gather(-1, extrema_indices),
+    )
+
+
+def _extrema_pool_indices_2d(input_: torch.Tensor, kernel_size: int) -> torch.Tensor:
+    x_flattened = input_.view(input_.shape[0], -1)
+    extrema_primary = torch.zeros_like(x_flattened)
+    _, extrema_indices = functional.max_pool2d(
+        abs(input_),
+        kernel_size,
+        return_indices=True,
+    )
+    return extrema_primary.scatter(
+        -1,
+        extrema_indices[..., 0, 0],
+        x_flattened.gather(-1, extrema_indices[..., 0, 0]),
+    ).view(input_.shape)
 
 
 def _save_images_1d(  # noqa: PLR0915
@@ -712,6 +691,27 @@ def _save_images_2d(
             f"tmp/{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",
         )
         plt.close()
+
+
+def _topk_absolutes_1d(input_: torch.Tensor, topk: int) -> torch.Tensor:
+    extrema_primary = torch.zeros_like(input_)
+    _, extrema_indices = torch.topk(abs(input_), topk)
+    return extrema_primary.scatter(
+        -1,
+        extrema_indices,
+        input_.gather(-1, extrema_indices),
+    )
+
+
+def _topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
+    x_flattened = input_.view(input_.shape[0], -1)
+    extrema_primary = torch.zeros_like(x_flattened)
+    _, extrema_indices = torch.topk(abs(x_flattened), topk)
+    return extrema_primary.scatter(
+        -1,
+        extrema_indices,
+        x_flattened.gather(-1, extrema_indices),
+    ).view(input_.shape)
 
 
 def _train_model_supervised(
