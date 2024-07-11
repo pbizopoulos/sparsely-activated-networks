@@ -2,7 +2,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     flake-utils.url = "github:numtide/flake-utils";
-    check-python-script.url = "github:pbizopoulos/check-python-script/main?dir=python";
+    check-python-script.url = "github:pbizopoulos/check-python-script?dir=python";
+    wfdb.url = "github:pbizopoulos/nixpkgs?dir=wfdb";
   };
 
   outputs =
@@ -11,6 +12,7 @@
       nixpkgs,
       flake-utils,
       check-python-script,
+      wfdb,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -19,41 +21,49 @@
           inherit system;
           config.allowUnfree = true;
         };
-        wfdb = pkgs.python3Packages.buildPythonPackage rec {
-          pname = "wfdb";
-          version = "4.1.2";
-          format = "wheel";
-          src = pkgs.python3Packages.fetchPypi rec {
-            inherit pname version format;
-            sha256 = "V+9kMJ7HeTuxFhHGRtEp8LGTa1mJR/7YwU+Qo1ZlBT0=";
-            dist = python;
-            python = "py3";
-          };
-          propagatedBuildInputs = [
-            pkgs.python3Packages.matplotlib
-            pkgs.python3Packages.pandas
-            pkgs.python3Packages.scipy
-          ];
-        };
-        packages = with pkgs; [
-          python3Packages.torch-bin
-          python3Packages.torchvision-bin
-          python3Packages.types-requests
-          wfdb
+        packagesAll = [
+          pkgs.python3Packages.torch-bin
+          pkgs.python3Packages.torchvision-bin
+          pkgs.python3Packages.types-requests
+          wfdb.packages.${system}.default
+        ];
+        packagesCheck = [
+          check-python-script.packages.${system}.default
+          pkgs.djlint
+          pkgs.mypy
+          pkgs.nixfmt-rfc-style
+          pkgs.ruff
         ];
       in
-      with pkgs;
       {
-        devShells.default = pkgs.mkShell { buildInputs = packages; };
-        devShells.check = pkgs.mkShell {
-          buildInputs = packages ++ [
-            check-python-script.packages.${system}.default
-            djlint
-            mypy
-            nixfmt-rfc-style
-            ruff
-          ];
+        devShells.all = pkgs.mkShell {
+          buildInputs = packagesAll;
+          shellHook = ''
+            set -e
+            PYTHONDONTWRITEBYTECODE=1 python3 main.py || exit
+            exit
+          '';
         };
+        devShells.check = pkgs.mkShell {
+          buildInputs = packagesAll ++ packagesCheck;
+          shellHook = ''
+            set -e
+            export PYTHONDONTWRITEBYTECODE=1
+            nix flake check
+            nix fmt
+            check-python-script main.py
+            ruff format --cache-dir tmp/ruff main.py
+            ruff check --cache-dir tmp/ruff --exit-non-zero-on-fix --fix --select ALL --unsafe-fixes main.py
+            mypy --cache-dir tmp/mypy --ignore-missing-imports --strict main.py
+            if [ -d 'templates/' ]; then djlint templates/ --lint --profile=jinja --quiet --reformat; fi
+            [ -z $STAGE ] || (unset STAGE && pydoc -w main && mv main.html tmp/)
+            ls -ap | grep -v -E -x './|../|.env|.gitignore|Makefile|flake.lock|flake.nix|main.py|prm/|pyproject.toml|python/|result|static/|templates/|tmp/' | grep -q . && exit 1 || true
+            test $(basename $(pwd)) = 'python'
+            exit
+          '';
+        };
+        devShells.default = pkgs.mkShell { buildInputs = packagesAll; };
+        formatter = pkgs.nixfmt-rfc-style;
       }
     );
 }
