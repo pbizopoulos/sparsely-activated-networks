@@ -704,7 +704,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
                 - 0.5 * sparse_activation_index
                 - inverse_compression_ratio_best.mean(),
             )
-            fig.add_axes(
+            fig.add_axes(  # type: ignore[call-overload]
                 [0.75, 0.81 - 0.165 * sparse_activation_index, 0.1, 0.1],
                 facecolor="y",
             )
