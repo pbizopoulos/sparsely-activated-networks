@@ -1,7 +1,6 @@
 # Sparsely activated networks
 # https://arxiv.org/abs/1907.06592
 # https://ieeexplore.ieee.org/abstract/document/9072295/
-# https://pbizopoulos.github.io/sparsely-activated-networks/
 
 # Requirements
 # POSIX Shell & Utilities
@@ -22,4 +21,7 @@ cd ~/github.com/pbizopoulos/sparsely-activated-networks/
 cd latex/python/ && make STAGE=1 && cd ../..
 cd latex/ && make && cd ..
 cd docs/ && make STAGE=1
+
+# Run
+# https://pbizopoulos.github.io/sparsely-activated-networks/
 
