@@ -1,7 +1,7 @@
-const helpButton = document.getElementById("help-button");
-const helpDialog = document.getElementById("help-dialog");
-helpButton.addEventListener("click", () => {
-	helpDialog.showModal();
+const documentationA = document.getElementById("documentation-a");
+const documentationDialog = document.getElementById("documentation-dialog");
+documentationA.addEventListener("click", () => {
+	documentationDialog.showModal();
 });
 const noisyOneMotif = {
 	input: {
