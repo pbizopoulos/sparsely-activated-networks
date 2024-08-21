@@ -28,7 +28,7 @@
             inherit system;
             config.allowUnfree = true;
           };
-          packagesAll = [
+          dependencies = [
             pkgs.python3Packages.torch-bin
             pkgs.python3Packages.torchvision-bin
             pkgs.python3Packages.types-requests
@@ -38,7 +38,7 @@
         {
           devShells.all = pkgs.mkShell {
             PYTHONDONTWRITEBYTECODE = true;
-            buildInputs = packagesAll;
+            buildInputs = dependencies;
             shellHook = ''
               set -e
               python3 main.py || exit
@@ -46,7 +46,7 @@
             '';
           };
           devShells.check = pkgs.mkShell {
-            buildInputs = packagesAll ++ [
+            buildInputs = dependencies ++ [
               check-python-script.packages.${system}.default
               pkgs.djlint
               pkgs.git
@@ -69,7 +69,7 @@
               exit
             '';
           };
-          devShells.default = pkgs.mkShell { buildInputs = packagesAll; };
+          devShells.default = pkgs.mkShell { buildInputs = dependencies; };
           formatter = pkgs.nixfmt-rfc-style;
         };
     };
