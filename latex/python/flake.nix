@@ -6,71 +6,68 @@
     wfdb.url = "github:pbizopoulos/nixpkgs?dir=wfdb";
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      flake-parts,
-      check-python-script,
-      wfdb,
-    }@inputs:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = {
+    self,
+    nixpkgs,
+    flake-parts,
+    check-python-script,
+    wfdb,
+  } @ inputs:
+    flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
-      perSystem =
-        { system, ... }:
-        let
-          pkgs = import nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
-          dependencies = [
-            pkgs.python3Packages.torch-bin
-            pkgs.python3Packages.torchvision-bin
-            pkgs.python3Packages.types-requests
-            wfdb.packages.${system}.default
-          ];
-        in
-        {
-          devShells.all = pkgs.mkShell {
-            PYTHONDONTWRITEBYTECODE = true;
-            buildInputs = dependencies;
-            shellHook = ''
-              set -e
-              python3 main.py || exit
-              exit
-            '';
-          };
-          devShells.check = pkgs.mkShell {
-            buildInputs = dependencies ++ [
+      perSystem = {system, ...}: let
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        dependencies = [
+          pkgs.python3Packages.torch-bin
+          pkgs.python3Packages.torchvision-bin
+          pkgs.python3Packages.types-requests
+          wfdb.packages.${system}.default
+        ];
+      in {
+        devShells.all = pkgs.mkShell {
+          PYTHONDONTWRITEBYTECODE = true;
+          buildInputs = dependencies;
+          shellHook = ''
+            set -e
+            python3 main.py || exit
+            exit
+          '';
+        };
+        devShells.check = pkgs.mkShell {
+          buildInputs =
+            dependencies
+            ++ [
               check-python-script.packages.${system}.default
               pkgs.djlint
               pkgs.git
               pkgs.mypy
-              pkgs.nixfmt-rfc-style
               pkgs.ruff
             ];
-            shellHook = ''
-              set -e
-              nix flake check
-              nix fmt
-              check-python-script main.py
-              ruff format --cache-dir tmp/ruff main.py
-              ruff check --cache-dir tmp/ruff --exit-non-zero-on-fix --fix --select ALL --unsafe-fixes main.py
-              mypy --cache-dir tmp/mypy --ignore-missing-imports --strict main.py
-              if [ -d 'templates/' ]; then djlint templates/ --lint --profile=jinja --quiet --reformat; fi
-              [ -z $STAGE ] || (unset STAGE && pydoc -w main && mv main.html tmp/)
-              ls -ap | grep -v -E -x './|../|.env|.gitignore|Makefile|flake.lock|flake.nix|main.py|prm/|pyproject.toml|python/|result|static/|templates/|tmp/' | grep -q . && exit 1 || true
-              test $(basename $(pwd)) = 'python'
-              exit
-            '';
-          };
-          devShells.default = pkgs.mkShell { buildInputs = dependencies; };
-          formatter = pkgs.nixfmt-rfc-style;
+          shellHook = ''
+            set -e
+            nix flake check
+            nix fmt
+            check-python-script main.py
+            ruff format --cache-dir tmp/ruff main.py
+            ruff check --cache-dir tmp/ruff --exit-non-zero-on-fix --fix --select ALL --unsafe-fixes main.py
+            mypy --cache-dir tmp/mypy --ignore-missing-imports --strict main.py
+            if [ -d 'templates/' ]; then djlint templates/ --lint --profile=jinja --quiet --reformat; fi
+            [ -z $STAGE ] || (unset STAGE && pydoc -w main && mv main.html tmp/)
+            ls -ap | grep -v -E -x './|../|.env|.gitignore|Makefile|flake.lock|flake.nix|main.py|prm/|pyproject.toml|python/|result|static/|templates/|tmp/' | grep -q . && exit 1 || true
+            test $(basename $(pwd)) = 'python'
+            exit
+          '';
         };
+        devShells.default = pkgs.mkShell {buildInputs = dependencies;};
+        formatter = pkgs.alejandra;
+      };
     };
 }
