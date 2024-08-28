@@ -5,7 +5,6 @@
     check-python-script.url = "github:pbizopoulos/check-python-script?dir=python";
     wfdb.url = "github:pbizopoulos/nixpkgs?dir=wfdb";
   };
-
   outputs = {
     self,
     nixpkgs,
