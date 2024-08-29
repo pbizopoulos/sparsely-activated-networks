@@ -2,7 +2,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    check-python-script.url = "github:pbizopoulos/check-python-script?dir=python";
+    check-python-script = {
+      url = "github:pbizopoulos/check-python-script?dir=python";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     wfdb.url = "github:pbizopoulos/nixpkgs?dir=wfdb";
   };
   outputs = {
