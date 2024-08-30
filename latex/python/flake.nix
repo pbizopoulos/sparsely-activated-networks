@@ -1,12 +1,15 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     check-python-script = {
       url = "github:pbizopoulos/check-python-script?dir=python";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    wfdb.url = "github:pbizopoulos/nixpkgs?dir=wfdb";
+    wfdb = {
+      url = "github:pbizopoulos/nixpkgs?dir=wfdb";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs = {
     self,
@@ -28,9 +31,9 @@
           config.allowUnfree = true;
         };
         dependencies = [
-          pkgs.python3Packages.torch-bin
-          pkgs.python3Packages.torchvision-bin
-          pkgs.python3Packages.types-requests
+          pkgs.python311Packages.torch-bin
+          pkgs.python311Packages.torchvision-bin
+          pkgs.python311Packages.types-requests
           wfdb.packages.${system}.default
         ];
       in {
@@ -50,7 +53,8 @@
               check-python-script.packages.${system}.default
               pkgs.djlint
               pkgs.git
-              pkgs.mypy
+              pkgs.python311Packages.coverage
+              pkgs.python311Packages.mypy
               pkgs.ruff
             ];
           shellHook = ''
