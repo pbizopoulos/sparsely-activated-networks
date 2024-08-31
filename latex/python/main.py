@@ -608,7 +608,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
                     for sparsity_density in sparsity_densities
                 ]
                 san1d_model = _SAN1d(kernel_sizes, sparse_activation_list).to(device)
-                optimizer = optim.Adam(san1d_model.parameters(), lr=lr)
+                optimizer = optim.Adam(san1d_model.parameters(), lr=lr)  # type: ignore[attr-defined]
                 hook_handles = [
                     _Hook(sparse_activation_)
                     for sparse_activation_ in san1d_model.sparse_activations
@@ -960,7 +960,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
     accuracy_best = 0.0
     num_classes = len(uci_epilepsy_train.classes.unique())  # type: ignore[no-untyped-call]
     model_supervised = _CNN(num_classes).to(device)
-    optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
+    optimizer = optim.Adam(model_supervised.parameters(), lr=lr)  # type: ignore[attr-defined]
     for _ in range(num_epochs):
         model_supervised.train()
         for signals, targets in dataloader_train:
@@ -1052,7 +1052,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
                 for sparsity_density in sparsity_densities
             ]
             san1d_model = _SAN1d(kernel_sizes, sparse_activation_list).to(device)
-            optimizer = optim.Adam(san1d_model.parameters(), lr=lr)
+            optimizer = optim.Adam(san1d_model.parameters(), lr=lr)  # type: ignore[attr-defined]
             hook_handles = [
                 _Hook(sparse_activation_)
                 for sparse_activation_ in san1d_model.sparse_activations
@@ -1072,7 +1072,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
                 weights_kernel.requires_grad_(False)  # noqa: FBT003
             flithos_epoch_mean_best = float("inf")
             model_supervised = _CNN(num_classes).to(device).to(device)
-            optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
+            optimizer = optim.Adam(model_supervised.parameters(), lr=lr)  # type: ignore[attr-defined]
             for _ in range(num_epochs):
                 _train_model_supervised(
                     dataloader_train,
@@ -1192,7 +1192,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
             len(dataset_train_validation.classes),
             dataset_train_validation.data[0],
         ).to(device)
-        optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
+        optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)  # type: ignore[attr-defined]
         for _ in range(num_epochs):
             fnn_model_supervised.train()
             for images, targets in dataloader_train:
@@ -1293,7 +1293,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
                     for sparsity_density in sparsity_densities
                 ]
                 san2d_model = _SAN2d(kernel_sizes, sparse_activation_list).to(device)
-                optimizer = optim.Adam(san2d_model.parameters(), lr=lr)
+                optimizer = optim.Adam(san2d_model.parameters(), lr=lr)  # type: ignore[attr-defined]
                 hook_handles = [
                     _Hook(sparse_activation_)
                     for sparse_activation_ in san2d_model.sparse_activations
@@ -1316,7 +1316,7 @@ def _main() -> None:  # noqa: C901,PLR0912,PLR0915
                     len(dataset_train_validation.classes),
                     dataset_train_validation.data[0],
                 ).to(device)
-                optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
+                optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)  # type: ignore[attr-defined]
                 for _ in range(num_epochs):
                     _train_model_supervised(
                         dataloader_train,
@@ -1654,7 +1654,7 @@ def _train_model_supervised(
     dataloader_train: DataLoader[int],
     model_supervised: nn.Module,
     model_unsupervised: nn.Module,
-    optimizer: optim.Adam,
+    optimizer: optim.Adam,  # type: ignore[name-defined]
 ) -> None:
     device = next(model_supervised.parameters()).device
     model_supervised.train()
@@ -1672,7 +1672,7 @@ def _train_model_supervised(
 def _train_model_unsupervised(
     dataloader_train: DataLoader[int],
     model: nn.Module,
-    optimizer: optim.Adam,
+    optimizer: optim.Adam,  # type: ignore[name-defined]
 ) -> None:
     device = next(model.parameters()).device
     model.train()
