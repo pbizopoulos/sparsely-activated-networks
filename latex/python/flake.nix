@@ -53,8 +53,8 @@
               check-python-script.packages.${system}.default
               pkgs.djlint
               pkgs.git
-              pkgs.python311Packages.coverage
               pkgs.python311Packages.mypy
+              pkgs.python311Packages.coverage
               pkgs.ruff
             ];
           shellHook = ''
@@ -65,6 +65,7 @@
             ruff format --cache-dir tmp/ruff main.py
             ruff check --cache-dir tmp/ruff --exit-non-zero-on-fix --fix --select ALL --unsafe-fixes main.py
             mypy --cache-dir tmp/mypy --ignore-missing-imports --strict main.py
+            [ -z $STAGE ] || (unset STAGE && coverage run --data-file=tmp/.coverage main.py && coverage html --data-file=tmp/.coverage --directory tmp/ --ignore-errors)
             if [ -d 'templates/' ]; then djlint templates/ --lint --profile=jinja --quiet --reformat; fi
             ls -ap | grep -v -E -x './|../|.env|.gitignore|Makefile|flake.lock|flake.nix|main.py|prm/|pyproject.toml|python/|result|static/|templates/|tmp/' | grep -q . && exit 1
             test $(basename $(pwd)) = 'python'
