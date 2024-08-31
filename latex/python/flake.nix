@@ -50,8 +50,8 @@
           buildInputs =
             dependencies
             ++ [
-              # check-python-script.packages.${system}.default
-              # pkgs.djlint
+              check-python-script.packages.${system}.default
+              pkgs.djlint
               pkgs.git
               pkgs.python311Packages.coverage
               pkgs.python311Packages.mypy
@@ -61,7 +61,7 @@
             set -e
             nix flake check
             nix fmt
-            # check-python-script main.py
+            check-python-script main.py
             ruff format --cache-dir tmp/ruff main.py
             ruff check --cache-dir tmp/ruff --exit-non-zero-on-fix --fix --select ALL --unsafe-fixes main.py
             mypy --cache-dir tmp/mypy --ignore-missing-imports --strict main.py
