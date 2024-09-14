@@ -2,12 +2,10 @@
 # https://arxiv.org/abs/1907.06592
 # https://ieeexplore.ieee.org/abstract/document/9072295/
 
-# Requirements
+# Develop Requirements
 # POSIX Shell & Utilities
 # Git
 # Nix
-
-# Download
 git clone git@github.com:pbizopoulos/sparsely-activated-networks ~/github.com/pbizopoulos/sparsely-activated-networks
 
 # Develop
@@ -16,11 +14,17 @@ cd docs/ && make clean check all && cd ..
 cd latex/python/ && make clean check all && cd ../..
 cd latex/ && make clean check all && cd ..
 
+# Stage Requirements
+# Develop Requirements
+
 # Stage
 cd ~/github.com/pbizopoulos/sparsely-activated-networks/
 cd latex/python/ && make STAGE=1 && cd ../..
 cd latex/ && make && cd ..
 cd docs/ && make STAGE=1
+
+# Run Requirements
+# Any Web Browser
 
 # Run
 # https://pbizopoulos.github.io/sparsely-activated-networks/
