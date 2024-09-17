@@ -1,6 +1,6 @@
 # Sparsely activated networks
-# https://arxiv.org/abs/1907.06592
-# https://ieeexplore.ieee.org/abstract/document/9072295/
+xdg-open https://arxiv.org/abs/1907.06592
+xdg-open https://ieeexplore.ieee.org/abstract/document/9072295/
 
 # Develop Requirements
 # POSIX Shell & Utilities
@@ -27,5 +27,5 @@ cd docs/ && make STAGE=1
 # Any Web Browser
 
 # Run
-# https://pbizopoulos.github.io/sparsely-activated-networks/
+xdg-open https://pbizopoulos.github.io/sparsely-activated-networks/
 
