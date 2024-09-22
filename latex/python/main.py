@@ -123,11 +123,6 @@ class _Identity2D(nn.Module):
 
 
 class _PhysionetDataset(Dataset):  # type: ignore[type-arg]
-    def __getitem__(self: _PhysionetDataset, index: int) -> tuple[torch.Tensor, int]:
-        out = self.signal[index] - self.signal[index].mean()
-        out /= out.std()
-        return (out, 0)
-
     def __init__(
         self: _PhysionetDataset,
         dataset_name: str,
@@ -152,6 +147,11 @@ class _PhysionetDataset(Dataset):  # type: ignore[type-arg]
         elif train_validation_test == "test":
             self.signal = signal[8000:]
         self.signal = self.signal.reshape((-1, 1, 1000))
+
+    def __getitem__(self: _PhysionetDataset, index: int) -> tuple[torch.Tensor, int]:
+        out = self.signal[index] - self.signal[index].mean()
+        out /= out.std()
+        return (out, 0)
 
     def __len__(self: _PhysionetDataset) -> int:
         return self.signal.shape[0]
@@ -264,12 +264,6 @@ class _TopKAbsolutes2D(nn.Module):
 
 
 class _UCIEpilepsy(Dataset):  # type: ignore[type-arg]
-    def __getitem__(
-        self: _UCIEpilepsy,
-        index: int,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        return (self.signal[index], self.classes[index])
-
     def __init__(self: _UCIEpilepsy, train_validation_test: str) -> None:
         data_file_path = Path("tmp/data.csv")
         if not data_file_path.is_file():
@@ -316,6 +310,12 @@ class _UCIEpilepsy(Dataset):  # type: ignore[type-arg]
                 torch.tensor(classes_all[last_validation_index:].to_numpy()) - 1
             )
         self.signal.unsqueeze_(1)
+
+    def __getitem__(
+        self: _UCIEpilepsy,
+        index: int,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        return (self.signal[index], self.classes[index])
 
     def __len__(self: _UCIEpilepsy) -> int:
         return self.classes.shape[0]
