@@ -1047,14 +1047,14 @@ arrowSvg.append("path").attr(
 		[2 * arrowMargin, arrowMargin],
 	]),
 );
-const x = d3.scaleLinear().range([0, width]);
-const y = d3.scaleLinear().domain([-1, 1]).range([height, 0]);
+const x = d3.scaleLinear([0, 1], [0, width]);
+const y = d3.scaleLinear([-1, 1], [height, 0]);
 const line = d3
 	.line()
 	.x((d, i) => x(i))
 	.y((d) => y(d));
-const ndnlX = d3.scaleLinear().range([0, width]);
-const ndnlY = d3.scaleLinear().domain([0, 1]).range([height, 0]);
+const ndnlX = d3.scaleLinear([0, 1], [0, width]);
+const ndnlY = d3.scaleLinear([0, 1], [height, 0]);
 const ndnlLine = d3
 	.line()
 	.x((d, i) => ndnlX(i))
