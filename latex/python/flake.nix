@@ -6,6 +6,10 @@
       url = "github:pbizopoulos/check-python-script?dir=python";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixgl = {
+      url = "github:nix-community/nixGL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     wfdb = {
       url = "github:pbizopoulos/nixpkgs?dir=wfdb";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -16,6 +20,7 @@
     nixpkgs,
     flake-parts,
     check-python-script,
+    nixgl,
     wfdb,
   } @ inputs:
     flake-parts.lib.mkFlake {inherit inputs;} {
@@ -29,8 +34,10 @@
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
+          overlays = [nixgl.overlay];
         };
         dependencies = [
+          pkgs.nixgl.auto.nixGLDefault
           pkgs.python311Packages.torch-bin
           pkgs.python311Packages.torchvision-bin
           pkgs.python311Packages.types-requests
@@ -42,7 +49,7 @@
           buildInputs = dependencies;
           shellHook = ''
             set -e
-            python3 main.py || exit
+            nixGL python3 main.py || exit
             exit
           '';
         };
@@ -59,7 +66,7 @@
             ];
           shellHook = ''
             set -e
-            nix flake check
+            nix flake check --impure
             nix fmt
             check-python-script main.py
             ruff format --cache-dir tmp/ruff main.py
