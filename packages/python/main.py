@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Sparsely activated networks."""
+
 from __future__ import annotations
 
 import os

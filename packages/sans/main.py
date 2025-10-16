@@ -1,4 +1,5 @@
 """Sparsely activated networks."""  # noqa: INP001
+
 from __future__ import annotations
 
 import torch
