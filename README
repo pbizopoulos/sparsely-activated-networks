@@ -1,0 +1,11 @@
+# Sparsely activated networks
+xdg-open https://arxiv.org/abs/1907.06592
+xdg-open https://ieeexplore.ieee.org/abstract/document/9072295/
+xdg-open https://pbizopoulos.github.io/sparsely-activated-networks/
+
+# Usage
+xdg-open https://pbizopoulos.github.io/README.txt
+
+# Extra commands
+xdg-open https://github.com/pbizopoulos/sparsely-activated-networks/settings/pages
+# In 'Build and deployment', Source choose GitHub Actions.
