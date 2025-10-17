@@ -34,7 +34,7 @@ from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
 
 _PACKAGE_PATH = (
-    Path.home() / "github.com/pbizopoulos/sparsely-activated-networks/packages/python/"
+    Path.home() / "github.com/pbizopoulos/sparsely-activated-networks/packages/default/"
 )
 if Path(__file__).resolve().as_posix().startswith("/nix/store/"):
     _PARENT_PATH = Path(__file__).resolve().parent
