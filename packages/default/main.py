@@ -30,18 +30,15 @@ from torch import nn, optim
 from torch.nn import functional
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
-from torchvision.datasets import MNIST, FashionMNIST
+from torchvision.datasets import MNIST, FakeData, FashionMNIST
 from torchvision.transforms import ToTensor
 
-_PACKAGE_PATH = (
-    Path.home() / "github.com/pbizopoulos/sparsely-activated-networks/packages/default/"
+_OUT_PATH = (
+    Path.home()
+    / "github.com/pbizopoulos/sparsely-activated-networks/packages/default/tmp/"
 )
-if Path(__file__).resolve().as_posix().startswith("/nix/store/"):
-    _PARENT_PATH = Path(__file__).resolve().parent
-else:
-    _PARENT_PATH = _PACKAGE_PATH
-_OUT_PATH = _PACKAGE_PATH / "tmp"
 _OUT_PATH.mkdir(exist_ok=True, parents=True)
+_PARENT_PATH = Path(__file__).resolve().parent
 
 
 class _CNN(nn.Module):  # type: ignore[misc]
@@ -66,9 +63,9 @@ class _CNN(nn.Module):  # type: ignore[misc]
 
 
 class _FNN(nn.Module):  # type: ignore[misc]
-    def __init__(self, num_classes: int, sample_data: torch.Tensor) -> None:
+    def __init__(self, num_classes: int, sample_data_shape: torch.Tensor) -> None:
         super().__init__()
-        self.fc = nn.Linear(sample_data.shape[-1] * sample_data.shape[-2], num_classes)
+        self.fc = nn.Linear(sample_data_shape[0] * sample_data_shape[0], num_classes)
 
     def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
         batch_x = batch_x.view(batch_x.shape[0], -1)
@@ -112,18 +109,21 @@ class _PhysionetDataset(Dataset):  # type: ignore[misc]
         dataset_name: str,
         train_validation_test: str,
     ) -> None:
-        dataset_dir_path = _OUT_PATH / dataset_name
-        if not dataset_dir_path.exists():
-            record_name = wfdb.get_record_list(f"{dataset_name}/1.0.0")[0]
-            wfdb.dl_database(
-                dataset_name,
-                dataset_dir_path.as_posix(),
-                records=[record_name],
-                annotators=None,
-            )
-        file_name = next(iter(dataset_dir_path.glob("*.hea"))).stem
-        records = wfdb.rdrecord(dataset_dir_path / file_name)
-        signal = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
+        if os.getenv("DEBUG"):
+            signal = torch.randn(12000)
+        else:
+            dataset_dir_path = _OUT_PATH / dataset_name
+            if not dataset_dir_path.exists():
+                record_name = wfdb.get_record_list(f"{dataset_name}/1.0.0")[0]
+                wfdb.dl_database(
+                    dataset_name,
+                    dataset_dir_path.as_posix(),
+                    records=[record_name],
+                    annotators=None,
+                )
+            file_name = next(iter(dataset_dir_path.glob("*.hea"))).stem
+            records = wfdb.rdrecord(dataset_dir_path / file_name)
+            signal = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
         if train_validation_test == "train":
             self.signal = signal[:6000]
         elif train_validation_test == "validation":
@@ -592,8 +592,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
     if os.getenv("DEBUG"):
-        num_epochs_physionet = 3
-        num_epochs = 2
+        num_epochs_physionet = 1
+        num_epochs = 1
         kernel_size_physionet_range = range(1, 10)
         uci_epilepsy_train_range = range(10)
         uci_epilepsy_validation_range = range(10)
@@ -1279,7 +1279,55 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         multicol_align="c",
     )
     dataset_names = ["MNIST", "FashionMNIST"]
-    dataset_list = [MNIST, FashionMNIST]
+    num_classes = 10
+    sample_data_shape = [28, 28]
+    if os.getenv("DEBUG"):
+        dataset_list = [
+            [
+                FakeData(
+                    60000,
+                    image_size=(1, 28, 28),
+                    num_classes=num_classes,
+                    transform=ToTensor(),
+                ),
+                FakeData(
+                    10000,
+                    image_size=(1, 28, 28),
+                    num_classes=num_classes,
+                    transform=ToTensor(),
+                ),
+            ],
+            [
+                FakeData(
+                    60000,
+                    image_size=(1, 28, 28),
+                    num_classes=num_classes,
+                    transform=ToTensor(),
+                ),
+                FakeData(
+                    10000,
+                    image_size=(1, 28, 28),
+                    num_classes=num_classes,
+                    transform=ToTensor(),
+                ),
+            ],
+        ]
+    else:
+        dataset_list = [
+            [
+                MNIST(_OUT_PATH, download=True, train=True, transform=ToTensor()),
+                MNIST(_OUT_PATH, train=False, transform=ToTensor()),
+            ],
+            [
+                FashionMNIST(
+                    _OUT_PATH,
+                    download=True,
+                    train=True,
+                    transform=ToTensor(),
+                ),
+                FashionMNIST(_OUT_PATH, train=False, transform=ToTensor()),
+            ],
+        ]
     accuracies_mnist_fashionmnist_supervised = []
     for dataset_name_index, (
         dataset_name,
@@ -1299,14 +1347,10 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             strict=True,
         ),
     ):
+        dataset_train_validation = dataset[0]
+        dataset_test = dataset[1]
         batch_size = 64
         lr = 0.01
-        dataset_train_validation = dataset(
-            _OUT_PATH,
-            download=True,
-            train=True,
-            transform=ToTensor(),
-        )
         dataloader_train = DataLoader(
             dataset_train_validation,
             batch_size=batch_size,
@@ -1317,20 +1361,12 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range),
             batch_size=batch_size,
         )
-        dataset_test = dataset(
-            _OUT_PATH,
-            train=False,
-            transform=ToTensor(),
-        )
         dataloader_test = DataLoader(
             dataset_test,
             sampler=SubsetRandomSampler(mnist_fashionmnist_test_range),
         )
         accuracy_best = 0
-        fnn_model_supervised = _FNN(
-            len(dataset_train_validation.classes),
-            dataset_train_validation.data[0],
-        ).to(device)
+        fnn_model_supervised = _FNN(num_classes, sample_data_shape).to(device)
         optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
         for _ in range(num_epochs):
             fnn_model_supervised.train()
@@ -1354,7 +1390,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     num_predictions_correct += sum(prediction == targets).item()
                     num_predictions += outputs.shape[0]
             accuracy = 100 * num_predictions_correct / num_predictions
-            if accuracy_best < accuracy:
+            if accuracy_best <= accuracy:
                 fnn_model_supervised_best = fnn_model_supervised
                 accuracy_best = accuracy
         fnn_model_supervised.eval()
@@ -1383,12 +1419,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         batch_size = 64
         lr = 0.01
         results_supervised_rows_list = []
-        dataset_train_validation = dataset(
-            _OUT_PATH,
-            download=True,
-            train=True,
-            transform=ToTensor(),
-        )
         dataloader_train = DataLoader(
             dataset_train_validation,
             batch_size=batch_size,
@@ -1397,11 +1427,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         dataloader_validation = DataLoader(
             dataset_train_validation,
             sampler=SubsetRandomSampler(mnist_fashionmnist_validation_range),
-        )
-        dataset_test = dataset(
-            _OUT_PATH,
-            train=False,
-            transform=ToTensor(),
         )
         dataloader_test = DataLoader(
             dataset_test,
@@ -1416,7 +1441,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             ):
                 if sparse_activation == TopKAbsolutes2D:
                     sparsity_densities = [
-                        int(dataset_test.data.shape[-1] / kernel_size) ** 2
+                        int(sample_data_shape[0] / kernel_size) ** 2
                         for kernel_size in kernel_sizes
                     ]
                 elif sparse_activation == Extrema2D:
@@ -1461,10 +1486,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 for weights_kernel in san2d_model.weights_kernels:
                     weights_kernel.requires_grad_(False)  # noqa: FBT003
                 flithos_epoch_mean_best = float("inf")
-                fnn_model_supervised = _FNN(
-                    len(dataset_train_validation.classes),
-                    dataset_train_validation.data[0],
-                ).to(device)
+                fnn_model_supervised = _FNN(num_classes, sample_data_shape).to(device)
                 optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
                 for _ in range(num_epochs):
                     _train_model_supervised(
