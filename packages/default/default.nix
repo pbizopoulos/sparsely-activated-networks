@@ -1,52 +1,32 @@
-{
-  inputs,
-  pkgs ? import <nixpkgs> { },
-}:
+{ inputs, pkgs, ... }:
 let
-  pythonEnv = pkgs.python312.withPackages (_ps: [
+  nativeDeps = [ ];
+  pname = baseNameOf ./.;
+  python = pkgs.python3;
+  pythonDeps = [
     inputs.self.packages.${pkgs.stdenv.system}.sans
-    pkgs.python312Packages.torchvision-bin
-    wfdb
-  ]);
-  wfdb = pkgs.python312Packages.buildPythonPackage rec {
-    format = "wheel";
-    pname = "wfdb";
-    propagatedBuildInputs = [
-      pkgs.python312Packages.fsspec
-      pkgs.python312Packages.matplotlib
-      pkgs.python312Packages.pandas
-      pkgs.python312Packages.scipy
-    ];
-    pythonImportsCheck = [ pname ];
-    src = pkgs.python312Packages.fetchPypi rec {
-      inherit pname version format;
-      dist = python;
-      python = "py3";
-      sha256 = "u9nSkbwgOLBYZhb82Acs/ckGrHDBhYsVEzeMQSmgEQ8=";
-    };
-    version = "4.3.0";
-  };
-in
-pkgs.stdenv.mkDerivation rec {
-  buildInputs = [
-    pkgs.texlive.combined.scheme-full
-    pythonEnv
+    inputs.self.packages.${pkgs.stdenv.system}.wfdb
+    python.pkgs.pandas
+    python.pkgs.torch
+    python.pkgs.torchvision
   ];
+in
+python.pkgs.buildPythonPackage {
+  inherit pname;
   installPhase = ''
-    mkdir -p $out/bin
-    echo '#!/usr/bin/env bash
-      set -e
-      package_dir=$HOME/github.com/pbizopoulos/sparsely-activated-networks/packages/default
-      tmp_dir=$(mktemp -d)
-      cp -r ${src}/* "$tmp_dir"
-      cd "$tmp_dir"
-      ${pythonEnv}/bin/python ./main.py
-      ${pkgs.texlive.combined.scheme-full}/bin/latexmk -outdir=$package_dir/tmp -pdf ./ms.tex
-      ' > $out/bin/${pname}
-    chmod +x $out/bin/${pname}
+    install -Dm644 main.py "$out/${python.sitePackages}/$pname.py"
+    install -Dm755 main.py "$out/bin/$pname"
+    if [ -d prm ]; then
+      cp -R prm/ "$out/${python.sitePackages}/"
+      cp -R prm/ "$out/bin/"
+    fi
   '';
   meta.mainProgram = pname;
-  pname = builtins.baseNameOf src;
+  nativeBuildInputs = nativeDeps;
+  passthru.python = python;
+  propagatedBuildInputs = pythonDeps;
+  pyproject = false;
   src = ./.;
+  strictDeps = true;
   version = "0.0.0";
 }

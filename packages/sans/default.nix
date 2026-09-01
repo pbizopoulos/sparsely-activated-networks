@@ -1,14 +1,26 @@
-{
-  pkgs ? import <nixpkgs> { },
-}:
-pkgs.python312Packages.buildPythonPackage rec {
+{ pkgs, ... }:
+let
+  nativeDeps = [ ];
+  pname = baseNameOf ./.;
+  python = pkgs.python3;
+  pythonDeps = [ python.pkgs.torch ];
+in
+python.pkgs.buildPythonPackage {
+  inherit pname;
   installPhase = ''
-    mkdir -p $out/${pkgs.python312.sitePackages}
-    cp ./main.py $out/${pkgs.python312.sitePackages}/${pname}.py
+    install -Dm644 main.py "$out/${python.sitePackages}/$pname.py"
+    install -Dm755 main.py "$out/bin/$pname"
+    if [ -d prm ]; then
+      cp -R prm/ "$out/${python.sitePackages}/"
+      cp -R prm/ "$out/bin/"
+    fi
   '';
-  pname = builtins.baseNameOf src;
-  propagatedBuildInputs = [ pkgs.python312Packages.torch-bin ];
+  meta.mainProgram = pname;
+  nativeBuildInputs = nativeDeps;
+  passthru.python = python;
+  propagatedBuildInputs = pythonDeps;
   pyproject = false;
   src = ./.;
+  strictDeps = true;
   version = "0.0.0";
 }

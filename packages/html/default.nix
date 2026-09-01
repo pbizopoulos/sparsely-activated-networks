@@ -1,8 +1,11 @@
 {
   pkgs ? import <nixpkgs> { },
 }:
-pkgs.writeShellApplication {
-  name = builtins.baseNameOf ./.;
-  runtimeInputs = [ pkgs.nodePackages.http-server ];
-  text = ''set +u && [ -z "$DEBUG" ] && http-server ${./.}'';
+pkgs.writeShellApplication rec {
+  meta.description = "An HTML, CSS, and JavaScript template package.";
+  name = baseNameOf ./.;
+  runtimeInputs = [ pkgs.http-server ];
+  text = ''
+    exec ${pkgs.http-server}/bin/http-server ${./.} "$@"
+  '';
 }

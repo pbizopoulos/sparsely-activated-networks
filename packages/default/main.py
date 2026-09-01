@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026- Paschalis Bizopoulos
 """Sparsely activated networks."""
 
 from __future__ import annotations
 
-import os
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -33,12 +36,9 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import MNIST, FakeData, FashionMNIST
 from torchvision.transforms import ToTensor
 
-_OUT_PATH = (
-    Path.home()
-    / "github.com/pbizopoulos/sparsely-activated-networks/packages/default/tmp/"
-)
+_OUT_PATH = Path.cwd() / "tmp"
+_RESOURCE_PATH = Path(__file__).resolve().parent / "prm"
 _OUT_PATH.mkdir(exist_ok=True, parents=True)
-_PARENT_PATH = Path(__file__).resolve().parent
 
 
 class _CNN(nn.Module):  # type: ignore[misc]
@@ -109,7 +109,7 @@ class _PhysionetDataset(Dataset):  # type: ignore[misc]
         dataset_name: str,
         train_validation_test: str,
     ) -> None:
-        if os.getenv("DEBUG"):
+        if "pytest" in sys.modules:
             signal = torch.randn(12000)
         else:
             dataset_dir_path = _OUT_PATH / dataset_name
@@ -159,7 +159,7 @@ class _ReLU2D(nn.Module):  # type: ignore[misc]
 
 class _UCIEpilepsy(Dataset):  # type: ignore[misc]
     def __init__(self, train_validation_test: str) -> None:
-        dataset = pd.read_csv(_PARENT_PATH / "prm/data.csv")
+        dataset = pd.read_csv(_RESOURCE_PATH / "data.csv")
         dataset["y"] = dataset["y"].replace(3, 2)
         dataset["y"] = dataset["y"].replace(4, 3)
         dataset["y"] = dataset["y"].replace(5, 3)
@@ -218,6 +218,20 @@ def _calculate_inverse_compression_ratio(
     )
     return (activation_multiplier * num_activations + num_parameters) / (
         data.shape[-1] * data.shape[-2]
+    )
+
+
+def _compile_manuscript() -> None:
+    """Copy and compile the manuscript after generating its artifacts."""
+    for filename in ("ms.tex", "ms.bib"):
+        shutil.copy2(_RESOURCE_PATH / filename, _OUT_PATH / filename)
+    latexmk = shutil.which("latexmk")
+    if latexmk is None:
+        return
+    subprocess.run(  # noqa: S603
+        [latexmk, "-pdf", "ms.tex"],
+        cwd=_OUT_PATH,
+        check=True,
     )
 
 
@@ -591,7 +605,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
-    if os.getenv("DEBUG"):
+    if "pytest" in sys.modules:
         num_epochs_physionet = 1
         num_epochs = 1
         kernel_size_physionet_range = range(1, 10)
@@ -1031,7 +1045,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         2,
     )
     nbins = 200
-    yi, xi = np.mgrid[0 : 2.5 : nbins * 1j, 0 : 2.5 : nbins * 1j]  # type: ignore[misc]
+    grid = np.linspace(0, 2.5, nbins)
+    xi, yi = np.meshgrid(grid, grid)
     for sparse_activation_color, gaussian_kde_input_element_array in zip(
         sparse_activation_colors,
         gaussian_kde_input_array,
@@ -1281,7 +1296,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     dataset_names = ["MNIST", "FashionMNIST"]
     num_classes = 10
     sample_data_shape = [28, 28]
-    if os.getenv("DEBUG"):
+    if "pytest" in sys.modules:
         dataset_list = [
             [
                 FakeData(
@@ -1580,6 +1595,18 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         index=False,
         float_format="%.2f",
     )
+    _compile_manuscript()
+
+
+def test_main() -> None:
+    """Generate the test artifacts and compile the manuscript."""
+    main()
+    if not (_OUT_PATH / "keys-values.csv").is_file():
+        msg = "Artifact generation did not produce keys-values.csv"
+        raise AssertionError(msg)
+    if shutil.which("latexmk") is not None and not (_OUT_PATH / "ms.pdf").is_file():
+        msg_0 = "Manuscript compilation did not produce ms.pdf"
+        raise AssertionError(msg_0)
 
 
 if __name__ == "__main__":

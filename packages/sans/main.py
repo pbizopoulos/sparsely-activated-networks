@@ -1,4 +1,6 @@
-"""Sparsely activated networks."""  # noqa: INP001
+# Copyright (c) 2026- Paschalis Bizopoulos
+# ruff: noqa: INP001
+"""Sparsely activated networks."""
 
 from __future__ import annotations
 
