@@ -23,7 +23,10 @@ python.pkgs.buildPythonPackage {
       cp -R prm/ "$out/bin/"
     fi
   '';
-  meta.mainProgram = pname;
+  meta = {
+    description = "A Python package.";
+    mainProgram = pname;
+  };
   nativeBuildInputs = nativeDeps;
   passthru.python = python;
   propagatedBuildInputs = pythonDeps;

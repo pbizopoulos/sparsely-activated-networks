@@ -1,446 +1,435 @@
-const documentationA = document.getElementById("documentation-a");
-const documentationDialog = document.getElementById("documentation-dialog");
+const documentationA = document.querySelector("#documentation-a"),
+  documentationDialog = document.querySelector("#documentation-dialog");
 documentationA.addEventListener("click", () => {
   documentationDialog.showModal();
 });
 const noisyOneMotif = {
-  input: {
-    data: null,
-    dataNoise: null,
-    channelArray: [
+    input: {
+      channelArray: [
+        {
+          amplitudeBase: 1,
+          amplitudeMax: 1,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 30,
+          distanceMin: 15,
+          distances: undefined,
+          motifSize: 10,
+          motifType: "cos",
+          use: true,
+        },
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 10,
+          motifType: "cos",
+          use: false,
+        },
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 10,
+          motifType: "cos",
+          use: false,
+        },
+      ],
+      data: undefined,
+      dataNoise: undefined,
+      noiseInitialize: false,
+      noiseSigma: 0.4,
+      noiseTypeKey: "normal",
+      quantizationStatesNum: 100,
+      resizeFunctionKey: "bilinear",
+      resizeMultiplier: 1,
+      size: 100,
+      standardize: true,
+      velocity: 0,
+    },
+    learningRateExponent: -1,
+    lossFunctionKey: "mse",
+    neuronArray: [
       {
-        amplitudeBase: 1,
-        amplitudeMax: 1,
-        amplitudes: null,
-        data: null,
-        distanceMax: 30,
-        distanceMin: 15,
-        distances: null,
-        motifSize: 10,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0.5,
+          data: undefined,
+          distanceMin: 10,
+          function_: "none",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: true,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 10,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: true,
       },
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 10,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 0,
+          function_: "extrema",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: false,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 1,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: false,
       },
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 10,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 0,
+          function_: "extrema",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: false,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 1,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: false,
       },
     ],
-    noiseInitialize: false,
-    noiseSigma: 0.4,
-    noiseTypeKey: "normal",
-    quantizationStatesNum: 100,
-    resizeFunctionKey: "bilinear",
-    resizeMultiplier: 1,
-    size: 100,
-    standardize: true,
-    velocity: 0,
+    optimizerKey: "sgd",
+    referenceFunction: "absolute topk",
   },
-  learningRateExponent: -1,
-  lossFunctionKey: "mse",
-  neuronArray: [
-    {
-      activation: {
-        amplitudeMin: 0.5,
-        data: null,
-        distanceMin: 10,
-        function_: "none",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: true,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 10,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: true,
+  sanConvEncoder = {
+    input: {
+      channelArray: [
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0.5,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 30,
+          motifType: "cos",
+          use: true,
+        },
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 10,
+          motifType: "cos",
+          use: false,
+        },
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 10,
+          motifType: "cos",
+          use: false,
+        },
+      ],
+      data: undefined,
+      dataNoise: undefined,
+      noiseInitialize: false,
+      noiseSigma: 0,
+      noiseTypeKey: "normal",
+      quantizationStatesNum: 100,
+      resizeFunctionKey: "bilinear",
+      resizeMultiplier: 1,
+      size: 100,
+      standardize: false,
+      velocity: 0,
     },
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 0,
-        function_: "extrema",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: false,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 1,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: false,
-    },
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 0,
-        function_: "extrema",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: false,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 1,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: false,
-    },
-  ],
-  optimizerKey: "sgd",
-  referenceFunction: "absolute topk",
-};
-const sanConvEncoder = {
-  input: {
-    data: null,
-    dataNoise: null,
-    channelArray: [
+    learningRateExponent: -1,
+    lossFunctionKey: "mse",
+    neuronArray: [
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0.5,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 30,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 8,
+          function_: "none",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: true,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 15,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: true,
       },
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 10,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 0,
+          function_: "none",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: false,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 1,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: false,
       },
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 10,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 0,
+          function_: "none",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: false,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 1,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: false,
       },
     ],
-    noiseInitialize: false,
-    noiseSigma: 0,
-    noiseTypeKey: "normal",
-    quantizationStatesNum: 100,
-    resizeFunctionKey: "bilinear",
-    resizeMultiplier: 1,
-    size: 100,
-    standardize: false,
-    velocity: 0,
+    optimizerKey: "sgd",
+    referenceFunction: "absolute topk",
   },
-  learningRateExponent: -1,
-  lossFunctionKey: "mse",
-  neuronArray: [
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 8,
-        function_: "none",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: true,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 15,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: true,
+  sanResize = {
+    input: {
+      channelArray: [
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 30,
+          motifType: "cos",
+          use: true,
+        },
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 10,
+          motifType: "cos",
+          use: false,
+        },
+        {
+          amplitudeBase: 0.5,
+          amplitudeMax: 0,
+          amplitudes: undefined,
+          data: undefined,
+          distanceMax: 20,
+          distanceMin: 10,
+          distances: undefined,
+          motifSize: 10,
+          motifType: "cos",
+          use: false,
+        },
+      ],
+      data: undefined,
+      dataNoise: undefined,
+      noiseInitialize: false,
+      noiseSigma: 0.1,
+      noiseTypeKey: "normal",
+      quantizationStatesNum: 100,
+      resizeFunctionKey: "bilinear",
+      resizeMultiplier: 1,
+      size: 100,
+      standardize: false,
+      velocity: 0,
     },
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 0,
-        function_: "none",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: false,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 1,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: false,
-    },
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 0,
-        function_: "none",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: false,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 1,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: false,
-    },
-  ],
-  optimizerKey: "sgd",
-  referenceFunction: "absolute topk",
-};
-const sanResize = {
-  input: {
-    data: null,
-    dataNoise: null,
-    channelArray: [
+    learningRateExponent: -1,
+    lossFunctionKey: "mse",
+    neuronArray: [
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 30,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 8,
+          function_: "extrema",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: true,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 3,
+          size: 3,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: true,
       },
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 10,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 0,
+          function_: "extrema",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: false,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 1,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: false,
       },
       {
-        amplitudeBase: 0.5,
-        amplitudeMax: 0,
-        amplitudes: null,
-        data: null,
-        distanceMax: 20,
-        distanceMin: 10,
-        distances: null,
-        motifSize: 10,
-        motifType: "cos",
+        activation: {
+          amplitudeMin: 0,
+          data: undefined,
+          distanceMin: 0,
+          function_: "extrema",
+          regulated: false,
+          regulates: false,
+        },
+        convEncoderUse: false,
+        kernel: {
+          amplitude: 1,
+          initialization: "constant",
+          resizeFunction: "bilinear",
+          resizeMultiplier: 1,
+          size: 1,
+          stride: 1,
+          strideResizeFunction: "bilinear",
+        },
         use: false,
       },
     ],
-    noiseInitialize: false,
-    noiseSigma: 0.1,
-    noiseTypeKey: "normal",
-    quantizationStatesNum: 100,
-    resizeFunctionKey: "bilinear",
-    resizeMultiplier: 1,
-    size: 100,
-    standardize: false,
-    velocity: 0,
+    optimizerKey: "sgd",
+    referenceFunction: "absolute topk",
   },
-  learningRateExponent: -1,
-  lossFunctionKey: "mse",
-  neuronArray: [
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 8,
-        function_: "extrema",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: true,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 3,
-        size: 3,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: true,
-    },
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 0,
-        function_: "extrema",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: false,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 1,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: false,
-    },
-    {
-      activation: {
-        amplitudeMin: 0,
-        data: null,
-        distanceMin: 0,
-        function_: "extrema",
-        regulated: false,
-        regulates: false,
-      },
-      convEncoderUse: false,
-      kernel: {
-        amplitude: 1,
-        initialization: "constant",
-        resizeFunction: "bilinear",
-        resizeMultiplier: 1,
-        size: 1,
-        stride: 1,
-        strideResizeFunction: "bilinear",
-      },
-      use: false,
-    },
-  ],
-  optimizerKey: "sgd",
-  referenceFunction: "absolute topk",
-};
-const motifMaxNum = 3;
-const neuronMaxNum = 3;
+  motifMaxNum = 3,
+  neuronMaxNum = 3;
 tf.env().set("WEBGL_DELETE_TEXTURE_THRESHOLD", 0);
-const activationFunctionArray = ["none", "extrema"];
-const arrowMargin = 5;
-const circleRadius = 15;
-const exampleObject = {
-  noisyOneMotif: noisyOneMotif,
-  sanConvEncoder: sanConvEncoder,
-  sanResize: sanResize,
-};
-const height = 150;
-const inputColor = "#1f77b4";
-const inputMotifTypeArray = ["constant", "cos", "random", "sin", "triangle"];
-const inputNoiseTypeObject = {
-  normal: tf.randomNormal,
-  uniform: tf.randomUniform,
-};
-const inputSizeMax = Number.parseInt(d3.select("#size-input-range").property("max"), 10);
-const kernelInitializationArray = ["constant", "normal", "uniform"];
-const lossFunctionObject = {
-  huber: tf.losses.huberLoss,
-  mae: tf.losses.absoluteDifference,
-  mse: tf.losses.meanSquaredError,
-};
-const motifColorArray = ["#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
-const motifIndexArray = [...Array(motifMaxNum).keys()];
-const neuronColorArray = ["#2ca02c", "#d62728", "#9467bd", "#8c564b"];
-const neuronIndexArray = [...Array(neuronMaxNum).keys()];
-const optimizerObject = {
-  adadelta: tf.train.adadelta,
-  adagrad: tf.train.adagrad,
-  adam: tf.train.adam,
-  adamax: tf.train.adamax,
-  rmsprop: tf.train.rmsprop,
-  sgd: tf.train.sgd,
-};
-const reconstructionColor = "#ff7f0e";
-const referenceFunctionArray = ["absolute topk", "subsample bilinear", "subsample nn"];
-const resizeFunctionObject = {
-  bilinear: tf.image.resizeBilinear,
-  nn: tf.image.resizeNearestNeighbor,
-};
-const width = 150;
-let epoch = 0;
-let input = null;
-let inputChannelCurrentIndex = 0;
-let inputReconstructionDescriptionLength = 0;
-let interval = null;
-let learningRateExponent = Number.parseFloat(
-  d3.select("#learning-rate-exponent-input-range").property("value"),
-);
-let lossFunctionKey = d3.select("#loss-function-select").property("value");
-let neuronArray = new Array(neuronMaxNum).fill(null);
-let neuronCurrentIndex = 0;
-let optimizerKey = d3.select("#optimizer-select").property("value");
-let referenceAction = null;
-let referenceArray = null;
-let referenceFunction = null;
-let referenceReconstructionLoss = null;
-let referenceReupsampledReconstructionLossArray = null;
-let sampleFirstCurrent = 0;
-let zeroReconstructionLoss = null;
+const activationFunctionArray = ["none", "extrema"],
+  arrowMargin = 5,
+  circleRadius = 15,
+  exampleObject = { noisyOneMotif, sanConvEncoder, sanResize },
+  height = 150,
+  inputColor = "#1f77b4",
+  inputMotifTypeArray = ["constant", "cos", "random", "sin", "triangle"],
+  inputNoiseTypeObject = { normal: tf.randomNormal, uniform: tf.randomUniform },
+  inputSizeMax = Math.trunc(Number(d3.select("#size-input-range").property("max"))),
+  kernelInitializationArray = ["constant", "normal", "uniform"],
+  lossFunctionObject = {
+    huber: tf.losses.huberLoss,
+    mae: tf.losses.absoluteDifference,
+    mse: tf.losses.meanSquaredError,
+  },
+  motifColorArray = ["#e377c2", "#7f7f7f", "#bcbd22", "#17becf"],
+  motifIndexArray = [...Array(motifMaxNum).keys()],
+  neuronColorArray = ["#2ca02c", "#d62728", "#9467bd", "#8c564b"],
+  neuronIndexArray = [...Array(neuronMaxNum).keys()],
+  optimizerObject = {
+    adadelta: tf.train.adadelta,
+    adagrad: tf.train.adagrad,
+    adam: tf.train.adam,
+    adamax: tf.train.adamax,
+    rmsprop: tf.train.rmsprop,
+    sgd: tf.train.sgd,
+  },
+  reconstructionColor = "#ff7f0e",
+  referenceFunctionArray = ["absolute topk", "subsample bilinear", "subsample nn"],
+  resizeFunctionObject = { bilinear: tf.image.resizeBilinear, nn: tf.image.resizeNearestNeighbor },
+  width = 150;
+let epoch = 0,
+  input,
+  inputChannelCurrentIndex = 0,
+  inputReconstructionDescriptionLength = 0,
+  interval,
+  learningRateExponent = Number(d3.select("#learning-rate-exponent-input-range").property("value")),
+  lossFunctionKey = d3.select("#loss-function-select").property("value"),
+  neuronArray = Array.from({ length: neuronMaxNum }).fill(),
+  neuronCurrentIndex = 0,
+  optimizerKey = d3.select("#optimizer-select").property("value"),
+  referenceAction,
+  referenceArray,
+  referenceFunction,
+  referenceReconstructionLoss,
+  referenceReupsampledReconstructionLossArray,
+  sampleFirstCurrent = 0,
+  zeroReconstructionLoss;
 function addNeuronKernelWeightAndVisualizations(index) {
   tf.tidy(() => {
     switch (neuronArray[index].kernel.initialization) {
-      case "constant":
+      case "constant": {
         neuronArray[index].kernel.weights = tf.variable(
           tf.fill([neuronArray[index].kernel.size, 1, 1], neuronArray[index].kernel.amplitude),
         );
         break;
-      case "normal":
+      }
+      case "normal": {
         neuronArray[index].kernel.weights = tf.variable(
           tf.randomNormal(
             [neuronArray[index].kernel.size, 1, 1],
@@ -449,7 +438,8 @@ function addNeuronKernelWeightAndVisualizations(index) {
           ),
         );
         break;
-      case "uniform":
+      }
+      case "uniform": {
         neuronArray[index].kernel.weights = tf.variable(
           tf.randomUniform(
             [neuronArray[index].kernel.size, 1, 1],
@@ -458,6 +448,7 @@ function addNeuronKernelWeightAndVisualizations(index) {
           ),
         );
         break;
+      }
     }
   });
   activationsSvg
@@ -498,15 +489,15 @@ function addNeuronKernelWeightAndVisualizations(index) {
     .style("stroke", neuronColorArray[index]);
 }
 function applyDistanceMin(x, distanceMin) {
-  const areaAllowed = new Array(x.length).fill(0);
-  const sorted = tf.topk(tf.abs(x), x.length);
-  const indicesSorted = sorted.indices.arraySync();
-  const valuesSorted = tf.gather(x, indicesSorted).arraySync();
-  const xWithDistanceMin = tf.buffer([x.length, 1]);
-  for (let i = 0; i < indicesSorted.length; i++) {
+  const areaAllowed = Array.from({ length: x.length }).fill(0),
+    sorted = tf.topk(tf.abs(x), x.length),
+    indicesSorted = sorted.indices.arraySync(),
+    valuesSorted = tf.gather(x, indicesSorted).arraySync(),
+    xWithDistanceMin = tf.buffer([x.length, 1]);
+  for (let i = 0; i < indicesSorted.length; i += 1) {
     const indexSorted = indicesSorted[i];
     if (valuesSorted[i] && areaAllowed[indexSorted] === 0) {
-      for (let j = 0; j <= distanceMin; j++) {
+      for (let j = 0; j <= distanceMin; j += 1) {
         areaAllowed[indexSorted - j] = x[indexSorted];
         if (indexSorted + j < x.length) {
           areaAllowed[indexSorted + j] = x[indexSorted];
@@ -518,16 +509,16 @@ function applyDistanceMin(x, distanceMin) {
   return [xWithDistanceMin.toTensor(), areaAllowed];
 }
 function extrema1d(x) {
-  const dx = tf.sub(x.slice(1, x.size - 1), x.slice(0, x.size - 1));
-  const dxPadRightGreater = tf.greater(dx.pad([[0, 1]]), 0);
-  const dxPadLeftLessEqual = tf.lessEqual(dx.pad([[1, 0]]), 0);
-  const sign = tf.sub(1, tf.sign(x)).asType("bool");
-  const valleys = tf.logicalAnd(tf.logicalAnd(dxPadRightGreater, dxPadLeftLessEqual), sign);
-  const peaks = tf.logicalAnd(
-    tf.logicalAnd(tf.logicalNot(dxPadRightGreater), tf.logicalNot(dxPadLeftLessEqual)),
-    tf.logicalNot(sign),
-  );
-  const peaksValleys = tf.logicalOr(peaks, valleys);
+  const dx = tf.sub(x.slice(1, x.size - 1), x.slice(0, x.size - 1)),
+    dxPadRightGreater = tf.greater(dx.pad([[0, 1]]), 0),
+    dxPadLeftLessEqual = tf.lessEqual(dx.pad([[1, 0]]), 0),
+    sign = tf.sub(1, tf.sign(x)).asType("bool"),
+    valleys = tf.logicalAnd(tf.logicalAnd(dxPadRightGreater, dxPadLeftLessEqual), sign),
+    peaks = tf.logicalAnd(
+      tf.logicalAnd(tf.logicalNot(dxPadRightGreater), tf.logicalNot(dxPadLeftLessEqual)),
+      tf.logicalNot(sign),
+    ),
+    peaksValleys = tf.logicalOr(peaks, valleys);
   return tf.mul(peaksValleys, x);
 }
 function generateAndProcessReference() {
@@ -535,17 +526,16 @@ function generateAndProcessReference() {
   tf.dispose(referenceReupsampledReconstructionLossArray);
   tf.tidy(() => {
     referenceArray = [tf.keep(tf.zerosLike(input.data))];
-    const referenceDescriptionLengthArray = [0];
-    const referenceReconstructionLossArray = [
-      lossFunctionObject[lossFunctionKey](input.data, tf.zerosLike(input.data)).dataSync(),
-    ];
-    const step = 20;
+    const referenceDescriptionLengthArray = [0],
+      referenceReconstructionLossArray = [
+        lossFunctionObject[lossFunctionKey](input.data, tf.zerosLike(input.data)).dataSync(),
+      ],
+      step = 20;
     for (let i = step; i < input.data.size; i += step) {
-      let reference = null;
-      let downsampled = null;
+      let reference, downsampled;
       const sorted = tf.topk(input.data.abs().squeeze(-1), i);
       switch (referenceFunction) {
-        case "absolute topk":
+        case "absolute topk": {
           reference = tf
             .scatterND(sorted.indices, tf.gather(input.data, sorted.indices).squeeze(-1), [
               input.data.size,
@@ -553,14 +543,17 @@ function generateAndProcessReference() {
             .expandDims(-1)
             .expandDims(-1);
           break;
-        case "subsample bilinear":
+        }
+        case "subsample bilinear": {
           downsampled = tf.image.resizeBilinear(input.data.expandDims(-1), [i, 1]);
           reference = tf.image.resizeBilinear(downsampled, input.data.shape);
           break;
-        case "subsample nn":
+        }
+        case "subsample nn": {
           downsampled = tf.image.resizeNearestNeighbor(input.data.expandDims(-1), [i, 1]);
           reference = tf.image.resizeNearestNeighbor(downsampled, input.data.shape);
           break;
+        }
       }
       referenceArray.push(tf.keep(reference));
       referenceDescriptionLengthArray.push(i);
@@ -570,7 +563,7 @@ function generateAndProcessReference() {
     }
     referenceArray.push(tf.keep(input.data));
     referenceDescriptionLengthArray.push(input.data.size - 1);
-    referenceReconstructionLossArray.push(new Float32Array([0.0]));
+    referenceReconstructionLossArray.push(new Float32Array([0]));
     referenceReupsampledReconstructionLossArray = tf.keep(
       tf.image.resizeBilinear(
         tf.tensor(referenceReconstructionLossArray).expandDims(-1),
@@ -583,7 +576,7 @@ function generateAndProcessReference() {
       "d",
       ndnlLine(referenceReupsampledReconstructionLossArray.dataSync()),
     );
-    d3.select("#reference-path").attr("d", null);
+    d3.select("#reference-path").attr("d");
     ndnlSvg.selectAll("#ndnl-reference-circle").remove();
     ndnlSvg
       .selectAll("#ndnl-reference-circle")
@@ -592,12 +585,8 @@ function generateAndProcessReference() {
       .append("circle")
       .attr("id", "ndnl-reference-circle")
       .attr("fill", "cyan")
-      .attr("cx", (d) => {
-        return ndnlX(d);
-      })
-      .attr("cy", (d) => {
-        return ndnlY(referenceReupsampledReconstructionLossArray.dataSync()[d]);
-      })
+      .attr("cx", (d) => ndnlX(d))
+      .attr("cy", (d) => ndnlY(referenceReupsampledReconstructionLossArray.dataSync()[d]))
       .attr("r", 2)
       .on("mouseover", (event) => {
         d3.select("#reference-path").attr(
@@ -606,7 +595,7 @@ function generateAndProcessReference() {
         );
       })
       .on("mouseout", () => {
-        d3.select("#reference-path").attr("d", null);
+        d3.select("#reference-path").attr("d");
       });
   });
   referenceReconstructionLoss =
@@ -639,42 +628,47 @@ function generateInputChannelData(index, motifDistancesInitialize, motifAmplitud
       );
     }
     const indices = input.channelArray[index].distances
-      .mul(input.channelArray[index].distanceMax)
-      .add(input.channelArray[index].distanceMin)
-      .cumsum()
-      .cast("int32");
-    const updates = input.channelArray[index].amplitudes
-      .mul(input.channelArray[index].amplitudeMax)
-      .add(input.channelArray[index].amplitudeBase);
-    const motifPositions = tf.scatterND(indices, updates, [inputSizeMax]).expandDims(-1);
-    let motifData = null;
+        .mul(input.channelArray[index].distanceMax)
+        .add(input.channelArray[index].distanceMin)
+        .cumsum()
+        .cast("int32"),
+      updates = input.channelArray[index].amplitudes
+        .mul(input.channelArray[index].amplitudeMax)
+        .add(input.channelArray[index].amplitudeBase),
+      motifPositions = tf.scatterND(indices, updates, [inputSizeMax]).expandDims(-1);
+    let motifData;
     const elementsNum = Math.round(input.channelArray[index].motifSize / 2);
     switch (input.channelArray[index].motifType) {
-      case "constant":
+      case "constant": {
         motifData = tf.fill([input.channelArray[index].motifSize, 1, 1], 1);
         break;
-      case "cos":
+      }
+      case "cos": {
         motifData = tf
           .cos(tf.linspace(0, 2 * Math.PI, input.channelArray[index].motifSize))
           .expandDims(-1)
           .expandDims(-1);
         break;
-      case "random":
+      }
+      case "random": {
         motifData = tf.randomNormal([input.channelArray[index].motifSize, 1, 1]);
         break;
-      case "sin":
+      }
+      case "sin": {
         motifData = tf
           .sin(tf.linspace(0, 2 * Math.PI, input.channelArray[index].motifSize))
           .expandDims(-1)
           .expandDims(-1);
         break;
-      case "triangle":
+      }
+      case "triangle": {
         motifData = tf
           .linspace(0, 1 - 1 / elementsNum, elementsNum)
           .concat(tf.linspace(1, 1 / elementsNum, elementsNum))
           .expandDims(-1)
           .expandDims(-1);
         break;
+      }
     }
     input.channelArray[index].data = tf.keep(tf.conv1d(motifPositions, motifData, 1, "same"));
   });
@@ -693,7 +687,7 @@ function processInputChannelsData(noiseInitialize) {
   tf.dispose(input.data);
   tf.tidy(() => {
     input.data = tf.zeros([inputSizeMax, 1]);
-    for (let i = 0; i < motifMaxNum; i++) {
+    for (let i = 0; i < motifMaxNum; i += 1) {
       if (input.channelArray[i].use && input.channelArray[i].data) {
         input.data = input.data.add(input.channelArray[i].data);
       }
@@ -716,13 +710,13 @@ function processInputChannelsData(noiseInitialize) {
     input.data = input.data.slice(sampleFirstCurrent, input.size);
     sampleFirstCurrent += input.velocity;
     const inputDownsampled = resizeFunctionObject[input.resizeFunctionKey](
-      input.data.expandDims(-1),
-      [Math.ceil(input.data.size * input.resizeMultiplier), 1],
-    );
-    const inputReupsampled = resizeFunctionObject[input.resizeFunctionKey](inputDownsampled, [
-      input.data.size,
-      1,
-    ]).squeeze(-1);
+        input.data.expandDims(-1),
+        [Math.ceil(input.data.size * input.resizeMultiplier), 1],
+      ),
+      inputReupsampled = resizeFunctionObject[input.resizeFunctionKey](inputDownsampled, [
+        input.data.size,
+        1,
+      ]).squeeze(-1);
     input.data = tf.keep(
       inputReupsampled.mul(input.quantizationStatesNum).round().div(input.quantizationStatesNum),
     );
@@ -752,7 +746,7 @@ function train() {
   const neuronActivationAreaAllowedArray = [];
   tf.tidy(() => {
     const optimizer = optimizerObject[optimizerKey](10 ** learningRateExponent);
-    let inputReconstruction = null;
+    let inputReconstruction;
     if (input.data) {
       inputReconstruction = tf.zerosLike(input.data);
     }
@@ -763,8 +757,8 @@ function train() {
     ) {
       return;
     }
-    const { value, grads } = tf.variableGrads(() => {
-      for (let i = 0; i < neuronMaxNum; i++) {
+    const { grads } = tf.variableGrads(() => {
+      for (let i = 0; i < neuronMaxNum; i += 1) {
         if (neuronArray[i].use) {
           neuronArray[i].kernel.weightsResized = resizeFunctionObject[
             neuronArray[i].kernel.resizeFunction
@@ -797,28 +791,30 @@ function train() {
             tf.zerosLike(neuronArray[i].similarity),
           );
           switch (neuronArray[i].activation.function_) {
-            case "none":
+            case "none": {
               break;
-            case "extrema":
+            }
+            case "extrema": {
               neuronArray[i].activation.data = extrema1d(neuronArray[i].activation.data.squeeze());
               break;
+            }
           }
           [neuronArray[i].activation.data, neuronActivationAreaAllowedArray[i]] = applyDistanceMin(
             neuronArray[i].activation.data.squeeze().arraySync(),
             neuronArray[i].activation.distanceMin,
           );
         } else {
-          neuronActivationAreaAllowedArray[i] = new Array(input.data.size).fill(0);
+          neuronActivationAreaAllowedArray[i] = Array.from({ length: input.data.size }).fill(0);
         }
       }
-      const neuronActivationAreaAllowedStackedArray = tf.stack(neuronActivationAreaAllowedArray);
-      const neuronActivationAreaAllowedPostArray = tf.unstack(
-        tf
-          .oneHot(tf.argMax(neuronActivationAreaAllowedStackedArray.abs()), neuronMaxNum)
-          .expandDims(-1),
-        1,
-      );
-      for (let i = 0; i < neuronMaxNum; i++) {
+      const neuronActivationAreaAllowedStackedArray = tf.stack(neuronActivationAreaAllowedArray),
+        neuronActivationAreaAllowedPostArray = tf.unstack(
+          tf
+            .oneHot(tf.argMax(neuronActivationAreaAllowedStackedArray.abs()), neuronMaxNum)
+            .expandDims(-1),
+          1,
+        );
+      for (let i = 0; i < neuronMaxNum; i += 1) {
         if (neuronArray[i].use) {
           if (neuronArray[i].activation.regulated) {
             neuronArray[i].activation.data = neuronArray[i].activation.data.mul(
@@ -874,16 +870,16 @@ function train() {
         }
       }
       const inputReconstructionLoss = lossFunctionObject[lossFunctionKey](
-        input.data,
-        inputReconstruction,
-      );
-      const tmp = lossFunctionObject[lossFunctionKey](
-        inputReconstruction,
-        tf.zerosLike(inputReconstruction),
-      ).arraySync();
-      const action =
-        tmp * input.size * inputReconstructionDescriptionLength +
-        inputReconstructionLoss.arraySync() * input.size * input.size;
+          input.data,
+          inputReconstruction,
+        ),
+        tmp = lossFunctionObject[lossFunctionKey](
+          inputReconstruction,
+          tf.zerosLike(inputReconstruction),
+        ).arraySync(),
+        action =
+          tmp * input.size * inputReconstructionDescriptionLength +
+          inputReconstructionLoss.arraySync() * input.size * input.size;
       d3.select("#action-text").text(action.toFixed(4));
       d3.select("#input-reconstruction-loss-text").text(
         (input.size * inputReconstructionLoss.arraySync()).toFixed(4),
@@ -900,14 +896,13 @@ function train() {
       d3.select("#input-reconstruction-energy-text").text((tmp * input.size).toFixed(4));
       return inputReconstructionLoss;
     });
-    console.log(value);
     d3.select("#description-length-text").text(inputReconstructionDescriptionLength);
     d3.select("#reference-description-length-text").text(inputReconstructionDescriptionLength);
     d3.select("#epoch-text").text(`epoch: ${epoch}`);
     d3.select("#time-per-epoch-text").text(
       `time/epoch: ${Math.round(performance.now() - startTime)}ms`,
     );
-    epoch++;
+    epoch += 1;
     optimizer.applyGradients(grads);
     optimizer.dispose();
   });
@@ -931,22 +926,22 @@ arrowSvg.append("path").attr(
     [2 * arrowMargin, arrowMargin],
   ]),
 );
-const x = d3.scaleLinear([0, 1], [0, width]);
-const y = d3.scaleLinear([-1, 1], [height, 0]);
-const line = d3
-  .line()
-  .x((_d, i) => x(i))
-  .y((d) => y(d));
-const ndnlX = d3.scaleLinear([0, 1], [0, width]);
-const ndnlY = d3.scaleLinear([0, 1], [height, 0]);
-const ndnlLine = d3
-  .line()
-  .x((_d, i) => ndnlX(i))
-  .y((d) => ndnlY(d));
-const activationFunctionSvg = d3
-  .select("#activation-function-div")
-  .append("svg")
-  .attr("viewBox", [0, 0, width, height]);
+const x = d3.scaleLinear([0, 1], [0, width]),
+  y = d3.scaleLinear([-1, 1], [height, 0]),
+  line = d3
+    .line()
+    .x((_d, i) => x(i))
+    .y((d) => y(d)),
+  ndnlX = d3.scaleLinear([0, 1], [0, width]),
+  ndnlY = d3.scaleLinear([0, 1], [height, 0]),
+  ndnlLine = d3
+    .line()
+    .x((_d, i) => ndnlX(i))
+    .y((d) => ndnlY(d)),
+  activationFunctionSvg = d3
+    .select("#activation-function-div")
+    .append("svg")
+    .attr("viewBox", [0, 0, width, height]);
 activationFunctionSvg
   .append("path")
   .attr(
@@ -1004,7 +999,7 @@ activationFunctionSvg
   .attr("cx", "50%")
   .attr("cy", "50%")
   .attr("r", "15px");
-activationFunctionSvg.append("text").attr("x", "50%").attr("y", "50%").text("\u03d5");
+activationFunctionSvg.append("text").attr("x", "50%").attr("y", "50%").text("\u03D5");
 activationFunctionSvg
   .append("circle")
   .attr("class", "circle-operation")
@@ -1200,7 +1195,7 @@ d3.select("#input-div").call(
   }),
 );
 const kernelSvg = d3.select("#kernel-div").append("svg").attr("viewBox", [0, 0, width, height]);
-kernelSvg.append("text").attr("x", "50%").attr("y", "10%").text("w\u1d62");
+kernelSvg.append("text").attr("x", "50%").attr("y", "10%").text("w\u1D62");
 kernelSvg.on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Learned kernels.");
 });
@@ -1208,7 +1203,7 @@ const kernelReconstructionsSvg = d3
   .select("#kernel-reconstruction-div")
   .append("svg")
   .attr("viewBox", [0, 0, width, height]);
-kernelReconstructionsSvg.append("text").attr("x", "50%").attr("y", "10%").text("w\u1d62*\u03B1");
+kernelReconstructionsSvg.append("text").attr("x", "50%").attr("y", "10%").text("w\u1D62*\u03B1");
 kernelReconstructionsSvg.on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Kernel reconstructions.");
 });
@@ -1349,9 +1344,7 @@ sumSvg.on("mouseover", () => {
   );
 });
 d3.select("#activation-amplitude-min-input-range").on("input", (event) => {
-  neuronArray[neuronCurrentIndex].activation.amplitudeMin = Number.parseFloat(
-    event.currentTarget.value,
-  );
+  neuronArray[neuronCurrentIndex].activation.amplitudeMin = Number(event.currentTarget.value);
   d3.select("#activation-amplitude-min-text").html(
     `min amp (T\u2090): ${neuronArray[neuronCurrentIndex].activation.amplitudeMin}`,
   );
@@ -1360,9 +1353,7 @@ d3.select("#activation-amplitude-min-input-range").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the amplitude threshold.");
 });
 d3.select("#activation-distance-min-input-range").on("input", (event) => {
-  neuronArray[neuronCurrentIndex].activation.distanceMin = Number.parseFloat(
-    event.currentTarget.value,
-  );
+  neuronArray[neuronCurrentIndex].activation.distanceMin = Number(event.currentTarget.value);
   d3.select("#activation-distance-min-text").html(
     `min dist (T\u2091): ${neuronArray[neuronCurrentIndex].activation.distanceMin}`,
   );
@@ -1429,9 +1420,7 @@ d3.select("#advanced-input-checkbox").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Toggles visibility of simple/advanced view.");
 });
 d3.select("#channel-amplitude-base-input-range").on("input", (event) => {
-  input.channelArray[inputChannelCurrentIndex].amplitudeBase = Number.parseFloat(
-    event.currentTarget.value,
-  );
+  input.channelArray[inputChannelCurrentIndex].amplitudeBase = Number(event.currentTarget.value);
   d3.select("#channel-amplitude-base-text").html(
     `base amp: ${input.channelArray[inputChannelCurrentIndex].amplitudeBase}`,
   );
@@ -1445,9 +1434,7 @@ d3.select("#channel-amplitude-base-input-range").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the base amplitude.");
 });
 d3.select("#channel-amplitude-max-input-range").on("input", (event) => {
-  input.channelArray[inputChannelCurrentIndex].amplitudeMax = Number.parseFloat(
-    event.currentTarget.value,
-  );
+  input.channelArray[inputChannelCurrentIndex].amplitudeMax = Number(event.currentTarget.value);
   d3.select("#channel-amplitude-max-text").html(
     `max amp: ${input.channelArray[inputChannelCurrentIndex].amplitudeMax}`,
   );
@@ -1461,9 +1448,8 @@ d3.select("#channel-amplitude-max-input-range").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the max amplitude.");
 });
 d3.select("#channel-distance-max-input-range").on("input", (event) => {
-  input.channelArray[inputChannelCurrentIndex].distanceMax = Number.parseInt(
-    event.currentTarget.value,
-    10,
+  input.channelArray[inputChannelCurrentIndex].distanceMax = Math.trunc(
+    Number(event.currentTarget.value),
   );
   d3.select("#channel-distance-max-text").html(
     `max dist: ${input.channelArray[inputChannelCurrentIndex].distanceMax}`,
@@ -1481,9 +1467,8 @@ d3.select("#channel-distance-max-input-range").on("mouseover", () => {
   );
 });
 d3.select("#channel-distance-min-input-range").on("input", (event) => {
-  input.channelArray[inputChannelCurrentIndex].distanceMin = Number.parseInt(
-    event.currentTarget.value,
-    10,
+  input.channelArray[inputChannelCurrentIndex].distanceMin = Math.trunc(
+    Number(event.currentTarget.value),
   );
   d3.select("#channel-distance-min-text").html(
     `min dist: ${input.channelArray[inputChannelCurrentIndex].distanceMin}`,
@@ -1501,9 +1486,8 @@ d3.select("#channel-distance-min-input-range").on("mouseover", () => {
   );
 });
 d3.select("#channel-motif-size-input-range").on("input", (event) => {
-  input.channelArray[inputChannelCurrentIndex].motifSize = Number.parseInt(
-    event.currentTarget.value,
-    10,
+  input.channelArray[inputChannelCurrentIndex].motifSize = Math.trunc(
+    Number(event.currentTarget.value),
   );
   d3.select("#channel-motif-size-text").html(
     `size: ${input.channelArray[inputChannelCurrentIndex].motifSize}`,
@@ -1533,7 +1517,7 @@ d3.select("#channel-use-input-checkbox").on("mouseover", () => {
 d3.select("#conv-encoder-use-input-checkbox").on("change", (event) => {
   if (event.currentTarget.checked) {
     convEncoderSvg.style("visibility", "visible");
-    d3.select("#similaritiesTextSvg").text("w\u1d62*x");
+    d3.select("#similaritiesTextSvg").text("w\u1D62*x");
   } else {
     convEncoderSvg.style("visibility", "hidden");
     d3.select("#convEncoderSvgVisible").style("visibility", "visible");
@@ -1560,12 +1544,12 @@ d3.select("#example-select")
   .append("option")
   .text((d) => d);
 d3.select("#example-select").on("change", (event) => {
-  for (let i = 0; i < neuronMaxNum; i++) {
+  for (let i = 0; i < neuronMaxNum; i += 1) {
     removeNeuronKernelWeightAndVisualizations(i);
   }
   if (input) {
     tf.dispose(input.data);
-    for (let i = 0; i < motifMaxNum; i++) {
+    for (let i = 0; i < motifMaxNum; i += 1) {
       tf.dispose(input.channelArray[i].data);
       tf.dispose(input.channelArray[i].amplitudes);
       tf.dispose(input.channelArray[i].distances);
@@ -1576,9 +1560,9 @@ d3.select("#example-select").on("change", (event) => {
   d3.select("#description-length-text").text("null");
   d3.select("#epoch-text").text(`epoch: ${epoch}`);
   d3.select("#action-text").text("null");
-  d3.select("#input-reconstruction-path").attr("d", null);
-  d3.select("#ndnl-circle").attr("cx", null).attr("cy", null);
-  d3.select("#ndnl-line").attr("x1", null).attr("y1", null).attr("x2", null).attr("y2", null);
+  d3.select("#input-reconstruction-path").attr("d");
+  d3.select("#ndnl-circle").attr("cx").attr("cy");
+  d3.select("#ndnl-line").attr("x1").attr("y1").attr("x2").attr("y2");
   d3.select("#input-reconstruction-loss-text").text("null");
   d3.select("#reference-action-text").text("null");
   d3.select("#reference-reconstruction-loss-text").text("null");
@@ -1586,7 +1570,7 @@ d3.select("#example-select").on("change", (event) => {
   d3.select("#input-reconstruction-energy-text").text("null");
   ({ input, learningRateExponent, lossFunctionKey, neuronArray, optimizerKey, referenceFunction } =
     exampleObject[event.currentTarget.value]);
-  for (let i = 0; i < motifMaxNum; i++) {
+  for (let i = 0; i < motifMaxNum; i += 1) {
     generateInputChannelData(i, true, true);
     d3.select("#input-channel-index-select").property("value", i).dispatch("change");
     d3.select("#channel-use-input-checkbox")
@@ -1637,7 +1621,7 @@ d3.select("#example-select").on("change", (event) => {
   d3.select("#loss-function-select").property("value", lossFunctionKey).dispatch("change");
   d3.select("#optimizer-select").property("value", optimizerKey).dispatch("change");
   d3.select("#reference-function-select").property("value", referenceFunction).dispatch("change");
-  for (let i = 0; i < neuronMaxNum; i++) {
+  for (let i = 0; i < neuronMaxNum; i += 1) {
     d3.select("#neuron-index-select").property("value", i).dispatch("change");
     d3.select("#activation-regulated-input-checkbox")
       .property("checked", neuronArray[i].activation.regulated)
@@ -1702,9 +1686,8 @@ d3.select("#input-channel-index-select")
   .append("option")
   .text((d) => d);
 d3.select("#input-channel-index-select").on("change", () => {
-  inputChannelCurrentIndex = Number.parseInt(
-    d3.select("#input-channel-index-select").property("value"),
-    10,
+  inputChannelCurrentIndex = Math.trunc(
+    Number(d3.select("#input-channel-index-select").property("value")),
   );
   d3.select("#channel-use-input-checkbox").property(
     "checked",
@@ -1812,7 +1795,7 @@ d3.select("#input-resize-function-select").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the input resize function.");
 });
 d3.select("#kernel-amplitude-input-range").on("input", (event) => {
-  neuronArray[neuronCurrentIndex].kernel.amplitude = Number.parseFloat(event.currentTarget.value);
+  neuronArray[neuronCurrentIndex].kernel.amplitude = Number(event.currentTarget.value);
   d3.select("#kernel-amplitude-text").html(
     `amplitude: ${neuronArray[neuronCurrentIndex].kernel.amplitude}`,
   );
@@ -1853,9 +1836,7 @@ d3.select("#kernel-resize-function-select").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the kernel resize function.");
 });
 d3.select("#kernel-resize-multiplier-input-range").on("input", (event) => {
-  neuronArray[neuronCurrentIndex].kernel.resizeMultiplier = Number.parseFloat(
-    event.currentTarget.value,
-  );
+  neuronArray[neuronCurrentIndex].kernel.resizeMultiplier = Number(event.currentTarget.value);
   d3.select("#kernel-resize-multiplier-text").html(
     `resize x: ${neuronArray[neuronCurrentIndex].kernel.resizeMultiplier}`,
   );
@@ -1864,7 +1845,7 @@ d3.select("#kernel-resize-multiplier-input-range").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the kernel resize multiplier.");
 });
 d3.select("#kernel-size-input-range").on("input", (event) => {
-  neuronArray[neuronCurrentIndex].kernel.size = Number.parseInt(event.currentTarget.value, 10);
+  neuronArray[neuronCurrentIndex].kernel.size = Math.trunc(Number(event.currentTarget.value));
   d3.select("#kernel-size-text").html(`size: ${neuronArray[neuronCurrentIndex].kernel.size}`);
   if (neuronArray[neuronCurrentIndex].use) {
     removeNeuronKernelWeightAndVisualizations(neuronCurrentIndex);
@@ -1875,14 +1856,14 @@ d3.select("#kernel-size-input-range").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the kernel resize.");
 });
 d3.select("#kernel-stride-input-range").on("input", (event) => {
-  neuronArray[neuronCurrentIndex].kernel.stride = Number.parseInt(event.currentTarget.value, 10);
+  neuronArray[neuronCurrentIndex].kernel.stride = Math.trunc(Number(event.currentTarget.value));
   d3.select("#kernel-stride-text").html(`stride: ${neuronArray[neuronCurrentIndex].kernel.stride}`);
 });
 d3.select("#kernel-stride-input-range").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the kernel stride.");
 });
 d3.select("#learning-rate-exponent-input-range").on("input", (event) => {
-  learningRateExponent = Number.parseFloat(event.currentTarget.value);
+  learningRateExponent = Number(event.currentTarget.value);
   d3.select("#learning-rate-text").html(`lr: 10<sup>${learningRateExponent}</sup>`);
 });
 d3.select("#learning-rate-exponent-input-range").on("mouseover", () => {
@@ -1915,7 +1896,7 @@ d3.select("#neuron-index-select")
   .append("option")
   .text((d) => d);
 d3.select("#neuron-index-select").on("change", () => {
-  neuronCurrentIndex = Number.parseInt(d3.select("#neuron-index-select").property("value"), 10);
+  neuronCurrentIndex = Math.trunc(Number(d3.select("#neuron-index-select").property("value")));
   d3.select("#neuron-use-input-checkbox").property("checked", neuronArray[neuronCurrentIndex].use);
   d3.select("#activation-regulated-input-checkbox").property(
     "checked",
@@ -2015,8 +1996,8 @@ d3.select("#noise-initialize-input-checkbox").on("mouseover", () => {
   );
 });
 d3.select("#noise-sigma-input-range").on("input", (event) => {
-  input.noiseSigma = Number.parseFloat(event.currentTarget.value);
-  d3.select("#noise-sigma-text").html(`\u03c3: ${input.noiseSigma}`);
+  input.noiseSigma = Number(event.currentTarget.value);
+  d3.select("#noise-sigma-text").html(`\u03C3: ${input.noiseSigma}`);
   processInputChannelsData(false);
   generateAndProcessReference();
 });
@@ -2039,7 +2020,7 @@ d3.select("#optimizer-select").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the optimizer.");
 });
 d3.select("#quantization-states-num-input-range").on("input", (event) => {
-  input.quantizationStatesNum = Number.parseInt(event.currentTarget.value, 10);
+  input.quantizationStatesNum = Math.trunc(Number(event.currentTarget.value));
   d3.select("#quantization-states-num-text").html(`quant states: ${input.quantizationStatesNum}`);
   processInputChannelsData(false);
   generateAndProcessReference();
@@ -2074,7 +2055,7 @@ d3.select("#reference-reconstruction-loss-text").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Reconstruction loss of the reference function.");
 });
 d3.select("#resize-multiplier-input-range").on("input", (event) => {
-  input.resizeMultiplier = Number.parseFloat(event.currentTarget.value);
+  input.resizeMultiplier = Number(event.currentTarget.value);
   d3.select("#resize-multiplier-text").html(`resize x: ${input.resizeMultiplier}`);
   processInputChannelsData(false);
   generateAndProcessReference();
@@ -2086,7 +2067,7 @@ d3.select("#resize-multiplier-input-range").on("mouseover", () => {
   );
 });
 d3.select("#size-input-range").on("click", (event) => {
-  input.size = Number.parseInt(event.currentTarget.value, 10);
+  input.size = Math.trunc(Number(event.currentTarget.value));
   d3.select("#size-text").html(input.size);
   d3.select("#loss-description-length-text").html(input.size);
   d3.select("#reference-loss-description-length-text").html(input.size);
@@ -2131,7 +2112,7 @@ d3.select("#start-pause-button").on("mouseover", () => {
 });
 d3.select("#stop-button").on("click", () => {
   d3.select("#example-select").dispatch("change");
-  const startPauseButton = document.getElementById("start-pause-button");
+  const startPauseButton = document.querySelector("#start-pause-button");
   startPauseButton.textContent = "start";
   clearInterval(interval);
 });
@@ -2151,7 +2132,7 @@ d3.select("#stride-resize-function-select").on("mouseover", () => {
   d3.select("#help-div").property("innerHTML", "Controls the stride resize function.");
 });
 d3.select("#velocity-input-range").on("input", (event) => {
-  input.velocity = Number.parseInt(event.currentTarget.value, 10);
+  input.velocity = Math.trunc(Number(event.currentTarget.value));
   d3.select("#velocity-text").html(`velocity: ${input.velocity}`);
 });
 d3.select("#velocity-input-range").on("mouseover", () => {

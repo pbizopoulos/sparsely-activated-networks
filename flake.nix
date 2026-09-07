@@ -14,6 +14,15 @@
       nixpkgs.config.allowUnfree = true;
     }
     // {
-      inherit (inputs.canonicalization) formatter;
+      formatter = inputs.nixpkgs.lib.genAttrs (builtins.attrNames inputs.canonicalization.formatter) (
+        system:
+        inputs.nixpkgs.legacyPackages.${system}.writeShellApplication {
+          name = "treefmt";
+          text = ''
+            exec ${inputs.canonicalization.formatter.${system}}/bin/treefmt \
+              --excludes packages/html/script.js "$@"
+          '';
+        }
+      );
     };
 }
