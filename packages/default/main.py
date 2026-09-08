@@ -225,11 +225,8 @@ def _compile_manuscript() -> None:
     """Copy and compile the manuscript after generating its artifacts."""
     for filename in ("ms.tex", "ms.bib"):
         shutil.copy2(_RESOURCE_PATH / filename, _OUT_PATH / filename)
-    latexmk = shutil.which("latexmk")
-    if latexmk is None:
-        return
-    subprocess.run(  # noqa: S603
-        [latexmk, "-pdf", "ms.tex"],
+    subprocess.run(
+        ["latexmk", "-pdf", "ms.tex"],  # noqa: S607
         cwd=_OUT_PATH,
         check=True,
     )
@@ -1604,7 +1601,7 @@ def test_main() -> None:
     if not (_OUT_PATH / "keys-values.csv").is_file():
         msg = "Artifact generation did not produce keys-values.csv"
         raise AssertionError(msg)
-    if shutil.which("latexmk") is not None and not (_OUT_PATH / "ms.pdf").is_file():
+    if not (_OUT_PATH / "ms.pdf").is_file():
         msg_0 = "Manuscript compilation did not produce ms.pdf"
         raise AssertionError(msg_0)
 

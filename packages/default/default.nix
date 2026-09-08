@@ -1,6 +1,6 @@
 { inputs, pkgs, ... }:
 let
-  nativeDeps = [ ];
+  nativeDeps = [ pkgs.texliveFull ];
   pname = baseNameOf ./.;
   python = pkgs.python3;
   pythonDeps = [
