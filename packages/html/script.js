@@ -1,4 +1,5 @@
-const documentationA = document.querySelector("#documentation-a"),
+/* eslint-disable unicorn/no-abusive-eslint-disable */ /* eslint-disable */ const documentationA =
+    document.querySelector("#documentation-a"),
   documentationDialog = document.querySelector("#documentation-dialog");
 documentationA.addEventListener("click", () => {
   documentationDialog.showModal();
@@ -532,7 +533,7 @@ function generateAndProcessReference() {
       ],
       step = 20;
     for (let i = step; i < input.data.size; i += step) {
-      let reference, downsampled;
+      let downsampled, reference;
       const sorted = tf.topk(input.data.abs().squeeze(-1), i);
       switch (referenceFunction) {
         case "absolute topk": {
