@@ -1595,16 +1595,5 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     _compile_manuscript()
 
 
-def test_main() -> None:
-    """Generate the test artifacts and compile the manuscript."""
-    main()
-    if not (_OUT_PATH / "keys-values.csv").is_file():
-        msg = "Artifact generation did not produce keys-values.csv"
-        raise AssertionError(msg)
-    if not (_OUT_PATH / "ms.pdf").is_file():
-        msg_0 = "Manuscript compilation did not produce ms.pdf"
-        raise AssertionError(msg_0)
-
-
 if __name__ == "__main__":
     main()

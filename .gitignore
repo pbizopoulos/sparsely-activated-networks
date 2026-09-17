@@ -16,6 +16,7 @@
 !/packages/default/main.py
 !/packages/default/prm/
 !/packages/default/prm/**
+!/packages/default/test_main.py
 !/packages/html/
 !/packages/html/default.nix
 !/packages/html/index.html
