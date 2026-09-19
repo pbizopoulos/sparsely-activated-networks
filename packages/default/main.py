@@ -4,10 +4,11 @@
 
 from __future__ import annotations
 
+import argparse
 import shutil
 import subprocess
-import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import numpy.typing as npt
@@ -36,6 +37,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import MNIST, FakeData, FashionMNIST
 from torchvision.transforms import ToTensor
 
+_RUNTIME = SimpleNamespace(smoke=False)
 _OUT_PATH = Path.cwd() / "tmp"
 _RESOURCE_PATH = Path(__file__).resolve().parent / "prm"
 _OUT_PATH.mkdir(exist_ok=True, parents=True)
@@ -109,7 +111,7 @@ class _PhysionetDataset(Dataset):  # type: ignore[misc]
         dataset_name: str,
         train_validation_test: str,
     ) -> None:
-        if "pytest" in sys.modules:
+        if _RUNTIME.smoke:
             signal = torch.randn(12000)
         else:
             dataset_dir_path = _OUT_PATH / dataset_name
@@ -599,10 +601,17 @@ def _validate_or_test_model_unsupervised(
 
 def main() -> None:  # noqa: C901,PLR0912,PLR0915
     """Train SANs and generate corresponding images and tables."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Generate results and a manuscript using a small synthetic dataset.",
+    )
+    _RUNTIME.smoke = parser.parse_args().smoke
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
-    if "pytest" in sys.modules:
+    if _RUNTIME.smoke:
         num_epochs_physionet = 1
         num_epochs = 1
         kernel_size_physionet_range = range(1, 10)
@@ -1293,7 +1302,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     dataset_names = ["MNIST", "FashionMNIST"]
     num_classes = 10
     sample_data_shape = [28, 28]
-    if "pytest" in sys.modules:
+    if _RUNTIME.smoke:
         dataset_list = [
             [
                 FakeData(
