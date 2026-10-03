@@ -25,15 +25,17 @@
     "canonical": {
       "inputs": {
         "blueprint": "blueprint",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1790084351,
-        "narHash": "sha256-ecbGJFUbX855Z6Q3UZOoc3VxcTZy04v0NUd4UDASJuI=",
+        "lastModified": 1790980208,
+        "narHash": "sha256-ih74dlEq6uv7P/ON8b/PHM6I7rNq+fAot4iYjb6eoXM=",
         "owner": "pbizopoulos",
         "repo": "canonical",
-        "rev": "3c5b934c7470d7340be80f74e8892b197f998c05",
+        "rev": "a848f5d377b3db98ae41f14be79d906a1d1bac17",
         "type": "github"
       },
       "original": {
@@ -44,27 +46,24 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1790046670,
-        "narHash": "sha256-MYiI+CzL0tuWgRPjGsKCDHqYs2T3OzMlMQWOYWG0qso=",
+        "lastModified": 1790578696,
+        "narHash": "sha256-ZoxIApko70jCdbH3l20HWXOBaT2HZd87orzd2yJ9dVE=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "6774f7bc253789b113a4f39285dc0fa100abeacc",
+        "rev": "7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-unstable",
         "repo": "nixpkgs",
+        "rev": "7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f",
         "type": "github"
       }
     },
     "root": {
       "inputs": {
         "canonical": "canonical",
-        "nixpkgs": [
-          "canonical",
-          "nixpkgs"
-        ]
+        "nixpkgs": "nixpkgs"
       }
     },
     "systems": {
