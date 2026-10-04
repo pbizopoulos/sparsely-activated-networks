@@ -21,8 +21,34 @@ in
 pkgs.writeShellApplication {
   meta.description = "An HTML, CSS, and JavaScript template package.";
   name = pname;
-  runtimeInputs = runtimeDeps ++ [ pkgs.http-server ];
+  runtimeInputs =
+    runtimeDeps
+    ++ [ pkgs.http-server ]
+    ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.xdg-utils ];
   text = ''
-    exec http-server ${site} "$@"
+    open_args=()
+    if [[ -n "''${DISPLAY:-}" || -n "''${WAYLAND_DISPLAY:-}" ]]; then
+      open_args=(-o /)
+    fi
+    server_args=()
+    for argument in "$@"; do
+      case "$argument" in
+        --no-open)
+          open_args=()
+          ;;
+        -o|--o|-o=*|--o=*|--no-o)
+          open_args=()
+          server_args+=("$argument")
+          ;;
+        -h|--help)
+          printf '%s\n' 'Desktop runs open the browser; --no-open disables this.'
+          server_args+=("$argument")
+          ;;
+        *)
+          server_args+=("$argument")
+          ;;
+      esac
+    done
+    exec http-server ${site} "''${open_args[@]}" "''${server_args[@]}"
   '';
 }
