@@ -1,8 +1,8 @@
 {
-  inputs.canonical.url = "github:pbizopoulos/canonical";
+  inputs.perigrafo.url = "github:perigrafo/perigrafo";
   outputs =
     inputs:
-    inputs.canonical.blueprint {
+    inputs.perigrafo.blueprint {
       inherit inputs;
       nixpkgs.config = {
         allowUnfree = true;
@@ -10,6 +10,6 @@
       };
     }
     // {
-      inherit (inputs.canonical) formatter;
+      inherit (inputs.perigrafo) formatter;
     };
 }

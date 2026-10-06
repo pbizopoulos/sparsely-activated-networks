@@ -577,7 +577,7 @@ function generateAndProcessReference() {
       "d",
       ndnlLine(referenceReupsampledReconstructionLossArray.dataSync()),
     );
-    d3.select("#reference-path").attr("d");
+    d3.select("#reference-path").attr("d", null);
     ndnlSvg.selectAll("#ndnl-reference-circle").remove();
     ndnlSvg
       .selectAll("#ndnl-reference-circle")
@@ -596,7 +596,7 @@ function generateAndProcessReference() {
         );
       })
       .on("mouseout", () => {
-        d3.select("#reference-path").attr("d");
+        d3.select("#reference-path").attr("d", null);
       });
   });
   referenceReconstructionLoss =
@@ -1561,9 +1561,9 @@ d3.select("#example-select").on("change", (event) => {
   d3.select("#description-length-text").text("null");
   d3.select("#epoch-text").text(`epoch: ${epoch}`);
   d3.select("#action-text").text("null");
-  d3.select("#input-reconstruction-path").attr("d");
-  d3.select("#ndnl-circle").attr("cx").attr("cy");
-  d3.select("#ndnl-line").attr("x1").attr("y1").attr("x2").attr("y2");
+  d3.select("#input-reconstruction-path").attr("d", null);
+  d3.select("#ndnl-circle").attr("cx", null).attr("cy", null);
+  d3.select("#ndnl-line").attr("x1", null).attr("y1", null).attr("x2", null).attr("y2", null);
   d3.select("#input-reconstruction-loss-text").text("null");
   d3.select("#reference-action-text").text("null");
   d3.select("#reference-reconstruction-loss-text").text("null");
