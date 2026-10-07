@@ -10,6 +10,6 @@
       };
     }
     // {
-      inherit (inputs.perigrafo) formatter;
+      formatter = inputs.perigrafo.lib.mkFormatter { inherit (inputs) self; };
     };
 }

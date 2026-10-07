@@ -217,10 +217,10 @@ def _calculate_inverse_compression_ratio(
 ) -> npt.NDArray[np.float64]:
     activation_multiplier = 1 + len(model.weights_kernels[0].shape)
     num_parameters = sum(
-        weights_kernel.shape[0] for weights_kernel in model.weights_kernels
+        int(weights_kernel.shape[0]) for weights_kernel in model.weights_kernels
     )
     return (activation_multiplier * num_activations + num_parameters) / (
-        data.shape[-1] * data.shape[-2]
+        int(data.shape[-1] * data.shape[-2])
     )
 
 
@@ -248,7 +248,7 @@ def _save_images_1d(  # noqa: PLR0915
     plt.grid(visible=True)
     plt.autoscale(enable=True, axis="x", tight=True)
     plt.plot(signal.cpu().detach().numpy())
-    plt.ylim([signal.min(), signal.max()])
+    plt.ylim((signal.min(), signal.max()))
     plt.savefig(
         _OUT_PATH
         / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",  # noqa: E501
@@ -272,7 +272,7 @@ def _save_images_1d(  # noqa: PLR0915
             plt.grid(visible=True)
             plt.autoscale(enable=True, axis="x", tight=True)
             plt.plot(weights_kernel.cpu().detach().numpy(), "r")
-            plt.xlim([0, xlim_weight])
+            plt.xlim((0, xlim_weight))
             if dataset_name == "apnea-ecg":
                 plt.ylabel(sparse_activation_name, fontsize=20)
             if sparse_activation_name == "relu":
@@ -340,7 +340,7 @@ def _save_images_1d(  # noqa: PLR0915
             neg_signal[~step] = np.nan
             plt.plot(pos_signal)
             plt.plot(neg_signal, color="r")
-            plt.ylim([signal.min(), signal.max()])
+            plt.ylim((signal.min(), signal.max()))
             plt.savefig(
                 _OUT_PATH
                 / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",  # noqa: E501
@@ -352,7 +352,7 @@ def _save_images_1d(  # noqa: PLR0915
         plt.autoscale(enable=True, axis="x", tight=True)
         plt.plot(signal.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
-        plt.ylim([signal.min(), signal.max()])
+        plt.ylim((signal.min(), signal.max()))
         plt.savefig(
             _OUT_PATH
             / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",  # noqa: E501
@@ -698,7 +698,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
         (len(sparse_activations), len(dataset_names)),
         dtype=int,
     )
-    gaussian_kde_input_array = np.zeros(
+    gaussian_kde_input_array: npt.NDArray[np.float64] = np.zeros(
         (len(sparse_activations), len(dataset_names), len(kernel_sizes_list), 2),
     )
     for dataset_name_index, (dataset_name, xlim_weight) in enumerate(
@@ -853,20 +853,20 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
                 - inverse_compression_ratio_best.mean(),
             )
             fig.add_axes(
-                [0.75, 0.81 - 0.165 * sparse_activation_index, 0.1, 0.1],
+                (0.75, 0.81 - 0.165 * sparse_activation_index, 0.1, 0.1),
                 facecolor="y",
             )
             plt.plot(
                 model_best.weights_kernels[0].flip(0).cpu().detach().numpy().T,
                 c=sparse_activation_color,
             )
-            plt.xlim([0, xlim_weight])
+            plt.xlim((0, xlim_weight))
             plt.xticks([])
             plt.yticks([])
         results_physionet_rows.append(results_physionet_row)
         plt.sca(ax_main)
-        plt.xlim([0, 2.5])
-        plt.ylim([0, 2.5])
+        plt.xlim((0, 2.5))
+        plt.ylim((0, 2.5))
         plt.xlabel("$\\tilde{\\mathcal{L}}$")
         plt.ylabel("$CR^{-1}$")
         plt.grid(visible=True)
@@ -947,7 +947,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
     plt.xlabel("epochs")
     plt.ylabel("$\\bar\\varphi$")
     plt.autoscale(enable=True, axis="x", tight=True)
-    plt.ylim([0, 2.5])
+    plt.ylim((0, 2.5))
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.savefig(_OUT_PATH / "mean-flithos-validation-epochs.png")
@@ -987,7 +987,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
     plt.xlabel("$m$")
     plt.ylabel("$\\bar\\varphi$")
     plt.autoscale(enable=True, axis="x", tight=True)
-    plt.ylim([0, 2.5])
+    plt.ylim((0, 2.5))
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.savefig(_OUT_PATH / "mean-flithos-variable-kernel-size-list.png")
@@ -1081,8 +1081,8 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
     ax.add_patch(wedge)
     plt.xlabel("$\\tilde{\\mathcal{L}}$")
     plt.ylabel("$CR^{-1}$")
-    plt.xlim([0, 2.5])
-    plt.ylim([0, 2.5])
+    plt.xlim((0, 2.5))
+    plt.ylim((0, 2.5))
     plt.grid(visible=True)
     plt.savefig(_OUT_PATH / "crrl-density-plot.png")
     plt.close()

@@ -3,15 +3,6 @@
 }:
 let
   python = pkgs.python3;
-  pythonDeps = [
-    python.pkgs.aiohttp
-    python.pkgs.fsspec
-    python.pkgs.matplotlib
-    python.pkgs.pandas
-    python.pkgs.requests
-    python.pkgs.scipy
-    python.pkgs.soundfile
-  ];
 in
 python.pkgs.buildPythonPackage rec {
   format = "wheel";
@@ -20,7 +11,15 @@ python.pkgs.buildPythonPackage rec {
     substituteInPlace "$out/${python.sitePackages}/wfdb/io/annotation.py" \
       --replace-fail '.values, inplace=True' '.to_numpy(), inplace=True'
   '';
-  propagatedBuildInputs = pythonDeps;
+  propagatedBuildInputs = [
+    python.pkgs.aiohttp
+    python.pkgs.fsspec
+    python.pkgs.matplotlib
+    python.pkgs.pandas
+    python.pkgs.requests
+    python.pkgs.scipy
+    python.pkgs.soundfile
+  ];
   pythonImportsCheck = [ pname ];
   src = python.pkgs.fetchPypi rec {
     inherit pname version format;
