@@ -8,5 +8,4 @@ in
   meta.description = "A Python package.";
   propagatedBuildInputs = [ python.pkgs.torch ];
   src = ./.;
-  version = "0.0.0";
 }

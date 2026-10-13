@@ -15,5 +15,4 @@ in
     python.pkgs.torchvision
   ];
   src = ./.;
-  version = "0.0.0";
 }
