@@ -21,8 +21,5 @@
 !/packages/html/index.html
 !/packages/html/script.js
 !/packages/html/style.css
-!/packages/sans/
-!/packages/sans/default.nix
-!/packages/sans/main.py
 !/packages/wfdb/
 !/packages/wfdb/default.nix

@@ -15,7 +15,6 @@ in
   };
   nativeBuildInputs = [ pkgs.texliveFull ];
   propagatedBuildInputs = [
-    inputs.self.packages.${pkgs.stdenv.system}.sans
     inputs.self.packages.${pkgs.stdenv.system}.wfdb
     python.pkgs.pandas
     python.pkgs.torch
