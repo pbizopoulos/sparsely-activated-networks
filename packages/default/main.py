@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -28,6 +29,9 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import MNIST, FakeData, FashionMNIST
 from torchvision.transforms import ToTensor
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 _RUNTIME = SimpleNamespace(smoke=False)
 RUNTIME_DIR = Path.home() / (
     "github.com/pbizopoulos/sparsely-activated-networks/packages/default/tmp"
@@ -37,7 +41,7 @@ _RESOURCE_PATH = Path(__file__).resolve().parent / "prm"
 _OUT_PATH.mkdir(exist_ok=True, parents=True)
 
 
-class Extrema1D(nn.Module):  # type: ignore[misc] # noqa: D101
+class Extrema1D(nn.Module):  # noqa: D101
     def __init__(self, minimum_extrema_distance: int) -> None:  # noqa: D107
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
@@ -46,7 +50,7 @@ class Extrema1D(nn.Module):  # type: ignore[misc] # noqa: D101
         return _extrema_1d(input_, self.minimum_extrema_distance)
 
 
-class Extrema2D(nn.Module):  # type: ignore[misc] # noqa: D101
+class Extrema2D(nn.Module):  # noqa: D101
     def __init__(self, minimum_extrema_distance: list[int]) -> None:  # noqa: D107
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
@@ -55,7 +59,7 @@ class Extrema2D(nn.Module):  # type: ignore[misc] # noqa: D101
         return _extrema_2d(input_, self.minimum_extrema_distance)
 
 
-class ExtremaPoolIndices1D(nn.Module):  # type: ignore[misc] # noqa: D101
+class ExtremaPoolIndices1D(nn.Module):  # noqa: D101
     def __init__(self, pool_size: int) -> None:  # noqa: D107
         super().__init__()
         self.pool_size = pool_size
@@ -64,7 +68,7 @@ class ExtremaPoolIndices1D(nn.Module):  # type: ignore[misc] # noqa: D101
         return _extrema_pool_indices_1d(input_, self.pool_size)
 
 
-class ExtremaPoolIndices2D(nn.Module):  # type: ignore[misc] # noqa: D101
+class ExtremaPoolIndices2D(nn.Module):  # noqa: D101
     def __init__(self, pool_size: int) -> None:  # noqa: D107
         super().__init__()
         self.pool_size = pool_size
@@ -73,7 +77,7 @@ class ExtremaPoolIndices2D(nn.Module):  # type: ignore[misc] # noqa: D101
         return _extrema_pool_indices_2d(input_, self.pool_size)
 
 
-class SAN1d(nn.Module):  # type: ignore[misc] # noqa: D101
+class SAN1d(nn.Module):  # noqa: D101
     def __init__(  # noqa: D107
         self: SAN1d,
         kernel_sizes: list[int],
@@ -109,7 +113,7 @@ class SAN1d(nn.Module):  # type: ignore[misc] # noqa: D101
         return reconstructions_sum
 
 
-class SAN2d(nn.Module):  # type: ignore[misc] # noqa: D101
+class SAN2d(nn.Module):  # noqa: D101
     def __init__(  # noqa: D107
         self: SAN2d,
         kernel_sizes: list[int],
@@ -145,7 +149,7 @@ class SAN2d(nn.Module):  # type: ignore[misc] # noqa: D101
         return reconstructions_sum
 
 
-class TopKAbsolutes1D(nn.Module):  # type: ignore[misc] # noqa: D101
+class TopKAbsolutes1D(nn.Module):  # noqa: D101
     def __init__(self, topk: int) -> None:  # noqa: D107
         super().__init__()
         self.topk = topk
@@ -154,7 +158,7 @@ class TopKAbsolutes1D(nn.Module):  # type: ignore[misc] # noqa: D101
         return _topk_absolutes_1d(input_, self.topk)
 
 
-class TopKAbsolutes2D(nn.Module):  # type: ignore[misc] # noqa: D101
+class TopKAbsolutes2D(nn.Module):  # noqa: D101
     def __init__(self, topk: int) -> None:  # noqa: D107
         super().__init__()
         self.topk = topk
@@ -317,7 +321,7 @@ def _topk_absolutes_2d(input_: torch.Tensor, topk: int) -> torch.Tensor:
     ).view(input_.shape)
 
 
-class _CNN(nn.Module):  # type: ignore[misc]
+class _CNN(nn.Module):
     def __init__(self, num_classes: int) -> None:
         super().__init__()
         self.conv1 = nn.Conv1d(1, 3, 5)
@@ -338,8 +342,8 @@ class _CNN(nn.Module):  # type: ignore[misc]
         return output
 
 
-class _FNN(nn.Module):  # type: ignore[misc]
-    def __init__(self, num_classes: int, sample_data_shape: torch.Tensor) -> None:
+class _FNN(nn.Module):
+    def __init__(self, num_classes: int, sample_data_shape: Sequence[int]) -> None:
         super().__init__()
         self.fc = nn.Linear(sample_data_shape[0] * sample_data_shape[0], num_classes)
 
@@ -355,15 +359,15 @@ class _Hook:
 
     def hook_fn(
         self: _Hook,
-        _: None,
-        input_: torch.Tensor,
+        _: nn.Module,
+        input_: tuple[torch.Tensor, ...],
         output: torch.Tensor,
     ) -> None:
         self.input_ = input_
         self.output = output
 
 
-class _Identity1D(nn.Module):  # type: ignore[misc]
+class _Identity1D(nn.Module):
     def __init__(self, _: None) -> None:
         super().__init__()
 
@@ -371,7 +375,7 @@ class _Identity1D(nn.Module):  # type: ignore[misc]
         return input_
 
 
-class _Identity2D(nn.Module):  # type: ignore[misc]
+class _Identity2D(nn.Module):
     def __init__(self, _: None) -> None:
         super().__init__()
 
@@ -379,7 +383,7 @@ class _Identity2D(nn.Module):  # type: ignore[misc]
         return input_
 
 
-class _PhysionetDataset(Dataset):  # type: ignore[misc]
+class _PhysionetDataset(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
     def __init__(
         self: _PhysionetDataset,
         dataset_name: str,
@@ -414,10 +418,10 @@ class _PhysionetDataset(Dataset):  # type: ignore[misc]
         return (out, 0)
 
     def __len__(self) -> int:
-        return self.signal.shape[0]  # type: ignore[no-any-return]
+        return self.signal.shape[0]
 
 
-class _ReLU1D(nn.Module):  # type: ignore[misc]
+class _ReLU1D(nn.Module):
     def __init__(self, _: None) -> None:
         super().__init__()
 
@@ -425,7 +429,7 @@ class _ReLU1D(nn.Module):  # type: ignore[misc]
         return functional.relu(input_)
 
 
-class _ReLU2D(nn.Module):  # type: ignore[misc]
+class _ReLU2D(nn.Module):
     def __init__(self, _: None) -> None:
         super().__init__()
 
@@ -433,7 +437,7 @@ class _ReLU2D(nn.Module):  # type: ignore[misc]
         return functional.relu(input_)
 
 
-class _UCIEpilepsy(Dataset):  # type: ignore[misc]
+class _UCIEpilepsy(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
     def __init__(self, train_validation_test: str) -> None:
         dataset = pd.read_csv(_RESOURCE_PATH / "data.csv")
         dataset["y"] = dataset["y"].replace(3, 2)
@@ -480,7 +484,7 @@ class _UCIEpilepsy(Dataset):  # type: ignore[misc]
         return (self.signal[index], self.classes[index])
 
     def __len__(self) -> int:
-        return self.classes.shape[0]  # type: ignore[no-any-return]
+        return self.classes.shape[0]
 
 
 def _calculate_inverse_compression_ratio(
@@ -488,9 +492,10 @@ def _calculate_inverse_compression_ratio(
     data: torch.Tensor,
     model: nn.Module,
 ) -> npt.NDArray[np.float64]:
-    activation_multiplier = 1 + len(model.weights_kernels[0].shape)
+    weights_kernels = cast("nn.ParameterList", model.weights_kernels)
+    activation_multiplier = 1 + len(weights_kernels[0].shape)
     num_parameters = sum(
-        int(weights_kernel.shape[0]) for weights_kernel in model.weights_kernels
+        int(weights_kernel.shape[0]) for weights_kernel in weights_kernels
     )
     return (activation_multiplier * num_activations + num_parameters) / (
         int(data.shape[-1] * data.shape[-2])
@@ -521,7 +526,7 @@ def _save_images_1d(  # noqa: PLR0915
     plt.grid(visible=True)
     plt.autoscale(enable=True, axis="x", tight=True)
     plt.plot(signal.cpu().detach().numpy())
-    plt.ylim((signal.min(), signal.max()))
+    plt.ylim((float(signal.min()), float(signal.max())))
     plt.savefig(
         _OUT_PATH
         / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",  # noqa: E501
@@ -613,7 +618,7 @@ def _save_images_1d(  # noqa: PLR0915
             neg_signal[~step] = np.nan
             plt.plot(pos_signal)
             plt.plot(neg_signal, color="r")
-            plt.ylim((signal.min(), signal.max()))
+            plt.ylim((float(signal.min()), float(signal.max())))
             plt.savefig(
                 _OUT_PATH
                 / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",  # noqa: E501
@@ -625,7 +630,7 @@ def _save_images_1d(  # noqa: PLR0915
         plt.autoscale(enable=True, axis="x", tight=True)
         plt.plot(signal.cpu().detach().numpy(), alpha=0.5)
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
-        plt.ylim((signal.min(), signal.max()))
+        plt.ylim((float(signal.min()), float(signal.max())))
         plt.savefig(
             _OUT_PATH
             / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",  # noqa: E501
@@ -746,7 +751,7 @@ def _save_images_2d(
 
 
 def _train_model_supervised(
-    dataloader_train: DataLoader[int],
+    dataloader_train: DataLoader[tuple[torch.Tensor, int | torch.Tensor]],
     model_supervised: nn.Module,
     model_unsupervised: nn.Module,
     optimizer: optim.Adam,
@@ -760,12 +765,12 @@ def _train_model_supervised(
         outputs = model_supervised(data_reconstructed)
         classification_loss = functional.cross_entropy(outputs, targets)
         optimizer.zero_grad()
-        classification_loss.backward()
+        torch.autograd.backward(classification_loss)
         optimizer.step()
 
 
 def _train_model_unsupervised(
-    dataloader_train: DataLoader[int],
+    dataloader_train: DataLoader[tuple[torch.Tensor, int | torch.Tensor]],
     model: nn.Module,
     optimizer: optim.Adam,
     device: torch.device,
@@ -776,12 +781,12 @@ def _train_model_unsupervised(
         data_reconstructed = model(data)
         reconstruction_loss = functional.l1_loss(data, data_reconstructed)
         optimizer.zero_grad()
-        reconstruction_loss.backward()
+        torch.autograd.backward(reconstruction_loss)
         optimizer.step()
 
 
 def _validate_or_test_model_supervised(
-    dataloader: DataLoader[int],
+    dataloader: DataLoader[tuple[torch.Tensor, int | torch.Tensor]],
     hook_handles: list[_Hook],
     model_supervised: nn.Module,
     model_unsupervised: nn.Module,
@@ -833,7 +838,7 @@ def _validate_or_test_model_supervised(
 
 
 def _validate_or_test_model_unsupervised(
-    dataloader: DataLoader[int],
+    dataloader: DataLoader[tuple[torch.Tensor, int | torch.Tensor]],
     hook_handles: list[_Hook],
     model: nn.Module,
     device: torch.device,
@@ -1005,7 +1010,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
             for kernel_size_list_index, kernel_sizes in enumerate(kernel_sizes_list):
                 flithos_epoch_mean_best = float("inf")
                 if sparse_activation == TopKAbsolutes1D:
-                    sparsity_densities = [
+                    sparsity_densities: Sequence[int | Sequence[int]] = [
                         int(physionet_dataset_test.signal.shape[-1] / kernel_size)
                         for kernel_size in kernel_sizes
                     ]
@@ -1380,7 +1385,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
     )
     accuracy_best = 0.0
-    num_classes = len(uci_epilepsy_train.classes.unique())
+    num_classes = len(set(uci_epilepsy_train.classes.tolist()))
     model_supervised = _CNN(num_classes).to(device)
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(num_epochs):
@@ -1391,7 +1396,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
             outputs = model_supervised(signals)
             classification_loss = functional.cross_entropy(outputs, targets)
             optimizer.zero_grad()
-            classification_loss.backward()
+            torch.autograd.backward(classification_loss)
             optimizer.step()
         num_predictions_correct = 0
         num_predictions = 0
@@ -1672,7 +1677,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
                 outputs = fnn_model_supervised(images)
                 classification_loss = functional.cross_entropy(outputs, targets)
                 optimizer.zero_grad()
-                classification_loss.backward()
+                torch.autograd.backward(classification_loss)
                 optimizer.step()
             num_predictions_correct = 0
             num_predictions = 0
@@ -1741,14 +1746,14 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
                         for kernel_size in kernel_sizes
                     ]
                 elif sparse_activation == Extrema2D:
-                    sparsity_densities = np.clip(
+                    extrema_densities = np.clip(
                         [kernel_size - 2 for kernel_size in kernel_sizes],
                         1,
                         999,
                     ).tolist()
                     sparsity_densities = [
-                        [sparsity_density, sparsity_density]  # type: ignore[misc]
-                        for sparsity_density in sparsity_densities
+                        [sparsity_density, sparsity_density]
+                        for sparsity_density in extrema_densities
                     ]
                 else:
                     sparsity_densities = kernel_sizes
