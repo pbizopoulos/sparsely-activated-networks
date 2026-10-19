@@ -20,7 +20,7 @@ jobs:
       - name: Build static files
         id: build
         run: |
-          cp -r packages/html/ _site/
+          cp -r html/ _site/
       - name: Upload static files as artifact
         id: deployment
         uses: actions/upload-pages-artifact@main

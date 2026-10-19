@@ -16,7 +16,6 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import torch
-import wfdb
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Wedge
@@ -29,12 +28,14 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.datasets import MNIST, FakeData, FashionMNIST
 from torchvision.transforms import ToTensor
 
+import wfdb
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
 _RUNTIME = SimpleNamespace(smoke=False)
 RUNTIME_DIR = Path.home() / (
-    "github.com/pbizopoulos/sparsely-activated-networks/packages/default/tmp"
+    "github.com/pbizopoulos/sparsely-activated-networks/default/tmp"
 )
 _OUT_PATH = RUNTIME_DIR
 _RESOURCE_PATH = Path(__file__).resolve().parent / "prm"
