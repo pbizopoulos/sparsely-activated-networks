@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 _RUNTIME = SimpleNamespace(smoke=False)
 RUNTIME_DIR = Path.home() / (
-    "github.com/pbizopoulos/sparsely-activated-networks/default/tmp"
+    "github.com/pbizopoulos/sparsely-activated-networks/generate_paper/tmp"
 )
 _OUT_PATH = RUNTIME_DIR
 _RESOURCE_PATH = Path(__file__).resolve().parent / "prm"
