@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import argparse
 import shutil
 import subprocess
 import sys
@@ -879,14 +878,8 @@ def _validate_or_test_model_unsupervised(
     return (flithos, inverse_compression_ratio, reconstruction_loss)
 
 
-def parser() -> argparse.ArgumentParser:
-    """Declare the command-line interface for this fixed workflow."""
-    return argparse.ArgumentParser(description="Sparsely activated networks.")
-
-
-def main(argv: list[str] | None = None) -> None:  # noqa: C901,PLR0912,PLR0915
+def main() -> None:  # noqa: C901,PLR0912,PLR0915
     """Train SANs and generate corresponding images and tables."""
-    parser().parse_args(argv)
     _RUNTIME.smoke = "pytest" in sys.modules
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
