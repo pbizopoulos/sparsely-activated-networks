@@ -1,6 +1,4 @@
-{
-  pkgs ? import <nixpkgs> { },
-}:
+{ pkgs }:
 let
   python = pkgs.python3;
 in
