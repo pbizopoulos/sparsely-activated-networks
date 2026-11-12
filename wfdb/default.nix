@@ -4,6 +4,7 @@ let
 in
 python.pkgs.buildPythonPackage rec {
   format = "wheel";
+  meta.description = "Read and write physiological waveform and annotation data in Python";
   pname = "wfdb";
   postInstall = ''
     substituteInPlace "$out/${python.sitePackages}/wfdb/io/annotation.py" \

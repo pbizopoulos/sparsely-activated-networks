@@ -1,6 +1,6 @@
 { inputs, pkgs, ... }:
 inputs.afairesi.lib.mkHtmlPackage {
   inherit pkgs;
-  meta.description = "An HTML, CSS, and JavaScript template package.";
+  meta.description = "Interactive demonstration of sparsely activated networks and signal reconstruction";
   src = ./.;
 }
