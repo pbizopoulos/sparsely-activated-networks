@@ -3,8 +3,15 @@ let
   python = pkgs.python3;
 in
 python.pkgs.buildPythonPackage rec {
+  doInstallCheck = true;
   format = "wheel";
+  installCheckPhase = ''
+    runHook preInstallCheck
+    PYTHONPATH="$out/${python.sitePackages}:$PYTHONPATH" ${python.interpreter} -m pytest -q -p no:cacheprovider --import-mode=importlib ${./test_main.py}
+    runHook postInstallCheck
+  '';
   meta.description = "Read and write physiological waveform and annotation data in Python";
+  nativeInstallCheckInputs = [ python.pkgs.pytest ];
   pname = "wfdb";
   postInstall = ''
     substituteInPlace "$out/${python.sitePackages}/wfdb/io/annotation.py" \
