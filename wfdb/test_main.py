@@ -1,5 +1,5 @@
 # Copyright (c) 2026- Paschalis Bizopoulos
-"""Check the waveform annotation labels handled by the packaged pandas patch."""
+"""Check the waveform annotation labels handled by the packaged WFDB library."""
 
 from typing import TYPE_CHECKING
 

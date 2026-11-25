@@ -1,5 +1,27 @@
 { pkgs }:
 let
+  physionet = python.pkgs.buildPythonPackage rec {
+    format = "wheel";
+    pname = "physionet";
+    propagatedBuildInputs = [
+      python.pkgs.boto3
+      python.pkgs.fsspec
+      python.pkgs.numpy
+      python.pkgs.openpyxl
+      python.pkgs.pandas
+      python.pkgs.requests
+      python.pkgs.tqdm
+      python.pkgs.urllib3
+    ];
+    pythonImportsCheck = [ pname ];
+    src = python.pkgs.fetchPypi {
+      inherit pname version format;
+      dist = "py3";
+      hash = "sha256-WT3COUrVxzu7ByYC1LdD9OH20guR1S1E914LJs1X5j4=";
+      python = "py3";
+    };
+    version = "0.7.3";
+  };
   python = pkgs.python3;
 in
 python.pkgs.buildPythonPackage rec {
@@ -13,25 +35,23 @@ python.pkgs.buildPythonPackage rec {
   meta.description = "Read and write physiological waveform and annotation data in Python";
   nativeInstallCheckInputs = [ python.pkgs.pytest ];
   pname = "wfdb";
-  postInstall = ''
-    substituteInPlace "$out/${python.sitePackages}/wfdb/io/annotation.py" \
-      --replace-fail '.values, inplace=True' '.to_numpy(), inplace=True'
-  '';
   propagatedBuildInputs = [
+    physionet
     python.pkgs.aiohttp
     python.pkgs.fsspec
     python.pkgs.matplotlib
+    python.pkgs.numpy
     python.pkgs.pandas
     python.pkgs.requests
     python.pkgs.scipy
     python.pkgs.soundfile
   ];
   pythonImportsCheck = [ pname ];
-  src = python.pkgs.fetchPypi rec {
+  src = python.pkgs.fetchPypi {
     inherit pname version format;
-    dist = python;
+    dist = "py3";
+    hash = "sha256-U99omPlvf3FsPjwNuBgMMCNDRgrBkoUCxRftGJe5IFQ=";
     python = "py3";
-    sha256 = "qhgBz4NXl7kFGreVX7kAzmxfHhts2cyZeebHME4VcGM=";
   };
-  version = "4.3.1";
+  version = "5.2.0";
 }

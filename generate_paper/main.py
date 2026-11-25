@@ -36,9 +36,8 @@ _RUNTIME = SimpleNamespace(smoke=False)
 RUNTIME_DIR = Path.home() / (
     "github.com/pbizopoulos/sparsely-activated-networks/generate_paper/tmp"
 )
-_OUT_PATH = RUNTIME_DIR
 _RESOURCE_PATH = Path(__file__).resolve().parent
-_OUT_PATH.mkdir(exist_ok=True, parents=True)
+RUNTIME_DIR.mkdir(exist_ok=True, parents=True)
 
 
 class Extrema1D(nn.Module):  # noqa: D101
@@ -392,7 +391,7 @@ class _PhysionetDataset(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
         if _RUNTIME.smoke:
             signal = torch.randn(12000)
         else:
-            dataset_dir_path = _OUT_PATH / dataset_name
+            dataset_dir_path = RUNTIME_DIR / dataset_name
             if not dataset_dir_path.exists():
                 record_name = wfdb.get_record_list(f"{dataset_name}/1.0.0")[0]
                 wfdb.dl_database(
@@ -505,10 +504,10 @@ def _calculate_inverse_compression_ratio(
 def _compile_manuscript() -> None:
     """Copy and compile the manuscript after generating its artifacts."""
     for filename in ("ms.tex", "ms.bib"):
-        shutil.copy2(_RESOURCE_PATH / filename, _OUT_PATH / filename)
+        shutil.copy2(_RESOURCE_PATH / filename, RUNTIME_DIR / filename)
     subprocess.run(
         ["latexmk", "-pdf", "ms.tex"],  # noqa: S607
-        cwd=_OUT_PATH,
+        cwd=RUNTIME_DIR,
         check=True,
     )
 
@@ -528,7 +527,7 @@ def _save_images_1d(  # noqa: PLR0915
     plt.plot(signal.cpu().detach().numpy())
     plt.ylim((float(signal.min()), float(signal.max())))
     plt.savefig(
-        _OUT_PATH
+        RUNTIME_DIR
         / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",  # noqa: E501
     )
     plt.close()
@@ -556,7 +555,7 @@ def _save_images_1d(  # noqa: PLR0915
             if sparse_activation_name == "relu":
                 plt.title(dataset_name, fontsize=20)
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -571,7 +570,7 @@ def _save_images_1d(  # noqa: PLR0915
             plt.autoscale(enable=True, axis="x", tight=True)
             plt.plot(similarity.cpu().detach().numpy(), "g")
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -589,7 +588,7 @@ def _save_images_1d(  # noqa: PLR0915
                     basefmt=" ",
                 )
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -620,7 +619,7 @@ def _save_images_1d(  # noqa: PLR0915
             plt.plot(neg_signal, color="r")
             plt.ylim((float(signal.min()), float(signal.max())))
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -632,7 +631,7 @@ def _save_images_1d(  # noqa: PLR0915
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
         plt.ylim((float(signal.min()), float(signal.max())))
         plt.savefig(
-            _OUT_PATH
+            RUNTIME_DIR
             / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",  # noqa: E501
         )
         plt.close()
@@ -650,7 +649,7 @@ def _save_images_2d(
     plt.yticks([])
     plt.imshow(image.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
     plt.savefig(
-        _OUT_PATH
+        RUNTIME_DIR
         / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png",  # noqa: E501
     )
     plt.close()
@@ -675,7 +674,7 @@ def _save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -695,7 +694,7 @@ def _save_images_2d(
                 vmax=vmax,
             )
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -709,7 +708,7 @@ def _save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -729,7 +728,7 @@ def _save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                _OUT_PATH
+                RUNTIME_DIR
                 / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",  # noqa: E501
             )
             plt.close()
@@ -744,7 +743,7 @@ def _save_images_2d(
             vmax=vmax,
         )
         plt.savefig(
-            _OUT_PATH
+            RUNTIME_DIR
             / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",  # noqa: E501
         )
         plt.close()
@@ -1148,7 +1147,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         plt.axvspan(1, 2.5, alpha=0.3, color="gray")
         wedge = Wedge((0, 0), 1, theta1=0, theta2=90, alpha=0.3, color="g")
         ax_main.add_patch(wedge)
-        plt.savefig(_OUT_PATH / f"{dataset_name}.png")
+        plt.savefig(RUNTIME_DIR / f"{dataset_name}.png")
         plt.close()
     header = ["$m$", "$CR^{-1}$", "$\\tilde{\\mathcal{L}}$", "$\\bar\\varphi$"]
     columns = pd.MultiIndex.from_product([sparse_activation_names, header])
@@ -1170,7 +1169,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         },
     )
     styler.to_latex(
-        _OUT_PATH / "table-flithos-variable-kernel-size.tex",
+        RUNTIME_DIR / "table-flithos-variable-kernel-size.tex",
         hrules=True,
         multicol_align="c",
     )
@@ -1222,7 +1221,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.ylim((0, 2.5))
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(_OUT_PATH / "mean-flithos-validation-epochs.png")
+    plt.savefig(RUNTIME_DIR / "mean-flithos-validation-epochs.png")
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     p1 = []
@@ -1262,7 +1261,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.ylim((0, 2.5))
     plt.grid(visible=True)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.savefig(_OUT_PATH / "mean-flithos-variable-kernel-size-list.png")
+    plt.savefig(RUNTIME_DIR / "mean-flithos-variable-kernel-size-list.png")
     plt.close()
     fig = plt.figure(constrained_layout=True, figsize=(6, 6))
     fig_legend = plt.figure()
@@ -1316,7 +1315,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         line2d_list[4],
     ]
     fig_legend.legend(handles=legend_handle_list, fontsize=22, loc="upper center")
-    plt.savefig(_OUT_PATH / "legend.png")
+    plt.savefig(RUNTIME_DIR / "legend.png")
     plt.close()
     fig, ax = plt.subplots(constrained_layout=True, figsize=(6, 6))
     gaussian_kde_input_array = gaussian_kde_input_array.reshape(
@@ -1356,7 +1355,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     plt.xlim((0, 2.5))
     plt.ylim((0, 2.5))
     plt.grid(visible=True)
-    plt.savefig(_OUT_PATH / "crrl-density-plot.png")
+    plt.savefig(RUNTIME_DIR / "crrl-density-plot.png")
     plt.close()
     batch_size = 64
     lr = 0.01
@@ -1569,7 +1568,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         },
     )
     styler.to_latex(
-        _OUT_PATH / "table-uci-epilepsy-supervised.tex",
+        RUNTIME_DIR / "table-uci-epilepsy-supervised.tex",
         hrules=True,
         multicol_align="c",
     )
@@ -1610,17 +1609,17 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     else:
         dataset_list = [
             [
-                MNIST(_OUT_PATH, download=True, train=True, transform=ToTensor()),
-                MNIST(_OUT_PATH, train=False, transform=ToTensor()),
+                MNIST(RUNTIME_DIR, download=True, train=True, transform=ToTensor()),
+                MNIST(RUNTIME_DIR, train=False, transform=ToTensor()),
             ],
             [
                 FashionMNIST(
-                    _OUT_PATH,
+                    RUNTIME_DIR,
                     download=True,
                     train=True,
                     transform=ToTensor(),
                 ),
-                FashionMNIST(_OUT_PATH, train=False, transform=ToTensor()),
+                FashionMNIST(RUNTIME_DIR, train=False, transform=ToTensor()),
             ],
         ]
     accuracies_mnist_fashionmnist_supervised = []
@@ -1852,7 +1851,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             },
         )
         styler.to_latex(
-            _OUT_PATH / f"table-{dataset_name.lower()}-supervised.tex",
+            RUNTIME_DIR / f"table-{dataset_name.lower()}-supervised.tex",
             hrules=True,
             multicol_align="c",
         )
@@ -1871,7 +1870,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         },
     )
     keys_values_df.to_csv(
-        _OUT_PATH / "keys-values.csv",
+        RUNTIME_DIR / "keys-values.csv",
         index=False,
         float_format="%.2f",
     )
