@@ -37,51 +37,69 @@ RUNTIME_DIR = Path.home() / (
     "github.com/pbizopoulos/sparsely-activated-networks/generate_paper/tmp"
 )
 _RESOURCE_PATH = Path(__file__).resolve().parent
-RUNTIME_DIR.mkdir(exist_ok=True, parents=True)
 
 
-class Extrema1D(nn.Module):  # noqa: D101
-    def __init__(self, minimum_extrema_distance: int) -> None:  # noqa: D107
+class Extrema1D(nn.Module):
+    """Select signed extrema from a one-dimensional signal."""
+
+    def __init__(self, minimum_extrema_distance: int) -> None:
+        """Set the exclusion distance around each selected extremum."""
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+        """Keep the strongest separated peaks and valleys."""
         return _extrema_1d(input_, self.minimum_extrema_distance)
 
 
-class Extrema2D(nn.Module):  # noqa: D101
-    def __init__(self, minimum_extrema_distance: list[int]) -> None:  # noqa: D107
+class Extrema2D(nn.Module):
+    """Select signed extrema from a two-dimensional feature map."""
+
+    def __init__(self, minimum_extrema_distance: list[int]) -> None:
+        """Set the exclusion distance along each spatial axis."""
         super().__init__()
         self.minimum_extrema_distance = minimum_extrema_distance
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+        """Keep the strongest separated peaks and valleys."""
         return _extrema_2d(input_, self.minimum_extrema_distance)
 
 
-class ExtremaPoolIndices1D(nn.Module):  # noqa: D101
-    def __init__(self, pool_size: int) -> None:  # noqa: D107
+class ExtremaPoolIndices1D(nn.Module):
+    """Sparsify signals using absolute-value max pooling."""
+
+    def __init__(self, pool_size: int) -> None:
+        """Set the width of each pooling window."""
         super().__init__()
         self.pool_size = pool_size
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+        """Keep the signed value with the largest magnitude in each window."""
         return _extrema_pool_indices_1d(input_, self.pool_size)
 
 
-class ExtremaPoolIndices2D(nn.Module):  # noqa: D101
-    def __init__(self, pool_size: int) -> None:  # noqa: D107
+class ExtremaPoolIndices2D(nn.Module):
+    """Sparsify feature maps using absolute-value max pooling."""
+
+    def __init__(self, pool_size: int) -> None:
+        """Set the side length of each pooling window."""
         super().__init__()
         self.pool_size = pool_size
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+        """Retain signed activations at the selected pooling indices."""
         return _extrema_pool_indices_2d(input_, self.pool_size)
 
 
-class SAN1d(nn.Module):  # noqa: D101
-    def __init__(  # noqa: D107
+class SAN1d(nn.Module):
+    """Reconstruct signals using learned kernels and sparse activations."""
+
+    def __init__(
         self: SAN1d,
         kernel_sizes: list[int],
         sparse_activations: list[nn.Module],
     ) -> None:
+        """Pair each one-dimensional kernel with its activation module."""
         super().__init__()
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList(
@@ -91,7 +109,8 @@ class SAN1d(nn.Module):  # noqa: D101
             ],
         )
 
-    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
+        """Sum the signal reconstructions from all kernels."""
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(
             self.sparse_activations,
@@ -112,12 +131,15 @@ class SAN1d(nn.Module):  # noqa: D101
         return reconstructions_sum
 
 
-class SAN2d(nn.Module):  # noqa: D101
-    def __init__(  # noqa: D107
+class SAN2d(nn.Module):
+    """Reconstruct images using learned kernels and sparse activations."""
+
+    def __init__(
         self: SAN2d,
         kernel_sizes: list[int],
         sparse_activations: list[nn.Module],
     ) -> None:
+        """Pair each square kernel with its activation module."""
         super().__init__()
         self.sparse_activations = nn.ModuleList(sparse_activations)
         self.weights_kernels = nn.ParameterList(
@@ -127,7 +149,8 @@ class SAN2d(nn.Module):  # noqa: D101
             ],
         )
 
-    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
+        """Sum the image reconstructions from all kernels."""
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(
             self.sparse_activations,
@@ -148,21 +171,29 @@ class SAN2d(nn.Module):  # noqa: D101
         return reconstructions_sum
 
 
-class TopKAbsolutes1D(nn.Module):  # noqa: D101
-    def __init__(self, topk: int) -> None:  # noqa: D107
+class TopKAbsolutes1D(nn.Module):
+    """Select the largest signal activations by magnitude."""
+
+    def __init__(self, topk: int) -> None:
+        """Set the number of activations to retain per signal."""
         super().__init__()
         self.topk = topk
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+        """Keep the signed values of the strongest activations."""
         return _topk_absolutes_1d(input_, self.topk)
 
 
-class TopKAbsolutes2D(nn.Module):  # noqa: D101
-    def __init__(self, topk: int) -> None:  # noqa: D107
+class TopKAbsolutes2D(nn.Module):
+    """Select the largest image activations by magnitude."""
+
+    def __init__(self, topk: int) -> None:
+        """Set the number of activations to retain per image."""
         super().__init__()
         self.topk = topk
 
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:  # noqa: D102
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
+        """Keep the strongest signed activations across spatial locations."""
         return _topk_absolutes_2d(input_, self.topk)
 
 
@@ -359,10 +390,9 @@ class _Hook:
     def hook_fn(
         self: _Hook,
         _: nn.Module,
-        input_: tuple[torch.Tensor, ...],
+        _inputs: tuple[torch.Tensor, ...],
         output: torch.Tensor,
     ) -> None:
-        self.input_ = input_
         self.output = output
 
 
@@ -512,7 +542,78 @@ def _compile_manuscript() -> None:
     )
 
 
-def _save_images_1d(  # noqa: PLR0915
+def _save_kernel_response_1d(
+    signal: torch.Tensor,
+    weights_kernel: torch.Tensor,
+    activations: torch.Tensor,
+    figure_prefix: str,
+    weights_index: int,
+) -> None:
+    """Plot one kernel's similarity, sparse activations and reconstruction."""
+    similarity = functional.conv1d(
+        signal.unsqueeze(0).unsqueeze(0),
+        weights_kernel.unsqueeze(0).unsqueeze(0),
+        padding="same",
+    )[0, 0]
+    _, ax = plt.subplots()
+    ax.tick_params(labelbottom=False, labelleft=False)
+    plt.grid(visible=True)
+    plt.autoscale(enable=True, axis="x", tight=True)
+    plt.plot(similarity.cpu().detach().numpy(), "g")
+    plt.savefig(
+        RUNTIME_DIR / f"{figure_prefix}-similarity-{weights_index}.png",
+    )
+    plt.close()
+    _, ax = plt.subplots()
+    ax.tick_params(labelbottom=False, labelleft=False)
+    plt.grid(visible=True)
+    plt.autoscale(enable=True, axis="x", tight=True)
+    peaks = torch.nonzero(activations, as_tuple=False)[:, 0]
+    plt.plot(similarity.cpu().detach().numpy(), "g", alpha=0.5)
+    if peaks.shape[0] != 0:
+        plt.stem(
+            peaks.cpu().detach().numpy(),
+            activations[peaks.cpu().detach().numpy()].cpu().detach().numpy(),
+            linefmt="c",
+            basefmt=" ",
+        )
+    plt.savefig(
+        RUNTIME_DIR / f"{figure_prefix}-activations-{weights_index}.png",
+    )
+    plt.close()
+    reconstruction_ = functional.conv1d(
+        activations.unsqueeze(0).unsqueeze(0),
+        weights_kernel.unsqueeze(0).unsqueeze(0),
+        padding="same",
+    )[0, 0]
+    _, ax = plt.subplots()
+    ax.tick_params(labelbottom=False, labelleft=False)
+    plt.grid(visible=True)
+    plt.autoscale(enable=True, axis="x", tight=True)
+    reconstruction = reconstruction_.cpu().detach().numpy()
+    lefts = peaks - weights_kernel.shape[0] / 2
+    rights = peaks + weights_kernel.shape[0] / 2
+    if weights_kernel.shape[0] % 2 == 1:
+        rights += 1
+    step = np.zeros_like(reconstruction, dtype=bool)
+    lefts[lefts < 0] = 0
+    rights[rights > reconstruction.shape[0]] = reconstruction.shape[0]
+    for left, right in zip(lefts, rights, strict=True):
+        step[int(left) : int(right)] = True
+    pos_signal = reconstruction.copy()
+    neg_signal = reconstruction.copy()
+    pos_signal[step] = np.nan
+    neg_signal[~step] = np.nan
+    plt.plot(pos_signal)
+    plt.plot(neg_signal, color="r")
+    plt.ylim((float(signal.min()), float(signal.max())))
+    plt.savefig(
+        RUNTIME_DIR / f"{figure_prefix}-reconstruction-{weights_index}.png",
+    )
+    plt.close()
+
+
+def _save_images_1d(
     signal: torch.Tensor,
     dataset_name: str,
     model: SAN1d,
@@ -520,6 +621,9 @@ def _save_images_1d(  # noqa: PLR0915
     xlim_weight: int,
 ) -> None:
     model = model.to("cpu")
+    figure_prefix = (
+        f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}"
+    )
     _, ax = plt.subplots()
     ax.tick_params(labelbottom=False, labelleft=False)
     plt.grid(visible=True)
@@ -527,8 +631,7 @@ def _save_images_1d(  # noqa: PLR0915
     plt.plot(signal.cpu().detach().numpy())
     plt.ylim((float(signal.min()), float(signal.max())))
     plt.savefig(
-        RUNTIME_DIR
-        / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-signal.png",  # noqa: E501
+        RUNTIME_DIR / f"{figure_prefix}-signal.png",
     )
     plt.close()
     hook_handles = [
@@ -555,74 +658,16 @@ def _save_images_1d(  # noqa: PLR0915
             if sparse_activation_name == "relu":
                 plt.title(dataset_name, fontsize=20)
             plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-kernel-{weights_index}.png",  # noqa: E501
+                RUNTIME_DIR / f"{figure_prefix}-kernel-{weights_index}.png",
             )
             plt.close()
-            similarity = functional.conv1d(
-                signal.unsqueeze(0).unsqueeze(0),
-                weights_kernel.unsqueeze(0).unsqueeze(0),
-                padding="same",
-            )[0, 0]
-            _, ax = plt.subplots()
-            ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(visible=True)
-            plt.autoscale(enable=True, axis="x", tight=True)
-            plt.plot(similarity.cpu().detach().numpy(), "g")
-            plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-similarity-{weights_index}.png",  # noqa: E501
+            _save_kernel_response_1d(
+                signal,
+                weights_kernel,
+                activations,
+                figure_prefix,
+                weights_index,
             )
-            plt.close()
-            _, ax = plt.subplots()
-            ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(visible=True)
-            plt.autoscale(enable=True, axis="x", tight=True)
-            peaks = torch.nonzero(activations, as_tuple=False)[:, 0]
-            plt.plot(similarity.cpu().detach().numpy(), "g", alpha=0.5)
-            if peaks.shape[0] != 0:
-                plt.stem(
-                    peaks.cpu().detach().numpy(),
-                    activations[peaks.cpu().detach().numpy()].cpu().detach().numpy(),
-                    linefmt="c",
-                    basefmt=" ",
-                )
-            plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-activations-{weights_index}.png",  # noqa: E501
-            )
-            plt.close()
-            reconstruction_ = functional.conv1d(
-                activations.unsqueeze(0).unsqueeze(0),
-                weights_kernel.unsqueeze(0).unsqueeze(0),
-                padding="same",
-            )[0, 0]
-            _, ax = plt.subplots()
-            ax.tick_params(labelbottom=False, labelleft=False)
-            plt.grid(visible=True)
-            plt.autoscale(enable=True, axis="x", tight=True)
-            reconstruction = reconstruction_.cpu().detach().numpy()
-            lefts = peaks - weights_kernel.shape[0] / 2
-            rights = peaks + weights_kernel.shape[0] / 2
-            if weights_kernel.shape[0] % 2 == 1:
-                rights += 1
-            step = np.zeros_like(reconstruction, dtype=bool)
-            lefts[lefts < 0] = 0
-            rights[rights > reconstruction.shape[0]] = reconstruction.shape[0]
-            for left, right in zip(lefts, rights, strict=True):
-                step[int(left) : int(right)] = True
-            pos_signal = reconstruction.copy()
-            neg_signal = reconstruction.copy()
-            pos_signal[step] = np.nan
-            neg_signal[~step] = np.nan
-            plt.plot(pos_signal)
-            plt.plot(neg_signal, color="r")
-            plt.ylim((float(signal.min()), float(signal.max())))
-            plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",  # noqa: E501
-            )
-            plt.close()
         _, ax = plt.subplots()
         ax.tick_params(labelbottom=False, labelleft=False)
         plt.grid(visible=True)
@@ -631,8 +676,7 @@ def _save_images_1d(  # noqa: PLR0915
         plt.plot(reconstructed[0, 0].cpu().detach().numpy(), "r")
         plt.ylim((float(signal.min()), float(signal.max())))
         plt.savefig(
-            RUNTIME_DIR
-            / f"{dataset_name}-{sparse_activation_name}-1d-{len(model.weights_kernels)}-reconstructed.png",  # noqa: E501
+            RUNTIME_DIR / f"{figure_prefix}-reconstructed.png",
         )
         plt.close()
 
@@ -644,13 +688,15 @@ def _save_images_2d(
     sparse_activation_name: str,
 ) -> None:
     model = model.to("cpu")
+    figure_prefix = (
+        f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}"
+    )
     plt.figure()
     plt.xticks([])
     plt.yticks([])
     plt.imshow(image.cpu().detach().numpy(), cmap="twilight", vmin=-2, vmax=2)
     plt.savefig(
-        RUNTIME_DIR
-        / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-signal.png",  # noqa: E501
+        RUNTIME_DIR / f"{figure_prefix}-signal.png",
     )
     plt.close()
     hook_handles = [
@@ -674,8 +720,7 @@ def _save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-kernel-{weights_index}.png",  # noqa: E501
+                RUNTIME_DIR / f"{figure_prefix}-kernel-{weights_index}.png",
             )
             plt.close()
             similarity = functional.conv2d(
@@ -694,8 +739,7 @@ def _save_images_2d(
                 vmax=vmax,
             )
             plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-similarity-{weights_index}.png",  # noqa: E501
+                RUNTIME_DIR / f"{figure_prefix}-similarity-{weights_index}.png",
             )
             plt.close()
             plt.figure()
@@ -708,8 +752,7 @@ def _save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-activations-{weights_index}.png",  # noqa: E501
+                RUNTIME_DIR / f"{figure_prefix}-activations-{weights_index}.png",
             )
             plt.close()
             reconstruction = functional.conv2d(
@@ -728,8 +771,7 @@ def _save_images_2d(
             plt.xticks([])
             plt.yticks([])
             plt.savefig(
-                RUNTIME_DIR
-                / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstruction-{weights_index}.png",  # noqa: E501
+                RUNTIME_DIR / f"{figure_prefix}-reconstruction-{weights_index}.png",
             )
             plt.close()
         vmax = 2 * abs(reconstructed).max().item()
@@ -743,8 +785,7 @@ def _save_images_2d(
             vmax=vmax,
         )
         plt.savefig(
-            RUNTIME_DIR
-            / f"{dataset_name}-{sparse_activation_name}-2d-{len(model.weights_kernels)}-reconstructed.png",  # noqa: E501
+            RUNTIME_DIR / f"{figure_prefix}-reconstructed.png",
         )
         plt.close()
 
@@ -757,9 +798,9 @@ def _train_model_supervised(
     device: torch.device,
 ) -> None:
     model_supervised.train()
-    for data, targets in dataloader_train:
-        data = data.to(device)  # noqa: PLW2901
-        targets = targets.to(device)  # noqa: PLW2901
+    for batch_data, batch_targets in dataloader_train:
+        data = batch_data.to(device)
+        targets = batch_targets.to(device)
         data_reconstructed = model_unsupervised(data)
         outputs = model_supervised(data_reconstructed)
         classification_loss = functional.cross_entropy(outputs, targets)
@@ -775,8 +816,8 @@ def _train_model_unsupervised(
     device: torch.device,
 ) -> None:
     model.train()
-    for data, _ in dataloader_train:
-        data = data.to(device)  # noqa: PLW2901
+    for batch_data, _ in dataloader_train:
+        data = batch_data.to(device)
         data_reconstructed = model(data)
         reconstruction_loss = functional.l1_loss(data, data_reconstructed)
         optimizer.zero_grad()
@@ -796,9 +837,9 @@ def _validate_or_test_model_supervised(
     reconstruction_loss = np.zeros(len(dataloader))
     model_supervised.eval()
     with torch.no_grad():
-        for index, (data, targets) in enumerate(dataloader):
-            data = data.to(device)  # noqa: PLW2901
-            targets = targets.to(device)  # noqa: PLW2901
+        for index, (batch_data, batch_targets) in enumerate(dataloader):
+            data = batch_data.to(device)
+            targets = batch_targets.to(device)
             data_reconstructed = model_unsupervised(data)
             activations_ = [hook_handle.output for hook_handle in hook_handles]
             activations_stack = torch.stack(activations_, 1)
@@ -846,8 +887,8 @@ def _validate_or_test_model_unsupervised(
     reconstruction_loss = np.zeros(len(dataloader))
     model.eval()
     with torch.no_grad():
-        for index, (data, _) in enumerate(dataloader):
-            data = data.to(device)  # noqa: PLW2901
+        for index, (batch_data, _) in enumerate(dataloader):
+            data = batch_data.to(device)
             data_reconstructed = model(data)
             activations_ = [hook_handle.output for hook_handle in hook_handles]
             activations_stack = torch.stack(activations_, 1)
@@ -879,6 +920,7 @@ def _validate_or_test_model_unsupervised(
 
 def main() -> None:  # noqa: C901,PLR0912,PLR0915
     """Train SANs and generate corresponding images and tables."""
+    RUNTIME_DIR.mkdir(exist_ok=True, parents=True)
     _RUNTIME.smoke = "pytest" in sys.modules
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
@@ -1383,9 +1425,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
     for _ in range(num_epochs):
         model_supervised.train()
-        for signals, targets in dataloader_train:
-            signals = signals.to(device)  # noqa: PLW2901
-            targets = targets.to(device)  # noqa: PLW2901
+        for batch_signals, batch_targets in dataloader_train:
+            signals = batch_signals.to(device)
+            targets = batch_targets.to(device)
             outputs = model_supervised(signals)
             classification_loss = functional.cross_entropy(outputs, targets)
             optimizer.zero_grad()
@@ -1395,9 +1437,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         num_predictions = 0
         model_supervised.eval()
         with torch.no_grad():
-            for signals, targets in dataloader_validation:
-                signals = signals.to(device)  # noqa: PLW2901
-                targets = targets.to(device)  # noqa: PLW2901
+            for batch_signals, batch_targets in dataloader_validation:
+                signals = batch_signals.to(device)
+                targets = batch_targets.to(device)
                 outputs = model_supervised(signals)
                 prediction = outputs.argmax(dim=1)
                 num_predictions_correct += sum(prediction == targets).item()
@@ -1408,9 +1450,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             accuracy_best = accuracy
     model_supervised.eval()
     with torch.no_grad():
-        for signals, targets in dataloader_test:
-            signals = signals.to(device)  # noqa: PLW2901
-            targets = targets.to(device)  # noqa: PLW2901
+        for batch_signals, batch_targets in dataloader_test:
+            signals = batch_signals.to(device)
+            targets = batch_targets.to(device)
             outputs = model_supervised_best(signals)
             prediction = outputs.argmax(dim=1)
             num_predictions_correct += sum(prediction == targets).item()
@@ -1447,6 +1489,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         dataset=uci_epilepsy_test,
         sampler=SubsetRandomSampler(uci_epilepsy_test_range),
     )
+    figure_kernel_size_1d = 10
     for kernel_sizes in kernel_sizes_list:
         results_supervised_rows = []
         for sparse_activation, sparse_activation_name in zip(
@@ -1495,7 +1538,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     model_epoch_best = san1d_model
                     flithos_epoch_mean_best = flithos_epoch.mean()
             for weights_kernel in san1d_model.weights_kernels:
-                weights_kernel.requires_grad_(False)  # noqa: FBT003
+                weights_kernel.requires_grad_(requires_grad=False)
             flithos_epoch_mean_best = float("inf")
             model_supervised = _CNN(num_classes).to(device).to(device)
             optimizer = optim.Adam(model_supervised.parameters(), lr=lr)
@@ -1534,7 +1577,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     accuracy - accuracy_uci_epilepsy,
                 ],
             )
-            if kernel_sizes[0] == 10:  # noqa: PLR2004
+            if kernel_sizes[0] == figure_kernel_size_1d:
                 _save_images_1d(
                     uci_epilepsy_test[0][0][0],
                     dataset_name,
@@ -1664,9 +1707,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
         for _ in range(num_epochs):
             fnn_model_supervised.train()
-            for images, targets in dataloader_train:
-                images = images.to(device)  # noqa: PLW2901
-                targets = targets.to(device)  # noqa: PLW2901
+            for batch_images, batch_targets in dataloader_train:
+                images = batch_images.to(device)
+                targets = batch_targets.to(device)
                 outputs = fnn_model_supervised(images)
                 classification_loss = functional.cross_entropy(outputs, targets)
                 optimizer.zero_grad()
@@ -1676,9 +1719,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             num_predictions = 0
             fnn_model_supervised.eval()
             with torch.no_grad():
-                for images, targets in dataloader_validation:
-                    images = images.to(device)  # noqa: PLW2901
-                    targets = targets.to(device)  # noqa: PLW2901
+                for batch_images, batch_targets in dataloader_validation:
+                    images = batch_images.to(device)
+                    targets = batch_targets.to(device)
                     outputs = fnn_model_supervised(images)
                     prediction = outputs.argmax(dim=1)
                     num_predictions_correct += sum(prediction == targets).item()
@@ -1689,9 +1732,9 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 accuracy_best = accuracy
         fnn_model_supervised.eval()
         with torch.no_grad():
-            for images, targets in dataloader_test:
-                images = images.to(device)  # noqa: PLW2901
-                targets = targets.to(device)  # noqa: PLW2901
+            for batch_images, batch_targets in dataloader_test:
+                images = batch_images.to(device)
+                targets = batch_targets.to(device)
                 outputs = fnn_model_supervised_best(images)
                 prediction = outputs.argmax(dim=1)
                 num_predictions_correct += sum(prediction == targets).item()
@@ -1726,6 +1769,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             dataset_test,
             sampler=SubsetRandomSampler(mnist_fashionmnist_test_range),
         )
+        figure_kernel_size_2d = 4
         for kernel_sizes in kernel_sizes_list:
             results_supervised_rows = []
             for sparse_activation, sparse_activation_name in zip(
@@ -1778,7 +1822,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                         san2d_model_epoch_best = san2d_model
                         flithos_epoch_mean_best = flithos_epoch.mean()
                 for weights_kernel in san2d_model.weights_kernels:
-                    weights_kernel.requires_grad_(False)  # noqa: FBT003
+                    weights_kernel.requires_grad_(requires_grad=False)
                 flithos_epoch_mean_best = float("inf")
                 fnn_model_supervised = _FNN(num_classes, sample_data_shape).to(device)
                 optimizer = optim.Adam(fnn_model_supervised.parameters(), lr=lr)
@@ -1818,7 +1862,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                         - accuracies_mnist_fashionmnist_supervised[dataset_name_index],
                     ],
                 )
-                if kernel_sizes[0] == 4:  # noqa: PLR2004
+                if kernel_sizes[0] == figure_kernel_size_2d:
                     _save_images_2d(
                         dataset_test[0][0][0],
                         dataset_name,
