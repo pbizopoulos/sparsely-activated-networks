@@ -14,7 +14,7 @@ let
       python.pkgs.urllib3
     ];
     pythonImportsCheck = [ pname ];
-    src = python.pkgs.fetchPypi {
+    src = pkgs.fetchPypi {
       inherit pname version format;
       dist = "py3";
       hash = "sha256-WT3COUrVxzu7ByYC1LdD9OH20guR1S1E914LJs1X5j4=";
@@ -47,7 +47,7 @@ python.pkgs.buildPythonPackage rec {
     python.pkgs.soundfile
   ];
   pythonImportsCheck = [ pname ];
-  src = python.pkgs.fetchPypi {
+  src = pkgs.fetchPypi {
     inherit pname version format;
     dist = "py3";
     hash = "sha256-U99omPlvf3FsPjwNuBgMMCNDRgrBkoUCxRftGJe5IFQ=";

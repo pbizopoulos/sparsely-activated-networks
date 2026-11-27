@@ -6,10 +6,8 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import sys
 from pathlib import Path
-from types import SimpleNamespace
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
@@ -24,15 +22,14 @@ from torch import nn, optim
 from torch.nn import functional
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
-from torchvision.datasets import MNIST, FakeData, FashionMNIST
-from torchvision.transforms import ToTensor
+from torchvision.datasets import MNIST, FakeData, FashionMNIST  # type: ignore[import-untyped]
+from torchvision.transforms import ToTensor  # type: ignore[import-untyped]
 
-import wfdb
+import wfdb  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-_RUNTIME = SimpleNamespace(smoke=False)
 RUNTIME_DIR = Path.home() / (
     "github.com/pbizopoulos/sparsely-activated-networks/generate_paper/tmp"
 )
@@ -95,7 +92,7 @@ class SAN1d(nn.Module):
     """Reconstruct signals using learned kernels and sparse activations."""
 
     def __init__(
-        self: SAN1d,
+        self,
         kernel_sizes: list[int],
         sparse_activations: list[nn.Module],
     ) -> None:
@@ -109,7 +106,9 @@ class SAN1d(nn.Module):
             ],
         )
 
-    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, batch_x: torch.Tensor, *, activations: list[torch.Tensor] | None = None
+    ) -> torch.Tensor:
         """Sum the signal reconstructions from all kernels."""
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(
@@ -122,9 +121,11 @@ class SAN1d(nn.Module):
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )
-            activations = sparse_activation(similarity)
+            activation = sparse_activation(similarity)
+            if activations is not None:
+                activations.append(activation)
             reconstructions_sum = reconstructions_sum + functional.conv1d(
-                activations,
+                activation,
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )
@@ -135,7 +136,7 @@ class SAN2d(nn.Module):
     """Reconstruct images using learned kernels and sparse activations."""
 
     def __init__(
-        self: SAN2d,
+        self,
         kernel_sizes: list[int],
         sparse_activations: list[nn.Module],
     ) -> None:
@@ -149,7 +150,9 @@ class SAN2d(nn.Module):
             ],
         )
 
-    def forward(self, batch_x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, batch_x: torch.Tensor, *, activations: list[torch.Tensor] | None = None
+    ) -> torch.Tensor:
         """Sum the image reconstructions from all kernels."""
         reconstructions_sum = torch.zeros_like(batch_x)
         for sparse_activation, weights_kernel in zip(
@@ -162,9 +165,11 @@ class SAN2d(nn.Module):
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )
-            activations = sparse_activation(similarity)
+            activation = sparse_activation(similarity)
+            if activations is not None:
+                activations.append(activation)
             reconstructions_sum = reconstructions_sum + functional.conv2d(
-                activations,
+                activation,
                 weights_kernel.unsqueeze(0).unsqueeze(0),
                 padding="same",
             )
@@ -383,42 +388,15 @@ class _FNN(nn.Module):
         return output
 
 
-class _Hook:
-    def __init__(self, module: nn.Module) -> None:
-        self.hook = module.register_forward_hook(self.hook_fn)
-
-    def hook_fn(
-        self: _Hook,
-        _: nn.Module,
-        _inputs: tuple[torch.Tensor, ...],
-        output: torch.Tensor,
-    ) -> None:
-        self.output = output
-
-
-class _Identity1D(nn.Module):
-    def __init__(self, _: None) -> None:
-        super().__init__()
-
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
-        return input_
-
-
-class _Identity2D(nn.Module):
-    def __init__(self, _: None) -> None:
-        super().__init__()
-
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
-        return input_
-
-
 class _PhysionetDataset(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
     def __init__(
-        self: _PhysionetDataset,
+        self,
         dataset_name: str,
         train_validation_test: str,
+        *,
+        smoke: bool,
     ) -> None:
-        if _RUNTIME.smoke:
+        if smoke:
             signal = torch.randn(12000)
         else:
             dataset_dir_path = RUNTIME_DIR / dataset_name
@@ -433,13 +411,12 @@ class _PhysionetDataset(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
             file_name = next(iter(dataset_dir_path.glob("*.hea"))).stem
             records = wfdb.rdrecord(dataset_dir_path / file_name)
             signal = torch.tensor(records.p_signal[:12000, 0], dtype=torch.float)
-        if train_validation_test == "train":
-            self.signal = signal[:6000]
-        elif train_validation_test == "validation":
-            self.signal = signal[6000:8000]
-        elif train_validation_test == "test":
-            self.signal = signal[8000:]
-        self.signal = self.signal.reshape((-1, 1, 1000))
+        samples = {
+            "train": slice(6000),
+            "validation": slice(6000, 8000),
+            "test": slice(8000, None),
+        }[train_validation_test]
+        self.signal = signal[samples].reshape((-1, 1, 1000))
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
         out = self.signal[index] - self.signal[index].mean()
@@ -448,22 +425,6 @@ class _PhysionetDataset(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
 
     def __len__(self) -> int:
         return self.signal.shape[0]
-
-
-class _ReLU1D(nn.Module):
-    def __init__(self, _: None) -> None:
-        super().__init__()
-
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
-        return functional.relu(input_)
-
-
-class _ReLU2D(nn.Module):
-    def __init__(self, _: None) -> None:
-        super().__init__()
-
-    def forward(self, input_: torch.Tensor) -> torch.Tensor:
-        return functional.relu(input_)
 
 
 class _UCIEpilepsy(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
@@ -479,35 +440,18 @@ class _UCIEpilepsy(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
         classes_all = dataset["y"]
         last_train_index = int(data_all.shape[0] * 0.76)
         last_validation_index = int(data_all.shape[0] * 0.88)
-        if train_validation_test == "train":
-            self.signal = torch.tensor(
-                data_all.to_numpy()[:last_train_index, :],
-                dtype=torch.float,
-            )
-            self.classes = torch.tensor(classes_all[:last_train_index].to_numpy()) - 1
-        elif train_validation_test == "validation":
-            self.signal = torch.tensor(
-                data_all.to_numpy()[last_train_index:last_validation_index, :],
-                dtype=torch.float,
-            )
-            self.classes = (
-                torch.tensor(
-                    classes_all[last_train_index:last_validation_index].to_numpy(),
-                )
-                - 1
-            )
-        elif train_validation_test == "test":
-            self.signal = torch.tensor(
-                data_all.to_numpy()[last_validation_index:, :],
-                dtype=torch.float,
-            )
-            self.classes = (
-                torch.tensor(classes_all[last_validation_index:].to_numpy()) - 1
-            )
-        self.signal.unsqueeze_(1)
+        rows = {
+            "train": slice(last_train_index),
+            "validation": slice(last_train_index, last_validation_index),
+            "test": slice(last_validation_index, None),
+        }[train_validation_test]
+        self.signal = torch.tensor(
+            data_all.iloc[rows].to_numpy(), dtype=torch.float
+        ).unsqueeze(1)
+        self.classes = torch.tensor(classes_all.iloc[rows].to_numpy()) - 1
 
     def __getitem__(
-        self: _UCIEpilepsy,
+        self,
         index: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         return (self.signal[index], self.classes[index])
@@ -516,12 +460,20 @@ class _UCIEpilepsy(Dataset[tuple[torch.Tensor, int | torch.Tensor]]):
         return self.classes.shape[0]
 
 
+def _make_sparse_activations(
+    activation: type[nn.Module], densities: Sequence[int | Sequence[int]]
+) -> list[nn.Module]:
+    if activation in (nn.Identity, nn.ReLU):
+        return [activation() for _ in densities]
+    return [activation(density) for density in densities]
+
+
 def _calculate_inverse_compression_ratio(
     num_activations: npt.NDArray[np.float64],
     data: torch.Tensor,
-    model: nn.Module,
+    model: SAN1d | SAN2d,
 ) -> npt.NDArray[np.float64]:
-    weights_kernels = cast("nn.ParameterList", model.weights_kernels)
+    weights_kernels = model.weights_kernels
     activation_multiplier = 1 + len(weights_kernels[0].shape)
     num_parameters = sum(
         int(weights_kernel.shape[0]) for weights_kernel in weights_kernels
@@ -634,14 +586,13 @@ def _save_images_1d(
         RUNTIME_DIR / f"{figure_prefix}-signal.png",
     )
     plt.close()
-    hook_handles = [
-        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
-    ]
     model.eval()
     with torch.no_grad():
-        reconstructed = model(signal.unsqueeze(0).unsqueeze(0))
-        activations_ = [hook_handle.output for hook_handle in hook_handles]
-        activations_stack = torch.stack(activations_, 1)
+        kernel_activations: list[torch.Tensor] = []
+        reconstructed = model(
+            signal.unsqueeze(0).unsqueeze(0), activations=kernel_activations
+        )
+        activations_stack = torch.stack(kernel_activations, 1)
         for weights_index, (weights_kernel, activations) in enumerate(
             zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
         ):
@@ -699,14 +650,13 @@ def _save_images_2d(
         RUNTIME_DIR / f"{figure_prefix}-signal.png",
     )
     plt.close()
-    hook_handles = [
-        _Hook(sparse_activation_) for sparse_activation_ in model.sparse_activations
-    ]
     model.eval()
     with torch.no_grad():
-        reconstructed = model(image.unsqueeze(0).unsqueeze(0))
-        activations_ = [hook_handle.output for hook_handle in hook_handles]
-        activations_stack = torch.stack(activations_, 1)
+        kernel_activations: list[torch.Tensor] = []
+        reconstructed = model(
+            image.unsqueeze(0).unsqueeze(0), activations=kernel_activations
+        )
+        activations_stack = torch.stack(kernel_activations, 1)
         for weights_index, (weights_kernel, activations) in enumerate(
             zip(model.weights_kernels, activations_stack[0, :, 0], strict=True),
         ):
@@ -827,11 +777,10 @@ def _train_model_unsupervised(
 
 def _validate_or_test_model_supervised(
     dataloader: DataLoader[tuple[torch.Tensor, int | torch.Tensor]],
-    hook_handles: list[_Hook],
     model_supervised: nn.Module,
-    model_unsupervised: nn.Module,
+    model_unsupervised: SAN1d | SAN2d,
     device: torch.device,
-) -> tuple:  # type: ignore[type-arg]
+) -> tuple[np.float64, npt.NDArray[np.float64], npt.NDArray[np.float64], float]:
     num_predictions_correct = 0
     num_activations = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
@@ -840,9 +789,11 @@ def _validate_or_test_model_supervised(
         for index, (batch_data, batch_targets) in enumerate(dataloader):
             data = batch_data.to(device)
             targets = batch_targets.to(device)
-            data_reconstructed = model_unsupervised(data)
-            activations_ = [hook_handle.output for hook_handle in hook_handles]
-            activations_stack = torch.stack(activations_, 1)
+            kernel_activations: list[torch.Tensor] = []
+            data_reconstructed = model_unsupervised(
+                data, activations=kernel_activations
+            )
+            activations_stack = torch.stack(kernel_activations, 1)
             reconstruction_loss[index] = functional.l1_loss(
                 data,
                 data_reconstructed,
@@ -879,19 +830,18 @@ def _validate_or_test_model_supervised(
 
 def _validate_or_test_model_unsupervised(
     dataloader: DataLoader[tuple[torch.Tensor, int | torch.Tensor]],
-    hook_handles: list[_Hook],
-    model: nn.Module,
+    model: SAN1d | SAN2d,
     device: torch.device,
-) -> tuple:  # type: ignore[type-arg]
+) -> tuple[np.float64, npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     num_activations = np.zeros(len(dataloader))
     reconstruction_loss = np.zeros(len(dataloader))
     model.eval()
     with torch.no_grad():
         for index, (batch_data, _) in enumerate(dataloader):
             data = batch_data.to(device)
-            data_reconstructed = model(data)
-            activations_ = [hook_handle.output for hook_handle in hook_handles]
-            activations_stack = torch.stack(activations_, 1)
+            kernel_activations: list[torch.Tensor] = []
+            data_reconstructed = model(data, activations=kernel_activations)
+            activations_stack = torch.stack(kernel_activations, 1)
             reconstruction_loss[index] = functional.l1_loss(
                 data,
                 data_reconstructed,
@@ -918,14 +868,13 @@ def _validate_or_test_model_unsupervised(
     return (flithos, inverse_compression_ratio, reconstruction_loss)
 
 
-def main() -> None:  # noqa: C901,PLR0912,PLR0915
+def main(*, smoke: bool = False) -> None:  # noqa: C901,PLR0912,PLR0915
     """Train SANs and generate corresponding images and tables."""
     RUNTIME_DIR.mkdir(exist_ok=True, parents=True)
-    _RUNTIME.smoke = "pytest" in sys.modules
     plt.rcParams["font.size"] = 20
     plt.rcParams["image.interpolation"] = "none"
     plt.rcParams["savefig.bbox"] = "tight"
-    if _RUNTIME.smoke:
+    if smoke:
         torch.set_num_threads(1)
         num_epochs_physionet = 1
         num_epochs = 1
@@ -981,8 +930,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     ]
     xlim_weights = [74, 113, 10, 71, 45, 20, 9, 229, 37, 105, 15, 232, 40, 70, 173]
     sparse_activations = [
-        _Identity1D,
-        _ReLU1D,
+        nn.Identity,
+        nn.ReLU,
         TopKAbsolutes1D,
         ExtremaPoolIndices1D,
         Extrema1D,
@@ -1018,15 +967,17 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
         zip(dataset_names, xlim_weights, strict=True),
     ):
         results_physionet_row = []
-        physionet_dataset_train = _PhysionetDataset(dataset_name, "train")
+        physionet_dataset_train = _PhysionetDataset(dataset_name, "train", smoke=smoke)
         dataloader_train = DataLoader(
             dataset=physionet_dataset_train,
             batch_size=batch_size,
             shuffle=True,
         )
-        physionet_dataset_validation = _PhysionetDataset(dataset_name, "validation")
+        physionet_dataset_validation = _PhysionetDataset(
+            dataset_name, "validation", smoke=smoke
+        )
         dataloader_validation = DataLoader(dataset=physionet_dataset_validation)
-        physionet_dataset_test = _PhysionetDataset(dataset_name, "test")
+        physionet_dataset_test = _PhysionetDataset(dataset_name, "test", smoke=smoke)
         dataloader_test = DataLoader(dataset=physionet_dataset_test)
         fig, ax_main = plt.subplots(constrained_layout=True, figsize=(6, 6))
         for sparse_activation_index, (
@@ -1057,16 +1008,11 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     ).tolist()
                 else:
                     sparsity_densities = kernel_sizes
-                sparse_activation_list = [
-                    sparse_activation(sparsity_density)
-                    for sparsity_density in sparsity_densities
-                ]
+                sparse_activation_list = _make_sparse_activations(
+                    sparse_activation, sparsity_densities
+                )
                 san1d_model = SAN1d(kernel_sizes, sparse_activation_list).to(device)
                 optimizer = optim.Adam(san1d_model.parameters(), lr=lr)
-                hook_handles = [
-                    _Hook(sparse_activation_)
-                    for sparse_activation_ in san1d_model.sparse_activations
-                ]
                 for epoch in range(num_epochs_physionet):
                     _train_model_unsupervised(
                         dataloader_train,
@@ -1076,7 +1022,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     )
                     flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                         dataloader_validation,
-                        hook_handles,
                         san1d_model,
                         device,
                     )
@@ -1095,7 +1040,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     reconstruction_loss_epoch_best,
                 ) = _validate_or_test_model_unsupervised(
                     dataloader_test,
-                    hook_handles,
                     model_epoch_best,
                     device,
                 )
@@ -1460,8 +1404,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     accuracy_uci_epilepsy = 100 * num_predictions_correct / num_predictions
     dataset_name = "UCI-epilepsy"
     sparse_activations = [
-        _Identity1D,
-        _ReLU1D,
+        nn.Identity,
+        nn.ReLU,
         TopKAbsolutes1D,
         ExtremaPoolIndices1D,
         Extrema1D,
@@ -1510,16 +1454,11 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 ).tolist()
             else:
                 sparsity_densities = kernel_sizes
-            sparse_activation_list = [
-                sparse_activation(sparsity_density)
-                for sparsity_density in sparsity_densities
-            ]
+            sparse_activation_list = _make_sparse_activations(
+                sparse_activation, sparsity_densities
+            )
             san1d_model = SAN1d(kernel_sizes, sparse_activation_list).to(device)
             optimizer = optim.Adam(san1d_model.parameters(), lr=lr)
-            hook_handles = [
-                _Hook(sparse_activation_)
-                for sparse_activation_ in san1d_model.sparse_activations
-            ]
             flithos_epoch_mean_best = float("inf")
             for _ in range(num_epochs):
                 _train_model_unsupervised(
@@ -1530,7 +1469,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 )
                 flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                     dataloader_validation,
-                    hook_handles,
                     san1d_model,
                     device,
                 )
@@ -1552,7 +1490,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 )
                 flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                     dataloader_validation,
-                    hook_handles,
                     model_epoch_best,
                     device,
                 )
@@ -1563,7 +1500,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             flithos, inverse_compression_ratio, reconstruction_loss, accuracy = (
                 _validate_or_test_model_supervised(
                     dataloader_test,
-                    hook_handles,
                     model_supervised_best,
                     model_best,
                     device,
@@ -1618,7 +1554,7 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
     dataset_names = ["MNIST", "FashionMNIST"]
     num_classes = 10
     sample_data_shape = [28, 28]
-    if _RUNTIME.smoke:
+    if smoke:
         dataset_list = [
             [
                 FakeData(
@@ -1743,8 +1679,8 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
             100 * num_predictions_correct / num_predictions,
         )
         sparse_activations = [
-            _Identity2D,
-            _ReLU2D,
+            nn.Identity,
+            nn.ReLU,
             TopKAbsolutes2D,
             ExtremaPoolIndices2D,
             Extrema2D,
@@ -1794,16 +1730,11 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     ]
                 else:
                     sparsity_densities = kernel_sizes
-                sparse_activation_list = [
-                    sparse_activation(sparsity_density)
-                    for sparsity_density in sparsity_densities
-                ]
+                sparse_activation_list = _make_sparse_activations(
+                    sparse_activation, sparsity_densities
+                )
                 san2d_model = SAN2d(kernel_sizes, sparse_activation_list).to(device)
                 optimizer = optim.Adam(san2d_model.parameters(), lr=lr)
-                hook_handles = [
-                    _Hook(sparse_activation_)
-                    for sparse_activation_ in san2d_model.sparse_activations
-                ]
                 flithos_epoch_mean_best = float("inf")
                 for _ in range(num_epochs):
                     _train_model_unsupervised(
@@ -1814,7 +1745,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     )
                     flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                         dataloader_validation,
-                        hook_handles,
                         san2d_model,
                         device,
                     )
@@ -1836,7 +1766,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                     )
                     flithos_epoch, *_ = _validate_or_test_model_unsupervised(
                         dataloader_validation,
-                        hook_handles,
                         san2d_model_epoch_best,
                         device,
                     )
@@ -1847,7 +1776,6 @@ def main() -> None:  # noqa: C901,PLR0912,PLR0915
                 flithos, inverse_compression_ratio, reconstruction_loss, accuracy = (
                     _validate_or_test_model_supervised(
                         dataloader_test,
-                        hook_handles,
                         fnn_model_supervised_best,
                         san2d_model_best,
                         device,
